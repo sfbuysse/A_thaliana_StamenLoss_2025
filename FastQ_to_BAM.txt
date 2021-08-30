@@ -108,3 +108,34 @@ while IFS= read -r line; do trim_galore \
 -o /mnt/scratch/buysseso/TG_trimmed "$line"_R1_comb.fastq.gz "$line"_R2_comb.fastq.gz; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt 
 
 # Submitted batch job 32000594
+
+#### Step 4: Align to Reference Genome
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load SAMtools
+module load BWA
+module load GATK/4.1.4.1-Python-3.6.6
+bwa index /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta /mnt/research/RadishSequence/ArabidopsisSeuqence/refChromFiles/Athal
+cd /mnt/scratch/buysseso/TG_trimmed
+# below this is for the test file BIS11
+bwa mem -t 4 /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+BIS11_R1_matched_comb_val_1.fq.gz  BIS11_R2_matched_comb_val_2.fq.gz \
+| samtools view - -bS -o BIS11_bwa.bam
+
+samtools sort BIS11_bwa.bam sorted_BIS11_bwa.bam
+samtools index sorted_BIS11_bwa.bam
+
+samtools view sorted_BIS11_bwa.bam | less -S
+samtools flagstat sorted_BIS11_bwa.bam > BIS11_alignment_metrics.txt
+
+# then I need to add read groups\
+# error that it can't access the jar file?
+java -jar $EBROOTPICARD/picard.jar AddOrReplaceReadGroups \
+       I=sorted_BIS11_bwa.bam \
+       O=sorted_BIS11_rg.bam \
+       RGID=BIS11 \
+       RGLB=BIS11 \
+       RGPL=ILLUMINA \
+       RGPU=1 \
+       RGSM=BIS11
+samtools index sorted_BIS11_rg.bam
+
