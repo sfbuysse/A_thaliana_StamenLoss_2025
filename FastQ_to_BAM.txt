@@ -66,7 +66,7 @@ ILLUMINACLIP:/mnt/research/RadishSequence/ArabidopsisSequence/fastq/Nextera_adap
 LEADING:3 \
 TRAILING:3 \
 SLIDINGWINDOW:4:15 \
-MINLEN:30; done < /mnt/research/RadishSequence/ArabidopsisSequence/fas.txttq/SeqID.txt
+MINLEN:30; done < /mnt/research/RadishSequence/ArabidopsisSequence/fasq/SeqID.txt
 
 # then fastqc these
 # module load GCC/7.3.0-2.30  OpenMPI/3.1.1
@@ -110,32 +110,46 @@ while IFS= read -r line; do trim_galore \
 # Submitted batch job 32000594
 
 #### Step 4: Align to Reference Genome
+#!/bin/bash
+##Job settings for without -t settings
+#SBATCH --job-name=BWA
+#SBATCH -e BWA.err
+#SBATCH -o BWA.out
+
+##Job Resources
+#SBATCH --nodes=4
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=2
+#SBATCH --mem-per-cpu=6gb
+#SBATCH -t 23:59:00
+#SBATCH --mail-user=buysseso@msu.edu
+#SBATCH --mail-type=FAIL,BEGIN,END
+
+cd $SLURM_SUBMIT_DIR
+
+##### code lines #####
+module purge
+
 module load GCC/7.3.0-2.30  OpenMPI/3.1.1
 module load SAMtools
 module load BWA
 module load GATK/4.1.4.1-Python-3.6.6
+
 bwa index /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta /mnt/research/RadishSequence/ArabidopsisSeuqence/refChromFiles/Athal
 cd /mnt/scratch/buysseso/TG_trimmed
-# below this is for the test file BIS11
-bwa mem -t 4 /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
-BIS11_R1_matched_comb_val_1.fq.gz  BIS11_R2_matched_comb_val_2.fq.gz \
-| samtools view - -bS -o BIS11_bwa.bam
 
-samtools sort BIS11_bwa.bam sorted_BIS11_bwa.bam
-samtools index sorted_BIS11_bwa.bam
+while IFS= read -r line; do bwa mem -t 4 /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+"$line"_R1_comb_val_1.fq.gz  "$line"_R2_comb_val_2.fq.gz \
+| samtools view - -bS -o /mnt/scratch/buysseso/BWA_bam/"$line"_bwa.bam; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
 
-samtools view sorted_BIS11_bwa.bam | less -S
-samtools flagstat sorted_BIS11_bwa.bam > BIS11_alignment_metrics.txt
+cd /mnt/scratch/buysseso/BWA_bam
 
-# then I need to add read groups\
-# error that it can't access the jar file?
-java -jar $EBROOTPICARD/picard.jar AddOrReplaceReadGroups \
-       I=sorted_BIS11_bwa.bam \
-       O=sorted_BIS11_rg.bam \
-       RGID=BIS11 \
-       RGLB=BIS11 \
-       RGPL=ILLUMINA \
-       RGPU=1 \
-       RGSM=BIS11
-samtools index sorted_BIS11_rg.bam
+while IFS= read -r line; do
+samtools sort "$line"_bwa.bam -o sorted_"$line"_bwa.bam
+samtools index sorted_"$line"_bwa.bam
+samtools view sorted_"$line"_bwa.bam | less -S
+samtools flagstat sorted_"$line"_bwa.bam > "$line"_alignment_metrics.txt; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+
+#Submitted batch job 32657542
+# ran line 147 to end separately as samtools_stats.sb > Submitted batch job 33233713
 
