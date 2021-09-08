@@ -1,0 +1,56 @@
+## code to prep bam file for variant calling and do variant calling
+
+##### Step 1: add read groups
+cd /mnt/scratch/buysseso/BWA_bam
+while IFS= read -r line; do gatk --java-options "-Xmx4g" AddOrReplaceReadGroups \
+       -I sorted_"$line"_bwa.bam \
+       -O "$line"_rg.bam \
+       -ID="$line" \
+       -LB="$line" \
+       -PL=ILLUMINA \
+       -PU=1 \
+       -SM="$line"; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+	   
+##### Step 2: Make dictionary for reference (do once)
+gatk --java-options "-Xmx4g" CreateSequenceDictionary \
+	-R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+	-O /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.dict
+
+##### Step 3: Mark Duplicates
+#!/bin/bash
+##Job settings for without -t settings
+#SBATCH --job-name=gatk_markdup
+#SBATCH -e gatk_markdup.err
+#SBATCH -o gatk_markdup.out
+#SBATCH --nodes=4
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=2
+#SBATCH --mem-per-cpu=24gb
+#SBATCH -t 23:59:00
+#SBATCH --mail-user=buysseso@msu.edu
+#SBATCH --mail-type=FAIL,BEGIN,END
+
+cd $SLURM_SUBMIT_DIR
+
+##### code lines #####
+
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load SAMtools
+module load GATK/4.1.4.1-Python-3.6.6
+
+cd /mnt/scratch/buysseso/BWA_bam
+	
+while IFS= read -r line; do gatk --java-options "-Xmx4g" MarkDuplicatesSpark \
+             -I "$line"_rg.bam  \
+             -O "$line"_rg_rmdup.bam \
+             -M "$line"_dup_metrics.txt\
+				-conf 'spark.executor.cores=4'; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+
+Submitted batch job 33296693
+
+# older function that takes 2 steps instead of 1
+gatk --java-options "-Xmx4g" MarkDuplicates \
+                      I=sorted_sample_NA12878_rg.bam O=sample_NA12878_rmdup.bam \
+                      M=dup_metrics REMOVE_DUPLICATES=true AS=TRUE VALIDATION_STRINGENCY=LENIENT \
+                      MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=1000
+samtools index sorted_BIS11_rg.bam
