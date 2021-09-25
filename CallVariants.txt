@@ -1,7 +1,12 @@
-## code to prep bam file for variant calling and do variant calling
+## code to prep bam file for variant calling, then do haplotype calling and genotyping with GATK
+
+##### load modules #####
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load SAMtools
+module load GATK/4.1.4.1-Python-3.6.6
 
 ##### Step 1: add read groups #####
-cd /mnt/scratch/buysseso/BWA_bam
+cd /folder/location/BWA_bam
 while IFS= read -r line; do gatk --java-options "-Xmx4g" AddOrReplaceReadGroups \
        -I sorted_"$line"_bwa.bam \
        -O "$line"_rg.bam \
@@ -9,126 +14,52 @@ while IFS= read -r line; do gatk --java-options "-Xmx4g" AddOrReplaceReadGroups 
        -LB="$line" \
        -PL=ILLUMINA \
        -PU=1 \
-       -SM="$line"; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+       -SM="$line"; done < /file/to/read/lines/from/SeqID.txt
 	   
 ##### Step 2: Make dictionary for reference (do once) #####
 gatk --java-options "-Xmx4g" CreateSequenceDictionary \
-	-R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
-	-O /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.dict
+	-R Athal.fasta \
+	-O Athal.dict
 
 ##### Step 3: Mark Duplicates #####
-#!/bin/bash
-##Job settings for without -t settings
-#SBATCH --job-name=gatk_markdup
-#SBATCH -e gatk_markdup.err
-#SBATCH -o gatk_markdup.out
-#SBATCH --nodes=4
-#SBATCH --ntasks=4
-#SBATCH --cpus-per-task=2
-#SBATCH --mem-per-cpu=24gb
-#SBATCH -t 23:59:00
-#SBATCH --mail-user=buysseso@msu.edu
-#SBATCH --mail-type=FAIL,BEGIN,END
-
-cd $SLURM_SUBMIT_DIR
-
-##### code lines #####
-
-module load GCC/7.3.0-2.30  OpenMPI/3.1.1
-module load SAMtools
-module load GATK/4.1.4.1-Python-3.6.6
-
-cd /mnt/scratch/buysseso/BWA_bam
+cd /folder/location/BWA_bam
 	
 while IFS= read -r line; do gatk --java-options "-Xmx4g" MarkDuplicatesSpark \
              -I "$line"_rg.bam  \
              -O "$line"_rg_rmdup.bam \
              -M "$line"_dup_metrics.txt\
-				-conf 'spark.executor.cores=4'; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
-
-Submitted batch job 33296693
-
-# older function that takes 2 steps instead of 1
-gatk --java-options "-Xmx4g" MarkDuplicates \
-                      I=sorted_sample_NA12878_rg.bam O=sample_NA12878_rmdup.bam \
-                      M=dup_metrics REMOVE_DUPLICATES=true AS=TRUE VALIDATION_STRINGENCY=LENIENT \
-                      MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=1000
-samtools index sorted_BIS11_rg.bam
+				-conf 'spark.executor.cores=4'; done < /file/to/read/lines/from/SeqID.txt
 
 ##### Step 4: Recalibrate Quality Scores #####
-- going to skip this for now b/c requires bootstrapping my data if I feel the need to do it.
+- This step is recommended in the GATK protocol. I skipped it.
 
 ##### Step 5: Call those haplotypes! #####
-## chromosome names in fast and bam don't match. fix that first
+## chromosome names in fasta and bam don't match. fix that first
 module load BWA
-grep '>' /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta
-awk '{print $1}' /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta > /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.short.fasta
-grep '>' /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.short.fasta
-bwa index /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.short.fasta /mnt/research/RadishSequence/ArabidopsisSeuqence/refChromFiles/Athal.short
+grep '>' Athal.fasta
+awk '{print $1}' Athal.fasta > Athal.short.fasta
+grep '>' Athal.short.fasta
+bwa index Athal.short.fasta Athal.short
 
-# do this by sample
+# do this by sample and by chromosome
 # get the GVCF right away (variants and nonvariant sites retained)
-#!/bin/bash --login
-#SBATCH --time=80:00:00
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=15
-#SBATCH --mem=60G
-#SBATCH --job-name HaploCall
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=buysseso@msu.edu
 
-#### Load modules ####
-module purge
-module load GCC/7.3.0-2.30 OpenMPI/3.1.1
-module load GATK/4.1.4.1-Python-3.6.6
-
-
-#### Code Lines ####
-# call by sample and by chromosome.
-cd /mnt/scratch/buysseso
+cd /folder/location
 
 while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk --java-options "-Xmx8G" HaplotypeCaller \
--R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
--I /mnt/scratch/buysseso/BWA_bam/"${LINE}"_rg_rmdup.bam \
+-R Athal.fasta \
+-I BWA_bam/"${LINE}"_rg_rmdup.bam \
 -L Chr1 \
--O /mnt/scratch/buysseso/GVCF/Chr1/"${LINE}".g.vcf \
--ERC GVCF; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+-O GVCF/Chr1/"${LINE}".g.vcf \
+-ERC GVCF; done < /file/to/read/lines/from/SeqID.txt
 
-scontrol show job $SLURM_JOB_ID
-
-Submitted batch job 33585575
-
-## submitted a different version of this job for each chromosome so they could run at the same time. All chromosomes needed an extra ~10 hours; so maybe 100 hours would have done the trick in one go?
-sbatch HaploCall2.sb
-Submitted batch job 33638421
-sbatch HaploCall3.sb
-Submitted batch job 33638422
-sbatch HaploCall4.sb
-Submitted batch job 33638423
-sbatch HaploCall5.sb
-Submitted batch job 33638429
+## run the above code for each chromosome. Could loop it. 
 
 ##### Step 6 Combine GVCFs #####
-#!/bin/bash --login
-#SBATCH --time=120:00:00
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=15
-#SBATCH --mem=60G
-#SBATCH --job-name CombChrs
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=buysseso@msu.edu
 
-#### Load modules ####
-module purge
-module load GCC/7.3.0-2.30 OpenMPI/3.1.1
-module load GATK/4.1.4.1-Python-3.6.6
+cd /folder/location/GVCF
 
-cd /mnt/scratch/buysseso/GVCF
-
-# not including Pal-7b at this stage.
-# these names need to be updated to include the long form or I really could just rename them at some point.
-
-for x in 1 2 3 4 5; do gatk CombineGVCFs -R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta
+for x in 1 2 3 4 5; do gatk CombineGVCFs -R Athal.fasta
 --variant Chr"$x"/ALE10_*.g.vcf   \
 --variant Chr"$x"/Ale-12_*.g.vcf \
 --variant Chr"$x"/ALE16_*.g.vcf \
@@ -194,7 +125,7 @@ for x in 1 2 3 4 5; do gatk CombineGVCFs -R /mnt/research/RadishSequence/Arabido
 -O Chr"$x"/all.Chr"$x".g.vcf; done
 
 
-gatk CombineGVCFs -R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+gatk CombineGVCFs -R Athal.fasta \
 --variant Chr1/all.Chr1.g.vcf \
 --variant Chr2/all.Chr2.g.vcf \
 --variant Chr3/all.Chr3.g.vcf \
@@ -202,37 +133,13 @@ gatk CombineGVCFs -R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFi
 --variant Chr5/all.Chr5.g.vcf \
 -O AllSamplesAllChrs.g.vcf
 
-scontrol show job $SLURM_JOB_ID
-# submitted job 34209599 on 9/24/21 at 9:03 pm
-
-## At this point, I now have one file that I want to keep! great!
-
 ##### Step 7: Genotype GVCFs #####
-#!/bin/bash --login
-#SBATCH --time=20:00:00
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=15
-#SBATCH --mem=60G
-#SBATCH --job-name genoGVCF
-#SBATCH --mail-type=ALL
-#SBATCH --mail-user=buysseso@msu.edu
-
-#### Load modules ####
-module purge
-module load GCC/7.3.0-2.30 OpenMPI/3.1.1
-module load GATK/4.1.4.1-Python-3.6.6
-
-#### Code Lines ####
-cd /mnt/scratch/buysseso/GVCF
+cd /folder/location/GVCF
 
 gatk --java-options "-Xmx4g" GenotypeGVCFs \
--R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+-R Athal.fasta \
 -V AllSamplesAllChrs.g.vcf \
 -all-sites TRUE \
 -O allsites.raw.g.vcf.gz
 
-scontrol show job $SLURM_JOB_ID
-# Submitted batch job 34250055
-
-
-
+## end of CallVariants. Next step is to FilterVariants
