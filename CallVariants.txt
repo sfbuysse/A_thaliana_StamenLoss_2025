@@ -1,6 +1,6 @@
 ## code to prep bam file for variant calling and do variant calling
 
-##### Step 1: add read groups
+##### Step 1: add read groups #####
 cd /mnt/scratch/buysseso/BWA_bam
 while IFS= read -r line; do gatk --java-options "-Xmx4g" AddOrReplaceReadGroups \
        -I sorted_"$line"_bwa.bam \
@@ -11,12 +11,12 @@ while IFS= read -r line; do gatk --java-options "-Xmx4g" AddOrReplaceReadGroups 
        -PU=1 \
        -SM="$line"; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
 	   
-##### Step 2: Make dictionary for reference (do once)
+##### Step 2: Make dictionary for reference (do once) #####
 gatk --java-options "-Xmx4g" CreateSequenceDictionary \
 	-R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
 	-O /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.dict
 
-##### Step 3: Mark Duplicates
+##### Step 3: Mark Duplicates #####
 #!/bin/bash
 ##Job settings for without -t settings
 #SBATCH --job-name=gatk_markdup
@@ -54,3 +54,185 @@ gatk --java-options "-Xmx4g" MarkDuplicates \
                       M=dup_metrics REMOVE_DUPLICATES=true AS=TRUE VALIDATION_STRINGENCY=LENIENT \
                       MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=1000
 samtools index sorted_BIS11_rg.bam
+
+##### Step 4: Recalibrate Quality Scores #####
+- going to skip this for now b/c requires bootstrapping my data if I feel the need to do it.
+
+##### Step 5: Call those haplotypes! #####
+## chromosome names in fast and bam don't match. fix that first
+module load BWA
+grep '>' /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta
+awk '{print $1}' /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta > /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.short.fasta
+grep '>' /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.short.fasta
+bwa index /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.short.fasta /mnt/research/RadishSequence/ArabidopsisSeuqence/refChromFiles/Athal.short
+
+# do this by sample
+# get the GVCF right away (variants and nonvariant sites retained)
+#!/bin/bash --login
+#SBATCH --time=80:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=15
+#SBATCH --mem=60G
+#SBATCH --job-name HaploCall
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=buysseso@msu.edu
+
+#### Load modules ####
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+
+
+#### Code Lines ####
+# call by sample and by chromosome.
+cd /mnt/scratch/buysseso
+
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk --java-options "-Xmx8G" HaplotypeCaller \
+-R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+-I /mnt/scratch/buysseso/BWA_bam/"${LINE}"_rg_rmdup.bam \
+-L Chr1 \
+-O /mnt/scratch/buysseso/GVCF/Chr1/"${LINE}".g.vcf \
+-ERC GVCF; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+
+scontrol show job $SLURM_JOB_ID
+
+Submitted batch job 33585575
+
+## submitted a different version of this job for each chromosome so they could run at the same time. All chromosomes needed an extra ~10 hours; so maybe 100 hours would have done the trick in one go?
+sbatch HaploCall2.sb
+Submitted batch job 33638421
+sbatch HaploCall3.sb
+Submitted batch job 33638422
+sbatch HaploCall4.sb
+Submitted batch job 33638423
+sbatch HaploCall5.sb
+Submitted batch job 33638429
+
+##### Step 6 Combine GVCFs #####
+#!/bin/bash --login
+#SBATCH --time=120:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=15
+#SBATCH --mem=60G
+#SBATCH --job-name CombChrs
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=buysseso@msu.edu
+
+#### Load modules ####
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+
+cd /mnt/scratch/buysseso/GVCF
+
+# not including Pal-7b at this stage.
+# these names need to be updated to include the long form or I really could just rename them at some point.
+
+for x in 1 2 3 4 5; do gatk CombineGVCFs -R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta
+--variant Chr"$x"/ALE10_*.g.vcf   \
+--variant Chr"$x"/Ale-12_*.g.vcf \
+--variant Chr"$x"/ALE16_*.g.vcf \
+--variant Chr"$x"/Ale-4_*.g.vcf \
+--variant Chr"$x"/Arb-10_*.g.vcf \
+--variant Chr"$x"/ARB3_*.g.vcf \
+--variant Chr"$x"/Arb-6_*.g.vcf \
+--variant Chr"$x"/Arb-8_*.g.vcf \
+--variant Chr"$x"/BAR11_*.g.vcf \
+--variant Chr"$x"/Bar-3_*.g.vcf \
+--variant Chr"$x"/BAR4_*.g.vcf \
+--variant Chr"$x"/BAR9_*.g.vcf \
+--variant Chr"$x"/BIS11_*.g.vcf \
+--variant Chr"$x"/BIS16_*.g.vcf \
+--variant Chr"$x"/BIS20_*.g.vcf \
+--variant Chr"$x"/BIS8_*.g.vcf \
+--variant Chr"$x"/Bos-10_*.g.vcf \
+--variant Chr"$x"/BOS5_*.g.vcf \
+--variant Chr"$x"/Bos-6_*.g.vcf \
+--variant Chr"$x"/Bos-9_*.g.vcf \
+--variant Chr"$x"/COC14_*.g.vcf \
+--variant Chr"$x"/COC17_*.g.vcf \
+--variant Chr"$x"/Coc-19_*.g.vcf \
+--variant Chr"$x"/COC7_*.g.vcf \
+--variant Chr"$x"/Hor-16_*.g.vcf \
+--variant Chr"$x"/Hor-4_*.g.vcf \
+--variant Chr"$x"/Hor-6_*.g.vcf \
+--variant Chr"$x"/Hor-7_*.g.vcf \
+--variant Chr"$x"/MUR15_*.g.vcf \
+--variant Chr"$x"/MUR16_*.g.vcf \
+--variant Chr"$x"/MUR17_*.g.vcf \
+--variant Chr"$x"/Mur-20_*.g.vcf \
+--variant Chr"$x"/Pal-12_*.g.vcf \
+--variant Chr"$x"/PAL16_*.g.vcf \
+--variant Chr"$x"/PAL6_*.g.vcf \
+--variant Chr"$x"/Pal-7_*.g.vcf \
+--variant Chr"$x"/PAN1_*.g.vcf \
+--variant Chr"$x"/PAN5_*.g.vcf \
+--variant Chr"$x"/Pan-9_*.g.vcf \
+--variant Chr"$x"/Pin-3_*.g.vcf \
+--variant Chr"$x"/Pin-6_*.g.vcf \
+--variant Chr"$x"/Pin-7_*.g.vcf \
+--variant Chr"$x"/PIN9_*.g.vcf \
+--variant Chr"$x"/Pob-10_*.g.vcf \
+--variant Chr"$x"/Pob-16_*.g.vcf \
+--variant Chr"$x"/Pob-19_*.g.vcf \
+--variant Chr"$x"/Pob-7_*.g.vcf \
+--variant Chr"$x"/Rab-17_*.g.vcf \
+--variant Chr"$x"/Rab-20_*.g.vcf \
+--variant Chr"$x"/RAB4_*.g.vcf \
+--variant Chr"$x"/Rab-9_*.g.vcf \
+--variant Chr"$x"/Spe-2_*.g.vcf \
+--variant Chr"$x"/SPE5_*.g.vcf \
+--variant Chr"$x"/Spe-6_*.g.vcf \
+--variant Chr"$x"/Spe-7_*.g.vcf \
+--variant Chr"$x"/Vdm-17_*.g.vcf \
+--variant Chr"$x"/Vdm-20_*.g.vcf \
+--variant Chr"$x"/VDM9_*.g.vcf \
+--variant Chr"$x"/VIE16_*.g.vcf \
+--variant Chr"$x"/VIE3_*.g.vcf \
+--variant Chr"$x"/Vie-4_*.g.vcf \
+--variant Chr"$x"/Vie-6_*.g.vcf \
+-O Chr"$x"/all.Chr"$x".g.vcf; done
+
+
+gatk CombineGVCFs -R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+--variant Chr1/all.Chr1.g.vcf \
+--variant Chr2/all.Chr2.g.vcf \
+--variant Chr3/all.Chr3.g.vcf \
+--variant Chr4/all.Chr4.g.vcf \
+--variant Chr5/all.Chr5.g.vcf \
+-O AllSamplesAllChrs.g.vcf
+
+scontrol show job $SLURM_JOB_ID
+# submitted job 34209599 on 9/24/21 at 9:03 pm
+
+## At this point, I now have one file that I want to keep! great!
+
+##### Step 7: Genotype GVCFs #####
+#!/bin/bash --login
+#SBATCH --time=20:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=15
+#SBATCH --mem=60G
+#SBATCH --job-name genoGVCF
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=buysseso@msu.edu
+
+#### Load modules ####
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+
+#### Code Lines ####
+cd /mnt/scratch/buysseso/GVCF
+
+gatk --java-options "-Xmx4g" GenotypeGVCFs \
+-R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+-V AllSamplesAllChrs.g.vcf \
+-all-sites TRUE \
+-O allsites.raw.g.vcf.gz
+
+scontrol show job $SLURM_JOB_ID
+# Submitted batch job 34250055
+
+
+
