@@ -1,0 +1,411 @@
+## code to prep bam file for variant calling and do variant calling
+## this file includes all job settings and everything. the file on github is just the code lines, not the job settings.
+
+##### Step 1: add read groups #####
+cd /mnt/scratch/buysseso/BWA_bam
+while IFS= read -r line; do gatk --java-options "-Xmx4g" AddOrReplaceReadGroups \
+       -I sorted_"$line"_bwa.bam \
+       -O "$line"_rg.bam \
+       -ID="$line" \
+       -LB="$line" \
+       -PL=ILLUMINA \
+       -PU=1 \
+       -SM="$line"; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+	   
+##### Step 2: Make dictionary for reference (do once) #####
+gatk --java-options "-Xmx4g" CreateSequenceDictionary \
+	-R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+	-O /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.dict
+
+##### Step 3: Mark Duplicates #####
+#!/bin/bash
+##Job settings for without -t settings
+#SBATCH --job-name=gatk_markdup
+#SBATCH -e gatk_markdup.err
+#SBATCH -o gatk_markdup.out
+#SBATCH --nodes=4
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=2
+#SBATCH --mem-per-cpu=24gb
+#SBATCH -t 23:59:00
+#SBATCH --mail-user=buysseso@msu.edu
+#SBATCH --mail-type=FAIL,BEGIN,END
+
+cd $SLURM_SUBMIT_DIR
+
+##### code lines #####
+
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load SAMtools
+module load GATK/4.1.4.1-Python-3.6.6
+
+cd /mnt/scratch/buysseso/BWA_bam
+	
+while IFS= read -r line; do gatk --java-options "-Xmx4g" MarkDuplicatesSpark \
+             -I "$line"_rg.bam  \
+             -O "$line"_rg_rmdup.bam \
+             -M "$line"_dup_metrics.txt\
+				-conf 'spark.executor.cores=4'; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+
+Submitted batch job 33296693
+
+# older function that takes 2 steps instead of 1
+gatk --java-options "-Xmx4g" MarkDuplicates \
+                      I=sorted_sample_NA12878_rg.bam O=sample_NA12878_rmdup.bam \
+                      M=dup_metrics REMOVE_DUPLICATES=true AS=TRUE VALIDATION_STRINGENCY=LENIENT \
+                      MAX_FILE_HANDLES_FOR_READ_ENDS_MAP=1000
+samtools index sorted_BIS11_rg.bam
+
+##### Check Fast QC report again ####
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load FastQC
+module load MultiQC/1.7-Python-3.6.6
+while IFS= read -r line; do fastqc "${line}"_rg_rmdup.bam & done < /mnt/research/josephslab/Sophie/Athal_2/SeqID_61.txt
+#generate a single report form all the reports in the current directory
+multiqc . 
+
+
+##### Step 4: Call those haplotypes! (for the first time)#####
+## chromosome names in fast and bam don't match. fix that first
+module load BWA
+grep '>' /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta
+awk '{print $1}' /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta > /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.short.fasta
+grep '>' /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.short.fasta
+bwa index /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.short.fasta /mnt/research/RadishSequence/ArabidopsisSeuqence/refChromFiles/Athal.short
+
+# do this by sample
+# get the GVCF right away (variants and nonvariant sites retained)
+#!/bin/bash --login
+#SBATCH --time=80:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=15
+#SBATCH --mem=60G
+#SBATCH --job-name HaploCall
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=buysseso@msu.edu
+
+#### Load modules ####
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+
+
+#### Code Lines ####
+# call by sample and by chromosome.
+cd /mnt/scratch/buysseso
+
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk --java-options "-Xmx8G" HaplotypeCaller \
+-R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+-I /mnt/scratch/buysseso/BWA_bam/"${LINE}"_rg_rmdup.bam \
+-L Chr1 \
+-O /mnt/scratch/buysseso/GVCF/Chr1/"${LINE}".g.vcf \
+-ERC GVCF; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+
+scontrol show job $SLURM_JOB_ID
+
+Submitted batch job 33585575
+
+## submitted a different version of this job for each chromosome so they could run at the same time. All chromosomes needed an extra ~10 hours; so maybe 100 hours would have done the trick in one go?
+sbatch HaploCall2.sb
+Submitted batch job 33638421
+sbatch HaploCall3.sb
+Submitted batch job 33638422
+sbatch HaploCall4.sb
+Submitted batch job 33638423
+sbatch HaploCall5.sb
+Submitted batch job 33638429
+
+
+
+##################################################################################################################
+### this output is where I need to start
+##### Step 5: Combine Initial GVCFs to 1 per sample (actually maybe don't need this?) ##### 
+#!/bin/bash --login
+#SBATCH --time=12:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=15
+#SBATCH --mem=60G
+#SBATCH --job-name CombChrs_BQSR
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=buysseso@msu.edu
+
+#### Load modules ####
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+
+cd /mnt/research/josephslab/Sophie/Athal_2/GVCF
+
+# not including Pal-7b at this stage.
+# these names need to be updated to include the long form or I really could just rename them at some point.
+
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk CombineGVCFs \
+-R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
+--variant Chr1/"${LINE}".g.vcf \
+--variant Chr2/"${LINE}".g.vcf \
+--variant Chr3/"${LINE}".g.vcf \
+--variant Chr4/"${LINE}".g.vcf \
+--variant Chr5/"${LINE}".g.vcf \
+-O BQSR/"$x"_allChrs.g.vcf; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID_61.txt
+
+# Submitted batch job 44197178  1/20/2022 done the next morning. maybe don't actually need this?
+
+##### Step 6 Combine GVCFs to just 1 for all samples and chromosomes #####
+#!/bin/bash --login
+#SBATCH --time=120:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=15
+#SBATCH --mem=60G
+#SBATCH --job-name CombChrs
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=buysseso@msu.edu
+
+#### Load modules ####
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+
+cd /mnt/scratch/buysseso/GVCF
+
+# not including Pal-7b at this stage.
+# these names need to be updated to include the long form or I really could just rename them at some point.
+
+for x in 1 2 3 4 5; do gatk CombineGVCFs -R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta
+--variant Chr"$x"/ALE10_*.g.vcf   \
+--variant Chr"$x"/Ale-12_*.g.vcf \
+--variant Chr"$x"/ALE16_*.g.vcf \
+--variant Chr"$x"/Ale-4_*.g.vcf \
+--variant Chr"$x"/Arb-10_*.g.vcf \
+--variant Chr"$x"/ARB3_*.g.vcf \
+--variant Chr"$x"/Arb-6_*.g.vcf \
+--variant Chr"$x"/Arb-8_*.g.vcf \
+--variant Chr"$x"/BAR11_*.g.vcf \
+--variant Chr"$x"/Bar-3_*.g.vcf \
+--variant Chr"$x"/BAR4_*.g.vcf \
+--variant Chr"$x"/BAR9_*.g.vcf \
+--variant Chr"$x"/BIS11_*.g.vcf \
+--variant Chr"$x"/BIS16_*.g.vcf \
+--variant Chr"$x"/BIS20_*.g.vcf \
+--variant Chr"$x"/BIS8_*.g.vcf \
+--variant Chr"$x"/Bos-10_*.g.vcf \
+--variant Chr"$x"/BOS5_*.g.vcf \
+--variant Chr"$x"/Bos-6_*.g.vcf \
+--variant Chr"$x"/Bos-9_*.g.vcf \
+--variant Chr"$x"/COC14_*.g.vcf \
+--variant Chr"$x"/COC17_*.g.vcf \
+--variant Chr"$x"/Coc-19_*.g.vcf \
+--variant Chr"$x"/COC7_*.g.vcf \
+--variant Chr"$x"/Hor-16_*.g.vcf \
+--variant Chr"$x"/Hor-4_*.g.vcf \
+--variant Chr"$x"/Hor-6_*.g.vcf \
+--variant Chr"$x"/Hor-7_*.g.vcf \
+--variant Chr"$x"/MUR15_*.g.vcf \
+--variant Chr"$x"/MUR16_*.g.vcf \
+--variant Chr"$x"/MUR17_*.g.vcf \
+--variant Chr"$x"/Mur-20_*.g.vcf \
+--variant Chr"$x"/Pal-12_*.g.vcf \
+--variant Chr"$x"/PAL16_*.g.vcf \
+--variant Chr"$x"/PAL6_*.g.vcf \
+--variant Chr"$x"/Pal-7_*.g.vcf \
+--variant Chr"$x"/PAN1_*.g.vcf \
+--variant Chr"$x"/PAN5_*.g.vcf \
+--variant Chr"$x"/Pan-9_*.g.vcf \
+--variant Chr"$x"/Pin-3_*.g.vcf \
+--variant Chr"$x"/Pin-6_*.g.vcf \
+--variant Chr"$x"/Pin-7_*.g.vcf \
+--variant Chr"$x"/PIN9_*.g.vcf \
+--variant Chr"$x"/Pob-10_*.g.vcf \
+--variant Chr"$x"/Pob-16_*.g.vcf \
+--variant Chr"$x"/Pob-19_*.g.vcf \
+--variant Chr"$x"/Pob-7_*.g.vcf \
+--variant Chr"$x"/Rab-17_*.g.vcf \
+--variant Chr"$x"/Rab-20_*.g.vcf \
+--variant Chr"$x"/RAB4_*.g.vcf \
+--variant Chr"$x"/Rab-9_*.g.vcf \
+--variant Chr"$x"/Spe-2_*.g.vcf \
+--variant Chr"$x"/SPE5_*.g.vcf \
+--variant Chr"$x"/Spe-6_*.g.vcf \
+--variant Chr"$x"/Spe-7_*.g.vcf \
+--variant Chr"$x"/Vdm-17_*.g.vcf \
+--variant Chr"$x"/Vdm-20_*.g.vcf \
+--variant Chr"$x"/VDM9_*.g.vcf \
+--variant Chr"$x"/VIE16_*.g.vcf \
+--variant Chr"$x"/VIE3_*.g.vcf \
+--variant Chr"$x"/Vie-4_*.g.vcf \
+--variant Chr"$x"/Vie-6_*.g.vcf \
+-O Chr"$x"/all.Chr"$x".g.vcf; done
+
+
+gatk CombineGVCFs -R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+--variant Chr1/all.Chr1.g.vcf \
+--variant Chr2/all.Chr2.g.vcf \
+--variant Chr3/all.Chr3.g.vcf \
+--variant Chr4/all.Chr4.g.vcf \
+--variant Chr5/all.Chr5.g.vcf \
+-O AllSamplesAllChrs.g.vcf
+
+scontrol show job $SLURM_JOB_ID
+# submitted job 34209599 on 9/24/21 at 9:03 pm
+
+## At this point, I now have one file that I want to keep! great! ((or use for BQSR??)
+
+##### Step 7: Genotype GVCFs #####
+#!/bin/bash --login
+#SBATCH --time=20:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=15
+#SBATCH --mem=60G
+#SBATCH --job-name genoGVCF
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=buysseso@msu.edu
+
+#### Load modules ####
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+
+#### Code Lines ####
+cd /mnt/scratch/buysseso/GVCF
+
+gatk --java-options "-Xmx4g" GenotypeGVCFs \
+-R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+-V AllSamplesAllChrs.g.vcf \
+-all-sites TRUE \
+-O allsites.raw.g.vcf.gz
+
+scontrol show job $SLURM_JOB_ID
+# Submitted batch job 34250055
+
+############################################################################# real code to use is below this line ###########################################################################################
+Here's how you would bootstrap a set of known variants:
+
+First do an initial round of variant calling on your original, unrecalibrated data. okay. done.
+Then take the variants that you have the highest confidence in and use that set as the database of known variants by feeding it as a VCF file to the BaseRecalibrator. (so like filter?) ok. done.
+Finally, do a real round of variant calling with the recalibrated data. These steps could be repeated several times until convergence. maybe I need to just do it multiple times? let's do it once and see what the output is and the time constraint.
+	- if I do it again, do I make a new file of the high confidence bases or use the same file again?
+
+
+# allsites.raw.g.vcf.gz to determine the highest confidence sites.
+
+gatk SelectVariants \
+-R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
+-V allsites.raw.g.vcf.gz \
+-select-type SNP \
+-O all__raw_snps.vcf
+
+Processed 4401658 total variants in 15.4 minutes.
+
+gatk VariantFiltration \
+        -R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
+        -V all__raw_snps.vcf \
+        -O all_filtered_snps.vcf \
+        --filter-name "QD_filter" -filter "QD < 2.0" \
+        --filter-name "FS_filter" -filter "FS > 60.0" \
+        --filter-name "MQ_filter" -filter "MQ < 40.0" \
+        --filter-name "ReadPosRankSum_filter" -filter "ReadPosRankSum < -8.0" \
+		--filter-name "MQRankSum_filter" -filter "MQRankSum < -12.5"
+		
+Processed 4401658 total variants in 3.5 minutes.
+		
+gatk SelectVariants \
+        --exclude-filtered \
+        -V all_filtered_snps.vcf \
+        -O all_bqsr_snps.vcf	
+		
+processed all the variants in 7.6 minutes
+
+########## Slurm job for BQSR for all the first time ##########
+#!/bin/bash --login
+#SBATCH --time=60:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=15
+#SBATCH --mem=60G
+#SBATCH --job-name BQSR_all_1
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=buysseso@msu.edu
+
+#### Load modules ####
+module purge
+module load  GCC/6.4.0-2.28  OpenMPI/2.1.2
+module load R
+module load GATK/4.1.4.1-Python-3.6.4
+
+cd /mnt/research/josephslab/Sophie/Athal_2/GVCF/BQSR
+
+##### Step 8: BQSR Round 1 #####
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk BaseRecalibrator \
+        -R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
+        -I /mnt/research/josephslab/Sophie/Athal_2/BWA_bam/"${LINE}"_rg_rmdup.bam \
+        --known-sites all_bqsr_snps.vcf \
+        -O "${LINE}"_recal_1_data.table; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID_61.txt
+
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk ApplyBQSR \
+        -R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
+        -I /mnt/research/josephslab/Sophie/Athal_2/BWA_bam/"${LINE}"_rg_rmdup.bam \
+        -bqsr "${LINE}"_recal_1_data.table \
+        -O "${LINE}"_recal_1_reads.bam; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID_61.txt
+		
+##### Step 9: BQSR Round 1 results #####	
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk BaseRecalibrator \
+        -R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
+        -I "${LINE}"_recal_1_reads.bam \
+        --known-sites all_bqsr_snps.vcf \
+        -O "${LINE}"_post_recal_1_data.table; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID_61.txt
+
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk AnalyzeCovariates \
+-before "${LINE}"_recal_1_data.table \
+-after "${LINE}"_post_recal_1_data.table \
+-plots "${LINE}"_recalibration2_plots.pdf; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID_61.txt	
+		
+# Submitted batch job 44367143
+
+########## Step 10: BQSR Round 2 ##########
+#!/bin/bash --login
+#SBATCH --time=20:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=15
+#SBATCH --mem=60G
+#SBATCH --job-name BQSR_all_2
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=buysseso@msu.edu
+
+#### Load modules ####
+module purge
+module load  GCC/6.4.0-2.28  OpenMPI/2.1.2
+module load R
+module load GATK/4.1.4.1-Python-3.6.4
+
+cd /mnt/research/josephslab/Sophie/Athal_2/GVCF/BQSR
+
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk BaseRecalibrator \
+        -R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
+        -I /mnt/research/josephslab/Sophie/Athal_2/GVCF/BQSR/"${LINE}"_recal_1_reads.bam \
+        --known-sites all_bqsr_snps.vcf \
+        -O "${LINE}"_recal_2_data.table; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID_61.txt
+
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk ApplyBQSR \
+        -R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
+        -I /mnt/research/josephslab/Sophie/Athal_2/GVCF/BQSR/"${LINE}"_recal_1_reads.bam \
+        -bqsr "${LINE}"_recal_2_data.table \
+        -O "${LINE}"_recal_2_reads.bam; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID_61.txt
+## results report ##
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk BaseRecalibrator \
+        -R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
+        -I "${LINE}"_recal_2_reads.bam \
+        --known-sites all_bqsr_snps.vcf \
+        -O "${LINE}"_post_recal_2_data.table; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID_61.txt
+
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk AnalyzeCovariates \
+-before "${LINE}"_recal_2_data.table \
+-after "${LINE}"_post_recal_2_data.table \
+-plots "${LINE}"_recalibration3_plots.pdf; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID_61.txt
+
+scontrol show job $SLURM_JOB_ID
+
+########## Step 11: FastQC on new Bam files ##########
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load FastQC
+module load MultiQC/1.7-Python-3.6.6
+while IFS= read -r line; do fastqc "${line}"_recal_2_reads.bam & done < /mnt/research/josephslab/Sophie/Athal_2/SeqID_61.txt
+#generate a single report form all the reports in the current directory
+multiqc . 
