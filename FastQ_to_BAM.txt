@@ -37,6 +37,8 @@ while IFS= read -r line; do trim_galore \
 --cores 4 \
 --nextera \
 --paired \
+--clip_R1 15 \
+--clip_R2 15 \
 --fastqc \
 -o /folder/location/TG_trimmed "$line"_R1_comb.fastq.gz "$line"_R2_comb.fastq.gz; done < SeqID.txt 
 
@@ -49,7 +51,7 @@ module load GATK/4.1.4.1-Python-3.6.6
 
 # indx the reference
 bwa index Athal.fasta Athal
-cd /foler/location/TG_trimmed
+cd /folder/location/TG_trimmed
 
 # bwa mem
 while IFS= read -r line; do bwa mem -t 4 Athal.fasta \

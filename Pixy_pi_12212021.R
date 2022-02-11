@@ -5,76 +5,69 @@ library(dplyr)
 library(ggplot2)
 library(ggpubr)
 ####Need to read in the results
-###dat <- read.delim("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/pixy_round2/all_filtered.50k.out_pi.txt", header=TRUE)
+#dat <- read.delim("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/pixy_round2/all_filtered.50k.out_pi.txt", header=TRUE)
 ###head(dat)
 ###tail(dat)
 ###
 ########## Calculate Population global pi #######
 ### use dyplyr to group by population
 # make a facto
-dat$pop <- as.factor(dat$pop)
+#dat$pop <- as.factor(dat$pop)
 # calculate the aggregated value
 ## (window 1 count_diffs + window 2 count_diffs) / (window 1 comparisons + window 2 comparisons)
-sums <- dat %>% group_by(pop) %>% summarize(Sum.count.diff = sum(count_diffs, na.rm = T), Sum.count.comp = sum(count_comparisons, na.rm = T))
-sums$Mean.pi <- sums$Sum.count.diff/sums$Sum.count.comp
+#sums <- dat %>% group_by(pop) %>% summarize(Sum.count.diff = sum(count_diffs, na.rm = T), Sum.count.comp = sum(count_comparisons, na.rm = T))
+#sums$Mean.pi <- sums$Sum.count.diff/sums$Sum.count.comp
 ##### this should be right following the pixy documentation
 ###
 #### add the other population information
-#### ARB -> ARU
-#### SPE -> SAL
-#### I must have actually fixed this in previous code so I don't have to do it for every analysis
-###elev <- data.frame("pop" = c("ALE","ARU","BAR","BIS","BOS","COC","HOR","MUR","PAL","PAN","PIN","POB","RAB","SAL",
-###                            "VDM","VIE"), elev_m = c(1229,416,441,1444,715,519,413,836,1585,1706,177,665,61,303,991,1605))
+#### Should have labels ARU and SAL
+#load(file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/Elev_Means_Feb2022.ROBJ")
 #### merge the info together
-###comp <- merge(sums, elev, by = "pop")
-##### add in mean pop ssn as well. just using the raw means because they are highly correlated with the LSMs
-###pheno.all <- read.csv("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Ind_trait_data.csv", stringsAsFactors = FALSE)
-###ave2 <- pheno.all %>% group_by(Population) %>% summarize(Mean.ssn = mean(Short_Stamens, na.rm=TRUE))
-#### change ARB and SPE to ARU and SAL
-###ave2$Population <- c("ALE","ARU","BAR","BIS","BOS","COC","HOR","MUR","PAL","PAN","PIN","POB","RAB","SAL",
-###                    "VDM","VIE")
-###head(ave2)
-#### join the means with other info
-###comp2 <- merge(comp, ave2, by.x = "pop", by.y = "Population")
+#comp <- merge(sums, Elev_Means, by.x = "pop", by.y = "Population")
 #### save as an R object
-###save(comp2, file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_allsite_12212021.ROBJ")
+#save(comp, file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_allsite_12212021.ROBJ")
 
 load("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_allsite_12212021.ROBJ")
 
 ##### Correlation/regressions between Variables #######
 ### Pi and Elevation ###
-plot(Mean.pi ~ elev_m, data = comp2)
-cor.test(comp2$Mean.pi, comp2$elev_m, method = "pearson")
-### strong correlation. r = -0.81 p = 0.0001807
-m.pi.elev <- lm(Mean.pi ~ elev_m, data = comp2)
+plot(Mean.pi ~ Elev_m, data = comp)
+cor.test(comp$Mean.pi, comp$Elev_m, method = "pearson")
+### strong correlation. r = -0.805 p = 0.0001704
+m.pi.elev <- lm(Mean.pi ~ Elev_m, data = comp)
 summary(m.pi.elev)
-### r2 = 0.6447. p val is significant (but from stats I recall I should not look at this)
+### r2 = 0.6475. p val is significant (but from stats I recall I should not look at this)
 ### means that elevation does explain pi. 
 
 ### SSN and Elevation ###
-plot(Mean.ssn ~ elev_m, data = comp2)
-cor.test(comp2$Mean.ssn, comp2$elev_m, method = "pearson")
-### r = 0.568 p = 0.02165
-###plot(ShrtLSM ~ elev_m, data = comp2)
-###cor.test(comp2$ShrtLSM, comp2$elev_m, method = "pearson")
-### should really be a linear and quadratic regression
-### which means I do the quadratic and look at both the linear and quadratic components of the model (coefficients)
+## Do this with the Full means because we want the best picture of each popualtion
+plot(Full_PopFlwrMean ~ Elev_m, data = comp)
+cor.test(comp$Full_PopFlwrMean, comp$Elev_m, method = "pearson")
+### r = 0.618 p = 0.01074
+
+### quadratic regression and look at both the linear and quadratic components of the model (coefficients)
 ### for quadratic regression
-comp2$elev_m2 <- (comp2$elev_m)^2
-m.ssn.elev <- lm(Mean.ssn ~ elev_m + elev_m2, data = comp2)
+comp$Elev_m2 <- (comp$Elev_m)^2
+m.ssn.elev <- lm(Full_PopFlwrMean ~ Elev_m + Elev_m2, data = comp)
 summary(m.ssn.elev)
-### linear component is sig at 0.1 level. coefficient is positive to the e-03
+### linear component is sig at 0.05 level. coefficient is positive to the e-03
 ### quadratic component is not significant. coefficient is negative to the e-07
 ### neg means it opens downward and small value means it is a pretty flat line. will want to plot this on the graph I make
-### r2 = 0.4134
+### r2 = 0.4818
 ### p value of model is significant?
 
+#ggplot code to test sanity
+#ggplot(comp, aes(x = Elev_m, y = Full_PopFlwrMean)) + geom_point() +
+#  stat_smooth(aes(x = Elev_m, y = Full_PopFlwrMean), method = "lm", formula = y ~ x, colour = "red") +
+#  stat_smooth(aes(x = Elev_m, y = Full_PopFlwrMean), method = "lm", formula = y ~ poly(x, 2), colour = "blue")
+
 ### Pi and SSN ###
-plot(Mean.ssn ~ Mean.pi, data = comp2)
-cor.test(comp2$Mean.pi, comp2$
-           Mean.ssn, method = "pearson")
+## here only use the sequenced lines because that is what pi was calculated from
+plot(Seq_PopFlwrMean ~ Mean.pi, data = comp)
+cor.test(comp$Mean.pi, comp$
+           Seq_PopFlwrMean, method = "pearson")
 ### r = -0.2257 p = 0.4
-m.pi.ssn <- lm(Mean.ssn ~ Mean.pi, dat = comp2)
+m.pi.ssn <- lm(Seq_PopFlwrMean ~ Mean.pi, dat = comp)
 summary(m.pi.ssn)
 ### r2 = 0.051 so not a good fit. pi does not explain short stamen number. 
 ### this is an interesting result. does not provide evidence for the drift theory because 
@@ -85,8 +78,13 @@ summary(m.pi.ssn)
 ### So, both mean.pi and mean.ssn are decently correlated with elevation, but not with each other! 
 ### interesting.probably makes sense though because pi is genome wide
 
+### The two means ###
+cor.test(comp$Full_PopFlwrMean, comp$Seq_PopFlwrMean, method = "pearson")
+# r = 0.985 p < 0.001
+
 ##### simulate data to draw lines on the plots where elevation is the predictor #######
-newdata <- data.frame(elev_m = seq(55,1750, length = 2000), elev_m2 = seq(3700, 2910450, length = 2000))
+new_elev <- seq(55,1750, length = 2000)
+newdata <- data.frame(Elev_m = new_elev, Elev_m2 = new_elev**2)
 newdata2 <- data.frame(Mean.pi = seq(0.001,.0051, length = 2000))
 ### Now use predict to get the predictions
 ### can't use se.fit = T for mixed effects model? 
@@ -94,8 +92,7 @@ m.ssn.elev.pred = predict(m.ssn.elev, newdata = newdata, se.fit = TRUE)
 m.pi.elev.pred = predict(m.pi.elev, newdata = newdata, se.fit = TRUE)
 m.pi.ssn.pred = predict(m.pi.ssn, newdata = newdata2, se.fit = TRUE)
 
-forplot2 <- data.frame('newd1' = newdata$elev_m,
-                       'newd2' = newdata$elev_m2,
+forplot2 <- data.frame('newd1' = newdata$Elev_m,
                        'newd3' = newdata2,
                        'pred.ssn.el' = m.ssn.elev.pred,
                        'pred.pi.el' = m.pi.elev.pred,
@@ -103,17 +100,17 @@ forplot2 <- data.frame('newd1' = newdata$elev_m,
 
 ##### fancy plot. #######
 ### pi by elevation
-comp2 <- comp2[order(comp2$elev_m),]
-comp2$pop <- as.factor(comp2$pop)
-comp2$pop <- factor(comp2$pop, levels = comp2$pop[order(comp2$elev_m)])
-str(comp2$pop)
+comp <- comp[order(comp$Elev_m),]
+comp$pop <- as.factor(comp$pop)
+comp$pop <- factor(comp$pop, levels = comp$pop[order(comp$Elev_m)])
+str(comp$pop)
 ### this looks like the right order
 ### key is that you need to order the whole sheet AND reorder the factor. BOTH, not just one.
-comp2$labels <- paste0(comp2$pop, " - ", comp2$elev_m, "m")
+comp$labels <- paste0(comp$pop, " - ", comp$Elev_m, "m")
 
 # with a linear fit line of elevation explaining mean pi
-ggplot(comp2)+
-  geom_point(data=comp2, aes(x=elev_m, y=Mean.pi, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
+ggplot(comp)+
+  geom_point(data=comp, aes(x=Elev_m, y=Mean.pi, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit), linetype = "solid",
             alpha = 0.7, size = 1.25)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit+1.96*pred.pi.el.se.fit), linetype = "solid",
@@ -122,10 +119,10 @@ ggplot(comp2)+
             alpha = 0.5, size = 0.75)+
   labs(x= "Elevation (m)", y= "Mean Pi", title = "")+
   scale_color_manual(name = "Population",
-                     labels = comp2$label,
+                     labels = comp$label,
                      values = c(rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4))))+
   scale_shape_manual(name = "Population",
-                     labels = comp2$label,
+                     labels = comp$label,
                      values = c(rep(c(0, 1, 2, 5), times = 4)))+
   theme_classic()+
   theme(
@@ -137,20 +134,20 @@ ggplot(comp2)+
 ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/PiPerPop_pixy_12212021.png", height = 7, width = 9)
 
 ### ssn by elevation
-ggplot(comp2)+
-  geom_point(data=comp2, aes(x=elev_m, y=Mean.ssn, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
+ggplot(comp)+
+  geom_point(data=comp, aes(x=Elev_m, y=Full_PopFlwrMean, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit), linetype = "solid",
             alpha = 0.7, size = 1.25)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit+1.96*pred.ssn.el.se.fit), linetype = "solid",
             alpha = 0.3, size = 0.75)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit-1.96*pred.ssn.el.se.fit), linetype = "solid",
             alpha = 0.5, size = 0.75)+
-  labs(x= "Elevation (m)", y= "Mean Short Stamen Number", title = "")+
+  labs(x= "Elevation (m)", y= "Mean Short Stamen Number - Full Phenotype Set", title = "")+
   scale_color_manual(name = "Population",
-                     labels = comp2$label,
+                     labels = comp$label,
                      values = c(rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)), "black"))+ # black not needed unless all is included
   scale_shape_manual(name = "Population",
-                     labels = comp2$label,
+                     labels = comp$label,
                      values = c(rep(c(0, 1, 2, 5), times = 4), 0))+ # extra 0 not needed unless all is included
   theme_classic()+
   theme(
@@ -159,21 +156,21 @@ ggplot(comp2)+
     legend.spacing.y = unit(0.03, "cm"),
     axis.title = element_text(color = "black", size = 16),
     axis.text = element_text(color = "black", size = 16))
-ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/MeanSSNByElev_12212021_quad.png", height = 7, width = 9)
-## looks essentially linear which is not what we were expecting
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/MeanSSNByElev_02082022_quad.png", height = 7, width = 9)
+## haha!
 
 # lowess line instead
-ggplot(comp2)+
-  geom_point(data=comp2, aes(x=elev_m, y=Mean.ssn, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
-  geom_smooth(aes(x=elev_m, y=Mean.ssn),stat = "smooth",position = "identity",method = "loess",
+ggplot(comp)+
+  geom_point(data=comp, aes(x=Elev_m, y=Full_PopFlwrMean, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
+  geom_smooth(aes(x=Elev_m, y=Full_PopFlwrMean),stat = "smooth",position = "identity",method = "loess",
     formula = y ~ x + (x**2),
-    se = TRUE,na.rm = FALSE)+
-  labs(x= "Elevation (m)", y= "Mean Short Stamen Number", title = "")+
+    se = TRUE, span = 0.99, na.rm = FALSE)+
+  labs(x= "Elevation (m)", y= "Mean Short Stamen Number - Full", title = "")+
   scale_color_manual(name = "Population",
-                     labels = comp2$label,
+                     labels = comp$label,
                      values = c(rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)), "black"))+ # black not needed unless all is included
   scale_shape_manual(name = "Population",
-                     labels = comp2$label,
+                     labels = comp$label,
                      values = c(rep(c(0, 1, 2, 5), times = 4), 0))+ # extra 0 not needed unless all is included
   theme_classic()+
   theme(
@@ -185,20 +182,20 @@ ggplot(comp2)+
 
 
 ### SSN by Pi
-ggplot(comp2)+
-  geom_point(data=comp2, aes(y=Mean.ssn, x=Mean.pi, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
+ggplot(comp)+
+  geom_point(data=comp, aes(y=Seq_PopFlwrMean, x=Mean.pi, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
   geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit), linetype = "solid",
             alpha = 0.7, size = 1.25)+
   geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit+1.96*pred.pi.ssn.se.fit), linetype = "solid",
             alpha = 0.3, size = 0.75)+
   geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit-1.96*pred.pi.ssn.se.fit), linetype = "solid",
             alpha = 0.5, size = 0.75)+
-  labs(y="Mean Short Stamen Number" , x= "Mean Pi", title = "")+
+  labs(y="Mean Short Stamen Number - Sequenced Only" , x= "Mean Pi", title = "")+
   scale_color_manual(name = "Population",
-                     labels = comp2$label,
+                     labels = comp$label,
                      values = c(rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)), "black"))+ # black not needed unless all is included
   scale_shape_manual(name = "Population",
-                     labels = comp2$label,
+                     labels = comp$label,
                      values = c(rep(c(0, 1, 2, 5), times = 4), 0))+ # extra 0 not needed unless all is included
   theme_classic()+
   theme(
@@ -208,6 +205,27 @@ ggplot(comp2)+
     axis.text = element_text(color = "black", size = 16),
     legend.spacing.y = unit(0.03, "cm"))
 ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/SSNbyPi_12212021.png", height = 7, width = 9)
+
+# Compare the FUll and Seq Means
+ggplot(comp)+
+  geom_point(data=comp, aes(y=Seq_PopFlwrMean, x=Full_PopFlwrMean, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
+  geom_abline(intercept = 0, slope = 1, size = 0.75)+
+  labs(y="Mean Short Stamen Number - Sequenced Only" , x= "Mean Short Stamen Number - Full", title = "")+
+  scale_color_manual(name = "Population",
+                     labels = comp$label,
+                     values = c(rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)), "black"))+ # black not needed unless all is included
+  scale_shape_manual(name = "Population",
+                     labels = comp$label,
+                     values = c(rep(c(0, 1, 2, 5), times = 4), 0))+ # extra 0 not needed unless all is included
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 16),
+    axis.title = element_text(color = "black", size = 16),
+    axis.text = element_text(color = "black", size = 16),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/MeanComparison_02022022.png", height = 7, width = 9)
+
 
 ####### Population windowed pi #######
 #the purpose of this is to find regions of elevated pi (kinda a selection test but I removed the centromere instead of doing any stats)

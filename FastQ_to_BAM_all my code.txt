@@ -76,15 +76,13 @@ while IFS= read -r line; do fastqc /mnt/research/RadishSequence/ArabidopsisSeque
 multiqc ~/mnt/research/RadishSequence/ArabidopsisSequence/fastq/trimmed
 
 ### 2B: do this with Trim Galore ###
+## updated 2/10/2022
 # this trims and then runs fastq again on the trimmed file all at once!
 # https://github.com/FelixKrueger/TrimGalore/blob/master/Docs/Trim_Galore_User_Guide.md
 
 #!/bin/bash
-##Job settings for without -t settings
-#SBATCH --job-name=test_trimgalore
-#SBATCH -e test_trimgalore.err
-#SBATCH -o test_trimgalore.out
-
+#SBATCH --job-name=TG_2
+#SBATCH -e tg.err
 ##Job Resources
 #SBATCH --nodes=4
 #SBATCH --ntasks=4
@@ -104,26 +102,27 @@ while IFS= read -r line; do trim_galore \
 --cores 4 \
 --nextera \
 --paired \
---hardtrim3 10 \
+--clip_R1 15 \
+--clip_R2 15 \
 --quality 20 \
 --fastqc \
--o /mnt/scratch/buysseso/TG_trimmed "$line"_R1_comb.fastq.gz "$line"_R2_comb.fastq.gz; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt 
+-o /mnt/scratch/buysseso/TG_trimmed "$line"_R1_comb.fastq.gz "$line"_R2_comb.fastq.gz; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID.txt 
 
-# Submitted batch job 32000594
+# Submitted batch job 45450169 
+# code at /mnt/research/josephslab/Sophie/Athal_2/TrimGal.sb
 
 #### Step 4: Align to Reference Genome
 #!/bin/bash
-##Job settings for without -t settings
-#SBATCH --job-name=BWA
-#SBATCH -e BWA.err
-#SBATCH -o BWA.out
+#SBATCH --job-name=BWA_2
+#SBATCH -e BWA2.err
+#SBATCH -o BWA2.out
 
 ##Job Resources
 #SBATCH --nodes=4
 #SBATCH --ntasks=4
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=6gb
-#SBATCH -t 23:59:00
+#SBATCH -t 50:59:00
 #SBATCH --mail-user=buysseso@msu.edu
 #SBATCH --mail-type=FAIL,BEGIN,END
 
@@ -131,18 +130,17 @@ cd $SLURM_SUBMIT_DIR
 
 ##### code lines #####
 module purge
-
 module load GCC/7.3.0-2.30  OpenMPI/3.1.1
 module load SAMtools
 module load BWA
 module load GATK/4.1.4.1-Python-3.6.6
 
-bwa index /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta /mnt/research/RadishSequence/ArabidopsisSeuqence/refChromFiles/Athal
+bwa index /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal
 cd /mnt/scratch/buysseso/TG_trimmed
 
-while IFS= read -r line; do bwa mem -t 4 /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+while IFS= read -r line; do bwa mem -t 4 -M /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal \
 "$line"_R1_comb_val_1.fq.gz  "$line"_R2_comb_val_2.fq.gz \
-| samtools view - -bS -o /mnt/scratch/buysseso/BWA_bam/"$line"_bwa.bam; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+| samtools view - -bS -o /mnt/scratch/buysseso/BWA_bam/"$line"_bwa.bam; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID.txt
 
 cd /mnt/scratch/buysseso/BWA_bam
 
@@ -150,8 +148,7 @@ while IFS= read -r line; do
 samtools sort "$line"_bwa.bam -o sorted_"$line"_bwa.bam
 samtools index sorted_"$line"_bwa.bam
 samtools view sorted_"$line"_bwa.bam | less -S
-samtools flagstat sorted_"$line"_bwa.bam > "$line"_alignment_metrics.txt; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+samtools flagstat sorted_"$line"_bwa.bam > "$line"_alignment_metrics.txt; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID.txt
 
-#Submitted batch job 32657542
-# ran line 147 to end separately as samtools_stats.sb > Submitted batch job 33233713
-
+# code updated 2/10/2022
+# submitted 2/11/2022 as job 45499831
