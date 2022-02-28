@@ -27,7 +27,7 @@ library(ggpubr)
 #### save as an R object
 #save(comp, file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_allsite_12212021.ROBJ")
 
-load("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_allsite_12212021.ROBJ")
+load("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_allsite_12212021.ROBJ")
 
 ##### Correlation/regressions between Variables #######
 ### Pi and Elevation ###

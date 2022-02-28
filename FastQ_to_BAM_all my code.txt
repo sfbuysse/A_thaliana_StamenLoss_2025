@@ -64,7 +64,7 @@ while IFS= read -r line; do java -jar $EBROOTTRIMMOMATIC/trimmomatic-0.39.jar \
 -baseout /mnt/research/RadishSequence/ArabidopsisSequence/fastq/trimmed/"$line".fastq.gz \
 ILLUMINACLIP:/mnt/research/RadishSequence/ArabidopsisSequence/fastq/Nextera_adapter.fa:2:30:10 \
 LEADING:3 \
-TRAILING:3 \
+TRAILING:3 \ # this line cuts off low quality reads at the end which trim galore doesn't do... can I have trim galore do this?
 SLIDINGWINDOW:4:15 \
 MINLEN:30; done < /mnt/research/RadishSequence/ArabidopsisSequence/fasq/SeqID.txt
 
@@ -138,7 +138,7 @@ module load GATK/4.1.4.1-Python-3.6.6
 bwa index /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal
 cd /mnt/scratch/buysseso/TG_trimmed
 
-while IFS= read -r line; do bwa mem -t 4 -M /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal \
+while IFS= read -r line; do bwa mem -t 4 -M /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
 "$line"_R1_comb_val_1.fq.gz  "$line"_R2_comb_val_2.fq.gz \
 | samtools view - -bS -o /mnt/scratch/buysseso/BWA_bam/"$line"_bwa.bam; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID.txt
 
@@ -152,3 +152,24 @@ samtools flagstat sorted_"$line"_bwa.bam > "$line"_alignment_metrics.txt; done <
 
 # code updated 2/10/2022
 # submitted 2/11/2022 as job 45499831
+# timed out but it seriously was so close to the end. Most already had an alignment metrics file when it timed out
+# ran as a separate job, finished 2/15/2022
+
+## actually maybe everything was never done?
+## code to redo some of the bwa mem and alignment
+## saved this as BWA3.sb
+
+while IFS= read -r line; do bwa mem -t 4 -M /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal \
+"$line"_R1_comb_val_1.fq.gz  "$line"_R2_comb_val_2.fq.gz \
+| samtools view - -bS -o /mnt/scratch/buysseso/BWA_bam/"$line"_bwa.bam; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID.txt
+
+bwa mem -t 4 -M /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal \
+Vie-6_AGGCAGAA-AAGGAGTA_R1_comb_val_1.fq.gz  "Vie-6_AGGCAGAA-AAGGAGTA_R2_comb_val_2.fq.gz \
+| samtools view - -bS -o /mnt/scratch/buysseso/BWA_bam/Vie-6_AGGCAGAA-AAGGAGTA_bwa_tmp.bam
+
+samtools sort Vie-6_AGGCAGAA-AAGGAGTA_bwa_tmp.bam -o sorted_Vie-6_AGGCAGAA-AAGGAGTA_bwa_tmp.bam
+samtools index sorted_Vie-6_AGGCAGAA-AAGGAGTA_bwa_tmp.bam
+samtools view sorted_Vie-6_AGGCAGAA-AAGGAGTA_bwa_tmp.bam | less -S
+samtools flagstat sorted_Vie-6_AGGCAGAA-AAGGAGTA_bwa_tmp.bam > Vie-6_AGGCAGAA-AAGGAGTA_tmp_alignment_metrics.txt
+
+#### needed like 80 hours

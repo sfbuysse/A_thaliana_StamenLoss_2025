@@ -1,5 +1,6 @@
 ## code to prep bam file for variant calling and do variant calling
 ## this file includes all job settings and everything. the file on github is just the code lines, not the job settings.
+# in process of updating 2/15/2022
 
 ##### Step 1: add read groups #####
 cd /mnt/scratch/buysseso/BWA_bam
@@ -10,12 +11,12 @@ while IFS= read -r line; do gatk --java-options "-Xmx4g" AddOrReplaceReadGroups 
        -LB="$line" \
        -PL=ILLUMINA \
        -PU=1 \
-       -SM="$line"; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+       -SM="$line"; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID.txt
 	   
 ##### Step 2: Make dictionary for reference (do once) #####
 gatk --java-options "-Xmx4g" CreateSequenceDictionary \
-	-R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
-	-O /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.dict
+	-R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
+	-O /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.dict
 
 ##### Step 3: Mark Duplicates #####
 #!/bin/bash
@@ -44,10 +45,10 @@ cd /mnt/scratch/buysseso/BWA_bam
 while IFS= read -r line; do gatk --java-options "-Xmx4g" MarkDuplicatesSpark \
              -I "$line"_rg.bam  \
              -O "$line"_rg_rmdup.bam \
-             -M "$line"_dup_metrics.txt\
-				-conf 'spark.executor.cores=4'; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+             -M "$line"_dup_metrics.txt	\
+			 -conf 'spark.executor.cores=4'; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID.txt
 
-Submitted batch job 33296693
+Submitted batch job  45991299
 
 # older function that takes 2 steps instead of 1
 gatk --java-options "-Xmx4g" MarkDuplicates \
@@ -68,19 +69,19 @@ multiqc .
 ##### Step 4: Call those haplotypes! (for the first time)#####
 ## chromosome names in fast and bam don't match. fix that first
 module load BWA
-grep '>' /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta
-awk '{print $1}' /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta > /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.short.fasta
-grep '>' /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.short.fasta
-bwa index /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.short.fasta /mnt/research/RadishSequence/ArabidopsisSeuqence/refChromFiles/Athal.short
+grep '>' /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta
+awk '{print $1}' /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta > /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.short.fasta
+grep '>' /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.short.fasta
+bwa index /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.short.fasta /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.short
 
 # do this by sample
 # get the GVCF right away (variants and nonvariant sites retained)
 #!/bin/bash --login
-#SBATCH --time=80:00:00
+#SBATCH --time=50:00:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=15
 #SBATCH --mem=60G
-#SBATCH --job-name HaploCall
+#SBATCH --job-name HaploCall_1
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=buysseso@msu.edu
 
@@ -95,27 +96,25 @@ module load GATK/4.1.4.1-Python-3.6.6
 cd /mnt/scratch/buysseso
 
 while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk --java-options "-Xmx8G" HaplotypeCaller \
--R /mnt/research/RadishSequence/ArabidopsisSequence/refChromFiles/Athal.fasta \
+-R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
 -I /mnt/scratch/buysseso/BWA_bam/"${LINE}"_rg_rmdup.bam \
 -L Chr1 \
 -O /mnt/scratch/buysseso/GVCF/Chr1/"${LINE}".g.vcf \
--ERC GVCF; done < /mnt/research/RadishSequence/ArabidopsisSequence/fastq/SeqID.txt
+-ERC GVCF; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID.txt
 
 scontrol show job $SLURM_JOB_ID
 
-Submitted batch job 33585575
+Submitted batch job 46158291
 
 ## submitted a different version of this job for each chromosome so they could run at the same time. All chromosomes needed an extra ~10 hours; so maybe 100 hours would have done the trick in one go?
-sbatch HaploCall2.sb
-Submitted batch job 33638421
-sbatch HaploCall3.sb
-Submitted batch job 33638422
-sbatch HaploCall4.sb
-Submitted batch job 33638423
-sbatch HaploCall5.sb
-Submitted batch job 33638429
-
-
+[buysseso@dev-amd20 Athal_2]$ sbatch HaploCall2.sb
+Submitted batch job 46158417
+[buysseso@dev-amd20 Athal_2]$ sbatch HaploCall3.sb
+Submitted batch job 46158419
+[buysseso@dev-amd20 Athal_2]$ sbatch HaploCall4.sb
+Submitted batch job 46158422
+[buysseso@dev-amd20 Athal_2]$ sbatch HaploCall5.sb
+Submitted batch job 46158424
 
 ##################################################################################################################
 ### this output is where I need to start
