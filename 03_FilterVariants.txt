@@ -4,9 +4,9 @@
 module purge
 module load GCC/7.3.0-2.30  OpenMPI/3.1.1
 module load tabix
-module load bcftools/1.9.64
 module load VCFtools/0.1.15-Perl-5.28.0
 module load GATK/4.1.4.1-Python-3.6.6
+## will also need to use bgzip from samtools. I had my own version rather than loading a module
 
 ##### Step 1: Filtered All Sites #####
 ## The first filtered file we make will be for the population genetics statistics, so we will filter it less stringently
@@ -15,10 +15,10 @@ module load GATK/4.1.4.1-Python-3.6.6
 cd /file_location/
 
 # invariant sites
-vcftools --gzvcf allsites.raw.g.vcf.gz \
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
 --max-maf 0 \
 --min-meanDP 3 \
---minQ 15 \
+--minQ 20 \
 --remove-indels \
 --max-missing 0.75 \
 --max-alleles 2 \
@@ -27,10 +27,10 @@ vcftools --gzvcf allsites.raw.g.vcf.gz \
 
 # only variant sites
 # keep these as only biallelic
-vcftools --gzvcf allsites.raw.g.vcf.gz \
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
 --mac 1 \
 --min-meanDP 3 \
---minQ 15 \
+--minQ 20 \
 --remove-indels \
 --max-missing 0.75 \
 --min-alleles 2 \
@@ -43,6 +43,9 @@ tabix invariant.vcf.gz
 tabix biallelic.variant.vcf.gz
 
 # combine the two VCFs using bcftools concat
+# having a module issue so need to purge and reload with a different version
+module purge
+module load GCC/6.4.0-2.28  OpenMPI/2.1.2 bcftools/1.9.64
 ~/Apps/bcftools concat \
 --allow-overlaps \
 invariant.vcf.gz biallelic.variant.vcf.gz \
@@ -50,18 +53,20 @@ invariant.vcf.gz biallelic.variant.vcf.gz \
 
 ##### Step 2: Filtered Variant Sites #####
 ## we then need a more strictly filtered file of ONLY the variant sites to use for the GWAS and PCA
-vcftools --gzvcf allsites.raw.g.vcf.gz \
+## need back to other version of modules
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load VCFtools/0.1.15-Perl-5.28.0
+
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
 --max-maf 0.05 \
 --min-meanDP 5 \
---minQ 30 \
+--minQ 25 \
 --remove-indels \
 --max-missing 0.75 \
 --min-alleles 2 \
 --max-alleles 2 \
 --remove-indv COC7_TCCTGAGC-TATCCTCT \
---recode --stdout | ~/Apps/bgzip -c > allSNPs.noIndelsMafp05MaxMissp75BiallelicQ30Dp5.vcf.gz
+--recode --stdout | ~/Apps/bgzip -c > allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz
 
-## output: (also in a log file)
-## After filtering, kept **1398791** out of a possible 116743295 Sites
-## Run Time = 798.00 seconds
-
+##### End of File #####

@@ -3,7 +3,7 @@
 ## the goal is to concatenate files together, trim the adapter sequences, and align with BWA 
 
 ##### Step 1: concatenate fastq files so each sample has 1 forward and 1 reverse read #####
-# SeqID.txt contains the unique identifier at teh beginning of each file name, one to a line
+# SeqID.txt contains the unique identifier at the beginning of each file name, one to a line
 
 # start by combining 001 to 00X for each lane independently
 # run these lines in the directory with 

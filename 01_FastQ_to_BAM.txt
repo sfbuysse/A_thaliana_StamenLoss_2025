@@ -8,7 +8,7 @@
 # SeqID.txt contains the unique identifier at the beginning of each file name, one to a line
 
 # start by combining 001 to 00X for each lane independently
-# run these lines in the directory with 
+# run these lines in the directory with the files
 while IFS= read -r line; do for x in 1 2; do cat "$line"_L00"$x"_R1_00*.fastq > "$line"_L00"$x"_R1_comb.fastq; done; done < SeqID.txt
 while IFS= read -r line; do for x in 1 2; do cat "$line"_L00"$x"_R2_00*.fastq > "$line"_L00"$x"_R2_comb.fastq; done; done < SeqID.txt
 # now join the L001 and L002 together
@@ -31,7 +31,7 @@ multiqc .
 
 ##### Step 3: Trim Adapter Sequences with TrimGalore#####
 # https://github.com/FelixKrueger/TrimGalore/blob/master/Docs/Trim_Galore_User_Guide.md
-
+# will trim and run fastq. The --quality flag is just the default level
 module load GCC/7.3.0-2.30  OpenMPI/3.1.1 TrimGalore/0.6.5
 while IFS= read -r line; do trim_galore \
 --cores 4 \
@@ -39,10 +39,12 @@ while IFS= read -r line; do trim_galore \
 --paired \
 --clip_R1 15 \
 --clip_R2 15 \
+--quality 20 \
 --fastqc \
 -o /folder/location/TG_trimmed "$line"_R1_comb.fastq.gz "$line"_R2_comb.fastq.gz; done < SeqID.txt 
 
 ##### Step 4: Align to Reference Genome #####
+# this step can take a long time.
 module purge
 module load GCC/7.3.0-2.30  OpenMPI/3.1.1
 module load SAMtools
@@ -53,12 +55,12 @@ module load GATK/4.1.4.1-Python-3.6.6
 bwa index Athal.fasta Athal
 cd /folder/location/TG_trimmed
 
-# bwa mem
-while IFS= read -r line; do bwa mem -t 4 Athal.fasta \
+# bwa mem with 4 cores
+while IFS= read -r line; do bwa mem -t 4 -M Athal.fasta \
 "$line"_R1_comb_val_1.fq.gz  "$line"_R2_comb_val_2.fq.gz \
 | samtools view - -bS -o /folder/location/BWA_bam/"$line"_bwa.bam; done < SeqID.txt
 
-# ort, index, get output metrics
+# sort, index, get output metrics
 cd /folder/location/BWA_bam
 
 while IFS= read -r line; do
@@ -66,3 +68,5 @@ samtools sort "$line"_bwa.bam -o sorted_"$line"_bwa.bam
 samtools index sorted_"$line"_bwa.bam
 samtools view sorted_"$line"_bwa.bam | less -S
 samtools flagstat sorted_"$line"_bwa.bam > "$line"_alignment_metrics.txt; done < SeqID.txt
+
+## End of FastQ to Bam. Next step is to Call Variants ##
