@@ -26,66 +26,85 @@ cd /mnt/scratch/buysseso/GVCF
 module purge
 module load GCC/7.3.0-2.30  OpenMPI/3.1.1
 module load tabix
-module load bcftools/1.9.64
 module load VCFtools/0.1.15-Perl-5.28.0
 
+
 # invariant sites
-vcftools --gzvcf allsites.raw.g.vcf.gz \
+# still with a max of 2 alleles but no minimum
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
 --max-maf 0 \
 --min-meanDP 3 \
---minQ 15 \
+--minQ 20 \
 --remove-indels \
 --max-missing 0.75 \
 --max-alleles 2 \
 --remove-indv COC7_TCCTGAGC-TATCCTCT \
 --recode --stdout | ~/Apps/bgzip -c > invariant.vcf.gz
-# kept 97833193 sites
+# kept 96132133 out of a possible 116855685 Sites
+
 
 # create a filtered VCF containing only variant sites
 # keep these as only biallelic
-vcftools --gzvcf allsites.raw.g.vcf.gz \
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
 --mac 1 \
 --min-meanDP 3 \
---minQ 15 \
+--minQ 20 \
 --remove-indels \
 --max-missing 0.75 \
 --min-alleles 2 \
 --max-alleles 2 \
 --remove-indv COC7_TCCTGAGC-TATCCTCT \
 --recode --stdout | ~/Apps/bgzip -c > biallelic.variant.vcf.gz
-# kept 3230225 sites
+# After filtering, kept 3070481 out of a possible 116855685 Sites
 
 # index both vcfs using tabix
 tabix invariant.vcf.gz
 tabix biallelic.variant.vcf.gz
 
+scontrol show job $SLURM_JOB_ID
+#Submitted batch job 50371494 on 3/31/2022 at 11am
+# done in two hours.
+
 # combine the two VCFs using bcftools concat
-~/Apps/bcftools concat \
+# this did not work. might be because bcftools is not at that location and I was having an issue
+# where the requirements for loading bcftools was in conflict with what is needed to load vcf tools. so I can finish it by running it as a separate line
+
+module purge
+module load GCC/6.4.0-2.28  OpenMPI/2.1.2 bcftools/1.9.64
+
+bcftools concat \
 --allow-overlaps \
 invariant.vcf.gz biallelic.variant.vcf.gz \
 -O z -o all.filtered.vcf.gz
 
-scontrol show job $SLURM_JOB_ID
+# I just submitted this as a job in the terminal and not submitted to the job scheduler. I am not sure how long I would expect it to take
+# but I  might just submit it as a job if this takes more than 10 minutes which I think is likely.
+
+# the other thing I can do is to submit the filtered variant sites job below because that is different filtering so I can do that at the same time.
 
 $ grep -v "^#" all.filtered.vcf|wc -l
-
-#Submitted batch job 34434100
+#####################################
 
 ##### Step 2: Filtered Variant Sites #####
 ## we then need a more strictly filtered file of ONLY the variant sites to use for the GWAS
-vcftools --gzvcf allsites.raw.g.vcf.gz \
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
 --max-maf 0.05 \
 --min-meanDP 5 \
---minQ 30 \
+--minQ 25 \
 --remove-indels \
 --max-missing 0.75 \
 --min-alleles 2 \
 --max-alleles 2 \
 --remove-indv COC7_TCCTGAGC-TATCCTCT \
---recode --stdout | ~/Apps/bgzip -c > allSNPs.noIndelsMafp05MaxMissp75BiallelicQ30Dp5.vcf.gz
+--recode --stdout | ~/Apps/bgzip -c > allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz
 
+# submitted as filter_forGWAS.sb
 ## After filtering, kept 61 out of 62 Individuals
 ## Outputting VCF file...
-## After filtering, kept **1398791** out of a possible 116743295 Sites
-## Run Time = 798.00 seconds
+## 1243031 out of a possible 116855685
+##### this is ~100000 fewer than the last time I filtered to get this file pre BQSR and with Q30
+## Run Time = 723.00 seconds
 
+
+## I should take some time soon to get rid of things in the josephslab directory and make backups from scratch space.
+# I think I can clear up Athal_2/BWA_bam and Athal_2/GVCF
