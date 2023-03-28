@@ -1,0 +1,529 @@
+########## Filter Variants ##########
+
+# this code filters variants for calculating population genetics statistics and for summarizing population structure and GWAS
+
+##### Load Modules ######
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load tabix
+module load VCFtools/0.1.15-Perl-5.28.0
+module load GATK/4.1.4.1-Python-3.6.6
+
+####################################################################################################
+##### Step 0: Try Multiple Filtering Parameters #####
+## At first I skipped this step, but then my PCA and GWAS looked different than I was expecting so we are putting it back in.
+## code saved as  on HPCC
+!/bin/bash --login
+########## SBATCH Lines for Resource Request ##########
+#SBATCH --time=3:59:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem-per-cpu=4G
+#SBATCH --job-name Athaliana4D0D
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=buysseso@msu.edu
+
+########## Command Lines to Run ##########
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load tabix
+module load VCFtools/0.1.15-Perl-5.28.0
+module load Java/15.0.2
+
+### do the filtering stuff
+cd /mnt/gs21/scratch/buysseso/GVCF
+
+# quality gradient
+for x in 0 10 20 30 40 60; do zcat allsites_PostBQSR.raw.g.vcf.gz |vcftools --vcf - --out ../Filtering_test/allSNPs.noIndelsMafp05MaxMissp75BiallelicDp5Q"$x".vcf --min-meanDP 5 --minQ "$x" --maf 0.05 --remove-indels --max-missing 0.75 --min-alleles 2 --max-alleles 2 --remove-indv COC7_TCCTGAGC-TATCCTCT --recode; ~/Apps/bgzip ../Filtering_test/allSNPs.noIndelsMafp05MaxMissp75BiallelicDp5Q"$x".vcf.recode.vcf & done
+
+# Dp gradient
+for x in 0 1 2 3 5 10 20; do zcat allsites_PostBQSR.raw.g.vcf.gz | vcftools --vcf - --out ../Filtering_test/allSNPs.noIndelsMafp05MaxMissp75BiallelicDp"$x".vcf --min-meanDP "$x" --maf 0.05 --remove-indels --max-missing 0.75 --min-alleles 2 --max-alleles 2 --remove-indv COC7_TCCTGAGC-TATCCTCT --recode; ~/Apps/bgzip ../Filtering_test/allSNPs.noIndelsMafp05MaxMissp75BiallelicDp"$x".vcf.recode.vcf & done
+
+# maf gradient
+for x in 0 0.01 0.03 0.05 0.10 0.15 0.20; do zcat allsites_PostBQSR.raw.g.vcf.gz | vcftools --vcf - --out ../Filtering_test/allSNPs.noIndelsMafp"$x"MaxMissp75BiallelicDp5.vcf --min-meanDP 5 --maf "$x" --remove-indels --max-missing 0.75 --min-alleles 2 --max-alleles 2 --remove-indv COC7_TCCTGAGC-TATCCTCT --recode; ~/Apps/bgzip ../Filtering_test/allSNPs.noIndelsMafp"$x"MaxMissp75BiallelicDp5.vcf.recode.vcf & done
+
+# max-miss gradient
+for x in 0 0.25 0.50 0.70 0.75 0.80 0.85 0.95; do zcat allsites_PostBQSR.raw.g.vcf.gz | vcftools --vcf - --out ../Filtering_test/allSNPs.noIndelsMafp05MaxMissp"$x"BiallelicDp5.vcf --min-meanDP 5 --maf 0.05 --remove-indels --max-missing "$x" --min-alleles 2 --max-alleles 2 --remove-indv COC7_TCCTGAGC-TATCCTCT --recode; ~/Apps/bgzip ../Filtering_test/allSNPs.noIndelsMafp05MaxMissp"$x"BiallelicDp5.vcf.recode.vcf & done
+
+
+### do the snpeff stuff
+cd /mnt/gs21/scratch/buysseso/Filtering_test
+
+# quality gradient
+for x in 0 10 20 30 40 60; do zcat allSNPs.noIndelsMafp05MaxMissp75BiallelicDp5Q"$x".vcf.recode.vcf.gz |java -jar ~/Apps/snpEff/snpEff.jar -c ~/Apps/snpEff/snpEff.config Arabidopsis_thaliana - > Q"$x".annot.vcf; mkdir Q"$x" ; mv Q"$x".annot.vcf Q"$x"; mv snpEff_genes.txt Q"$x"; echo $x; awk 'BEGIN{getline;getline;for(x=1;x<=NF;x++){if($x=="variants_effect_missense_variant"){A=x};if($x=="variants_effect_synonymous_variant"){B=x}};L=0;M=0} {L=L+$A;M=M+$B} END{print "Missense: " L " Synon: " M }' ./Q"$x"/snpEff_genes.txt;~/Apps/bgzip Q"$x"/Q"$x".annot.vcf; done
+
+# Dp gradient
+for x in 0 1 2 3 5 10 20; do zcat allSNPs.noIndelsMafp05MaxMissp75BiallelicDp"$x".vcf.recode.vcf.gz |java -jar ~/Apps/snpEff/snpEff.jar -c ~/Apps/snpEff/snpEff.config Arabidopsis_thaliana - > DP"$x".annot.vcf; mkdir DP"$x" ; mv DP"$x".annot.vcf DP"$x"; mv snpEff_genes.txt DP"$x"; echo $x; awk 'BEGIN{getline;getline;for(x=1;x<=NF;x++){if($x=="variants_effect_missense_variant"){A=x};if($x=="variants_effect_synonymous_variant"){B=x}};L=0;M=0} {L=L+$A;M=M+$B} END{print "Missense: " L " Synon: " M }' ./DP"$x"/snpEff_genes.txt;~/Apps/bgzip DP"$x"/DP"$x".annot.vcf; done
+
+# maf gradient
+#for x in 0 0.01 0.03 0.05 0.10 0.15 0.20; do zcat allSNPs.noIndelsMafp"$x"MaxMissp75BiallelicDp5.vcf.recode.vcf.gz |java -jar ~/Apps/snpEff/snpEff.jar -c ~/Apps/snpEff/snpEff.config Arabidopsis_thaliana - > maf"$x".annot.vcf; mkdir maf"$x" ; mv maf"$x".annot.vcf maf"$x"; mv snpEff_genes.txt maf"$x"; echo $x; awk 'BEGIN{getline;getline;for(x=1;x<=NF;x++){if($x=="variants_effect_missense_variant"){A=x};if($x=="variants_effect_synonymous_variant"){B=x}};L=0;M=0} {L=L+$A;M=M+$B} END{print "Missense: " L " Synon: " M }' ./maf"$x"/snpEff_genes.txt;~/Apps/bgzip maf"$x"/maf"$x".annot.vcf; done
+
+# max-miss gradient
+#for x in 0 0.25 0.50 0.70 0.75 0.80 0.85 0.95; do zcat allSNPs.noIndelsMafp05MaxMissp"$x"BiallelicDp5.vcf.recode.vcf.gz |java -jar ~/Apps/snpEff/snpEff.jar -c ~/Apps/snpEff/snpEff.config Arabidopsis_thaliana - > MaxMiss"$x".annot.vcf; mkdir MaxMiss"$x" ; mv MaxMiss"$x".annot.vcf MaxMiss"$x"; mv snpEff_genes.txt MaxMiss"$x"; echo $x; awk 'BEGIN{getline;getline;for(x=1;x<=NF;x++){if($x=="variants_effect_missense_variant"){A=x};if($x=="variants_effect_synonymous_variant"){B=x}};L=0;M=0} {L=L+$A;M=M+$B} END{print "Missense: " L " Synon: " M }' ./MaxMiss"$x"/snpEff_genes.txt; ~/Apps/bgzip MaxMiss"$x"/MaxMiss"$x".annot.vcf; done
+
+scontrol show job $SLURM_JOB_ID
+#################################################################################################
+
+##### Step 1: Filtered All Sites #####
+## The first filtered file we make will be for the population genetics statistics, so we will filter it less stringently
+## from following the pixy protocol https://pixy.readthedocs.io/en/latest/guide/pixy_guide.html
+
+#!/bin/bash
+##Job settings for without -t settings
+#SBATCH --job-name=filter_vcf
+#SBATCH -e filter_vcf.err
+#SBATCH --nodes=1
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=24gb
+#SBATCH -t 10:59:00
+#SBATCH --mail-user=buysseso@msu.edu
+#SBATCH --mail-type=FAIL,BEGIN,END
+cd /mnt/scratch/buysseso/GVCF
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load tabix
+module load VCFtools/0.1.15-Perl-5.28.0
+
+
+# invariant sites
+# still with a max of 2 alleles but no minimum
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
+--max-maf 0 \
+--min-meanDP 3 \
+--minQ 20 \
+--remove-indels \
+--max-missing 0.75 \
+--max-alleles 2 \
+--remove-indv COC7_TCCTGAGC-TATCCTCT \
+--recode --stdout | ~/Apps/bgzip -c > invariant.vcf.gz
+# kept 96132133 out of a possible 116855685 Sites
+
+
+# create a filtered VCF containing only variant sites
+# keep these as only biallelic
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
+--mac 1 \
+--min-meanDP 3 \
+--minQ 20 \
+--remove-indels \
+--max-missing 0.75 \
+--min-alleles 2 \
+--max-alleles 2 \
+--remove-indv COC7_TCCTGAGC-TATCCTCT \
+--recode --stdout | ~/Apps/bgzip -c > biallelic.variant.vcf.gz
+# After filtering, kept 3070481 out of a possible 116855685 Sites
+
+# index both vcfs using tabix
+tabix invariant.vcf.gz
+tabix biallelic.variant.vcf.gz
+
+scontrol show job $SLURM_JOB_ID
+#Submitted batch job 50371494 on 3/31/2022 at 11am
+# done in two hours.
+
+# combine the two VCFs using bcftools concat
+# this did not work. might be because bcftools is not at that location and I was having an issue
+# where the requirements for loading bcftools was in conflict with what is needed to load vcf tools. so I can finish it by running it as a separate line
+
+module purge
+module load GCC/6.4.0-2.28  OpenMPI/2.1.2 bcftools/1.9.64
+module load tabix
+
+bcftools concat \
+--allow-overlaps \
+invariant.vcf.gz biallelic.variant.vcf.gz \
+-O z -o all.filtered.vcf.gz
+
+tabix all.filtered.vcf.gz
+
+# I don't remember the point of the code below this and it doesn't run in two hours so don't worry about it??
+$ grep -v "^#" all.filtered.vcf.gz|wc -l
+#check how many variants in the files
+bcftools view -H cichlid_full.vcf.gz | wc -l
+
+gunzip all.filtered.vcf.gz | grep -v "^#" | wc -l
+
+
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load VCFtools/0.1.15-Perl-5.28.0
+zcat all.filtered.vcf.gz | vcf-annotate --fill-type | grep -oP "TYPE=\w+" | sort | uniq -c
+
+#####################################
+
+## things happened a bit out of order here.
+
+## allsites was filtered and then renamed. 
+##### Step 2: Rename the samples #####
+The sample names right now are long and not in a great order. rename the three output vcf files to have more concise names.
+
+module purge
+module load GCC/6.4.0-2.28  OpenMPI/2.1.2 bcftools/1.9.64
+module load tabix
+
+# make this easier.
+cd /mnt/scratch/buysseso/GVCF
+
+zcat /mnt/scratch/buysseso/GVCF/allsites_PostBQSR.raw.g.vcf.gz |bcftools query -l 
+
+bcftools query -l /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.recode.vcf > /mnt/scratch/buysseso/GVCF/NoCent_vcf_sampleOrder.txt
+
+bcftools query -l /mnt/scratch/buysseso/GVCF/all.filtered.vcf.gz > /mnt/scratch/buysseso/GVCF/all.filtered_vcf_sampleOrder.txt
+
+bcftools query -l /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz > /mnt/scratch/buysseso/GVCF/SNPs_vcf_sampleOrder.txt
+
+# all of them are in the same order, so I only need one file of the new order. 
+cp /mnt/scratch/buysseso/GVCF/NoCent_vcf_sampleOrder.txt /mnt/scratch/buysseso/GVCF/VCF_simplified_sampleOrder.txt
+nano VCF_simplified_sampleOrder.txt
+# edit to remove everything after the underscore
+
+#and now actually change them
+zcat /mnt/scratch/buysseso/GVCF/allsites_PostBQSR.raw.g.vcf.gz |bcftools reheader --samples /mnt/scratch/buysseso/GVCF/VCF_simplified_sampleOrder_62.txt -o allsites_PostBQSR.raw.NewSampleName.g.vcf 
+bcftools query -l allsites_PostBQSR.raw.NewSampleName.g.vcf 
+
+zcat /mnt/scratch/buysseso/GVCF/all.filtered.vcf.gz |bcftools reheader --samples /mnt/scratch/buysseso/GVCF/VCF_simplified_sampleOrder.txt -o all.filtered.NewSampleName.vcf 
+bcftools query -l all.filtered.NewSampleName.vcf
+
+zcat /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz |bcftools reheader --samples /mnt/scratch/buysseso/GVCF/VCF_simplified_sampleOrder.txt -o allSNPs.NewSampleName.vcf 
+bcftools query -l allSNPs.NewSampleName.vcf
+
+bcftools reheader --samples /mnt/scratch/buysseso/GVCF/VCF_simplified_sampleOrder.txt -o NoCent.all.NewSampleName.vcf /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.recode.vcf
+bcftools query -l NoCent.all.NewSampleName.vcf
+
+# do we want to remove any individuals?
+vcftools --vcf allSNPs.NewSampleName.vcf --missing-indv --out test.MissingIndv
+
+# I manually did this for each output file and I think the decision not to do this stands.
+
+############################################################
+
+##### Step 2: Filtered Variant Sites #####
+## this filtering seemed to cause issues that I was not able to figure out so I did the filtering with plink.
+## code that was written but then I didn't really use in the end is commented out.
+
+### ## we then need a more strictly filtered file of ONLY the variant sites to use for the GWAS
+### vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
+### --max-maf 0.05 \
+### --min-meanDP 5 \
+### --minQ 25 \
+### --remove-indels \
+### --max-missing 0.75 \
+### --min-alleles 2 \
+### --max-alleles 2 \
+### --remove-indv COC7_TCCTGAGC-TATCCTCT \
+### --recode --stdout | ~/Apps/bgzip -c > allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz
+### 
+### # submitted as filter_forGWAS.sb
+### ## After filtering, kept 61 out of 62 Individuals
+### ## Outputting VCF file...
+### ## 1243031 out of a possible 116855685
+### ##### this is ~100000 fewer than the last time I filtered to get this file pre BQSR and with Q30
+### ## Run Time = 723.00 seconds
+### 
+### 
+### ## I should take some time soon to get rid of things in the josephslab directory and make backups from scratch space.
+### # I think I can clear up Athal_2/BWA_bam and Athal_2/GVCF
+### 
+
+########## Filter Variants with Plink ##########
+#!/bin/bash
+##Job settings for without -t settings
+#SBATCH --job-name=filter_vcf
+#SBATCH -e filter_vcf.err
+#SBATCH --nodes=1
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=24gb
+#SBATCH -t 1:59:00
+#SBATCH --mail-user=buysseso@msu.edu
+#SBATCH --mail-type=FAIL,BEGIN,END
+
+module purge
+module load PLINK/1.9b_4.1-x86_64
+cd /mnt/scratch/buysseso/GVCF
+
+plink --vcf allsites_PostBQSR.raw.NewSampleName.g.vcf --remove COC7.txt --make-bed --double-id \
+--threads 4 --keep-allele-order --biallelic-only --vcf-min-qual 25 --vcf-require-gt \
+--snps-only --geno 0.25 --maf 0.05 --allow-no-sex --set-missing-var-ids @:# --out allsites_filtered_plinkTest
+
+# note there is no depth filter. min-meanDP 5 is recommended if the filtering had been done with vcftools
+
+# COC7.txt looks like this: 
+COC7 COC7
+
+output: 
+[buysseso@dev-amd20 GVCF]$ plink --vcf allsites_PostBQSR.raw.NewSampleName.g.vcf --remove COC7.txt --make-bed --double-id --threads 4 --keep-allele-order --biallelic-only --vcf-min-qual 25 --vcf-require-gt --snps-only --geno 0.25 --maf 0.05 --allow-no-sex --out allsites_filtered_plinkTest
+PLINK v1.90b6.6 64-bit (10 Oct 2018)           www.cog-genomics.org/plink/1.9/
+(C) 2005-2018 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to allsites_filtered_plinkTest.log.
+Options in effect:
+  --allow-no-sex
+  --biallelic-only
+  --double-idless
+  --geno 0.25
+  --keep-allele-order
+  --maf 0.05
+  --make-bed
+  --out allsites_filtered_plinkTest
+  --remove COC7.txt
+  --snps-only
+  --threads 4
+  --vcf allsites_PostBQSR.raw.NewSampleName.g.vcf
+  --vcf-min-qual 25
+  --vcf-require-gt
+
+1031524 MB RAM detected; reserving 515762 MB for main workspace.
+--vcf: allsites_filtered_plinkTest-temporary.bed +
+allsites_filtered_plinkTest-temporary.bim +
+allsites_filtered_plinkTest-temporary.fam written.
+(21919693 variants skipped.)
+94149842 out of 94935992 variants loaded from .bim file.
+62 people (0 males, 0 females, 62 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to allsites_filtered_plinkTest.nosex .
+--remove: 61 people remaining.
+Using 1 thread (no multithreaded calculations invoked).
+Before main variant filters, 61 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate in remaining samples is 0.961832.
+719673 variants removed due to missing genotype data (--geno).
+91571463 variants removed due to minor allele threshold(s)
+(--maf/--max-maf/--mac/--max-mac).
+1858706 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+--make-bed to allsites_filtered_plinkTest.bed + allsites_filtered_plinkTest.bim
++ allsites_filtered_plinkTest.fam ... done.
+
+# This output file is not actually allsites, I think it is actually just SNPs, no? this is so dang confusing.
+
+
+#### Step 3: Filter to exclude centromere region before calculating anything ####
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load VCFtools/0.1.15-Perl-5.28.0
+
+cd /mnt/scratch/buysseso/GVCF
+
+vcftools --gzvcf allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz \
+--chr Chr1 \
+--from-bp 13700000 \
+--to-bp 15900000 \
+--kept-sites \
+--out Chr1_Cent
+wc -l Chr1_Cent.kept.sites
+# this removed-sites output contains everything except those sites removed in chromosome one
+# 42,430 sites in centromere region
+
+#################################
+plink -bfile allsites_filtered_plinkTest --chr Chr1 \
+--threads 4 \
+--from-bp 13700000 \
+--to-bp 15900000 \
+--make-bed --out Chr1_noCent_plink
+# kept 39,408 sites
+
+# try to just get a list of variant IDs
+plink -bfile allsites_filtered_plinkTest --chr Chr1 \
+--threads 4 \
+--from-bp 13700000 \
+--to-bp 15900000 \
+--write-snplist --out Chr1_CentSites_plink
+
+# output
+PLINK v1.90b6.6 64-bit (10 Oct 2018)           www.cog-genomics.org/plink/1.9/
+(C) 2005-2018 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to Chr1_CentSites_plink.log.
+Options in effect:
+  --bfile allsites_filtered_plinkTest
+  --chr Chr1
+  --from-bp 13700000
+  --out Chr1_CentSites_plink
+  --threads 4
+  --to-bp 15900000
+  --write-snplist
+
+1031524 MB RAM detected; reserving 515762 MB for main workspace.
+39408 out of 1858706 variants loaded from .bim file.
+61 people (0 males, 0 females, 61 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to Chr1_CentSites_plink.nosex .
+Using 1 thread (no multithreaded calculations invoked).
+Before main variant filters, 61 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.92029.
+39408 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+List of variant IDs written to Chr1_CentSites_plink.snplist .
+
+
+#################################
+
+# do this for each chromosome
+vcftools --gzvcf allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz  \
+--chr Chr2 \
+--from-bp 2450000 \
+--to-bp 5500000 \
+--kept-sites \
+--out Chr2_Cent
+wc -l Chr2_Cent.kept.sites
+# 80,817 sites in centromere region
+
+#################################
+plink -bfile allsites_filtered_plinkTest --chr Chr2 \
+--threads 4 \
+--from-bp 2450000 \
+--to-bp 5500000 \
+--write-snplist --out Chr2_CentSites_plink
+# kept 83,377 sites
+
+#################################
+
+vcftools --gzvcf allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz  \
+--chr Chr3 \
+--from-bp 11300000 \
+--to-bp 14300000 \
+--kept-sites \
+--out Chr3_Cent
+wc -l Chr3_Cent.kept.sites
+# 71,730 sites in centromere region
+#################################
+plink -bfile allsites_filtered_plinkTest --chr Chr3 \
+--threads 4 \
+--from-bp 11300000 \
+--to-bp 14300000 \
+--write-snplist --out Chr3_CentSites_plink
+# kept 78,000 sites
+
+#################################
+
+vcftools --gzvcf allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz  \
+--chr Chr4 \
+--from-bp 1800000 \
+--to-bp 5150000 \
+--kept-sites \
+--out Chr4_Cent
+wc -l Chr4_Cent.kept.sites
+#  96,581 sites in the centromere region
+
+#################################
+plink -bfile allsites_filtered_plinkTest --chr Chr4 \
+--threads 4 \
+--from-bp 1800000 \
+--to-bp 5150000 \
+--write-snplist --out Chr4_CentSites_plink
+# kept 79,958 sites
+
+#################################
+
+vcftools --gzvcf allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz  \
+--chr Chr5 \
+--from-bp 11000000 \
+--to-bp 13350000 \
+--kept-sites \
+--out Chr5_Cent
+wc -l Chr5_Cent.kept.sites
+# 68,536 sites in the centromere
+
+#################################
+plink -bfile allsites_filtered_plinkTest --chr Chr5 \
+--threads 4 \
+--from-bp 11000000 \
+--to-bp 13350000 \
+--write-snplist --out Chr5_CentSites_plink
+# kept 70,635 sites
+#################################
+
+# then exclude them all from the original vcf
+vcftools --gzvcf allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz \
+--exclude-positions Chr1_Cent.kept.sites \
+--recode \
+--out NoCent1.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+# 1200601  sites kept
+
+vcftools --vcf NoCent1.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.recode.vcf \
+--exclude-positions Chr2_Cent.kept.sites \
+--recode \
+--out NoCent2.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+# 1119784 sites kept
+
+vcftools --vcf NoCent2.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.recode.vcf \
+--exclude-positions Chr3_Cent.kept.sites \
+--recode \
+--out NoCent3.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+# 1048054 sites kept
+
+vcftools --vcf NoCent3.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.recode.vcf \
+--exclude-positions Chr4_Cent.kept.sites \
+--recode \
+--out NoCent4.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+# 951473 sites kept
+
+vcftools --vcf NoCent4.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.recode.vcf \
+--exclude-positions Chr5_Cent.kept.sites \
+--recode \
+--out NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+# 882938 sites kept
+
+# so after excluding from all centromeres, there are 882938 of 1243032 sites remaining (71%)
+# this means 29% of sites that passed the GWAS filter were in centromere regions
+# if this is the case... why haven't I found other methods that do this? It seems like it would be published?
+
+# I might need to do a bit of a literature dive on how the centromere regions are treated and what is really going on here
+# because I am honestly quite confused and surprised?
+
+############ do the excluding with plink ###################
+
+## ok this is not working, so maybe just skip this for now.
+# !! cause all my variant names are gone!!!
+
+# went back and have fixed the variant names problem.
+
+plink -bfile allsites_filtered_plinkTest --chr Chr1 \
+--threads 4 \
+--exclude Chr1_CentSites_plink.snplist \
+--make-bed --out Chr1_SNPs_NoCent
+#436213 variants remaining
+
+plink -bfile allsites_filtered_plinkTest --chr Chr2 \
+--threads 4 \
+--exclude Chr2_CentSites_plink.snplist \
+--make-bed --out Chr2_SNPs_NoCent
+#217934 variants remaining
+
+plink -bfile allsites_filtered_plinkTest --chr Chr3 \
+--threads 4 \
+--exclude Chr3_CentSites_plink.snplist \
+--make-bed --out Chr3_SNPs_NoCent
+#279018 variants remaining
+
+plink -bfile allsites_filtered_plinkTest --chr Chr4 \
+--threads 4 \
+--exclude Chr4_CentSites_plink.snplist \
+--make-bed --out Chr4_SNPs_NoCent
+#214611 variants remaining
+
+plink -bfile allsites_filtered_plinkTest --chr Chr5 \
+--threads 4 \
+--exclude Chr5_CentSites_plink.snplist \
+--make-bed --out Chr5_SNPs_NoCent
+# 359552 variants remaining
+
+# total kept 1,507,328 -> which is more than was kept with vcftools filtering and even vcftools filtering that kept in the centromeres...
+
+# the -exclude flat accepts a text file with a list of variant IDs (one per line) and removes all listed variants.
+
+#for plink, join each of the chromosomes together
+
+
+## potential issue here: these merge one text filesite with the reference fileset. What does that mean? I don't think I want to merge with the reference fileset? Or maybe I do and the reference fileset is just the first one I load in?
+plink --bfile Chr1_SNPs_NoCent --bmerge Chr2_SNPs_NoCent --make-bed -out allChrs_SNPs_NoCent
+# this worked, so now try to do them all together.
+
+plink --merge-list PlinkChrFiles.txt --make-bed -out allChrs_SNPs_NoCent
+# 1,507,328 variants pass.
+# matches expectation. I should have 436213 + 217934 + 279018 + 214611 + 359553 = 1,507,328
+
+## At the end of this code file, I have now created 3 dataset files:
+1. all.filtered.vcf.gz -> vcf file format. Includes variant and nonvariants sites. Include centromeres. To be used to calculate pi.
+2. allsites_filtered_PlinkTest -> plink format files. Contains SNPs only, includes centromeres, filtered by plink
+3. allChrs_SNPs_NoCent -> plink format files. Contains SNPs only, excluding the centromere region, filtered before excluding regions.

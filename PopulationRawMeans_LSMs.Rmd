@@ -1,0 +1,157 @@
+---
+title: "ShortStamen_LSMs"
+author: "Sophia Buysse"
+date: "1/26/2022"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy.opts = list(width.cutoff=75), tidy = TRUE)
+```
+
+# Set up Model \
+
+```{r, warning = FALSE}
+## load packages 
+require(emmeans)
+require(lme4)
+require(dplyr)
+#require(lsmeans)
+
+## load data
+Full <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/SpanishMasterDataset_ByFlwr.csv")
+Sequenced <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/SpanishMasterDataset_Sequenced.csv")
+PopMetaData <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/SpanishMasterDataset_PopMetaData.csv", header=TRUE)
+
+## format columns as factors for both datasets
+
+Full$Population <- as.factor(substr(x=Full$Population, 1, 3))
+Full$Matriline <- as.factor(Full$Matriline)
+Full$Plant <- as.factor(toupper(Full$Plant))
+Full$PlantingBlock <- as.factor(Full$PlantingBlock)
+Full$Tube <- as.factor(Full$Tube)
+Full$Notes <- NULL
+str(Full)
+
+Sequenced <- Sequenced[,1:9]
+Sequenced$Population <- as.factor(Sequenced$Population)
+Sequenced$Line <- as.factor(Sequenced$Line)
+Sequenced$Rep <- as.factor(toupper(Sequenced$Rep))
+# Plant is equivalent to Rep 
+Sequenced$Tube <- as.factor(Sequenced$Tube)
+str(Sequenced)
+```
+
+Start with the means for all plants that were phenotyped (Full dataframe)
+
+```{r}
+
+## create a fully nested random model
+colnames(Full)
+# the important ones are Pop, Line, Rep, Tube to mimic what Jeff used
+# Population
+# Matriline
+# Plant
+# Tube = timepoint so there are multiple flowers for each tube
+# this doesn't include the flower b/c we want a mean
+# doesn't use PlantingBlock Either.
+
+# full random model
+F_m1 <- lmer(NumShortStamens ~ (1|Population) + (1|Matriline:Population) + (1|Plant:Matriline:Population) + (1|Tube:Plant:Matriline:Population), 
+         data = Full)
+
+# mixed model
+F_m2 <- lmer(NumShortStamens ~ Population + (1|Matriline:Population) + (1|Plant:Matriline:Population) + (1|Tube:Plant:Matriline:Population), 
+         data = Full)
+
+# full fixed model
+F_m3 <- lm(NumShortStamens ~ Population + Matriline + Plant + Tube, 
+         data = Full)
+
+summary(F_m1)
+summary(F_m2)
+
+anova(F_m1)
+anova(F_m2)
+```
+
+Now just the Sequenced Plants
+```{r}
+
+## create a fully nested random model
+colnames(Sequenced)
+# the important ones are Pop, Line, Rep, Tube to mimic what Jeff used
+# Population
+# line
+# Rep
+# Tube
+# this doesn't include the flower b/c we want a mean
+
+# full random model
+S_m1 <- lmer(Short_Stamens ~ (1|Population) + (1|Line:Population) + (1|Rep:Line:Population) + (1|Tube:Rep:Line:Population), 
+         data = Sequenced)
+
+# mixed model
+S_m2 <- lmer(Short_Stamens ~ Population + (1|Line:Population) + (1|Rep:Line:Population) + (1|Tube:Rep:Line:Population), 
+         data = Sequenced)
+
+# full fixed model
+S_m3 <- lm(Short_Stamens ~ Population + Line + Rep + Tube, data = Sequenced)
+
+summary(S_m1)
+summary(S_m2)
+
+anova(S_m1)
+anova(S_m2)
+```
+
+# Try LSMs (estimated marginal means)
+
+Can't use the fully random models here because the package doesn't like that. Deciding to use m2 so most things are random besides the population
+
+```{r}
+Full_LSM <- summary(emmeans(F_m2, spec = "Population"))
+
+Seq_LSM <- summary(emmeans(S_m2, spec = "Population"))
+```
+
+# Raw Means 
+
+```{r}
+Full_RawMeans <- Full %>% group_by(Population) %>%
+  summarize(Full_PopFlwrMean = mean(NumShortStamens))
+
+Seq_RawMeans <- Sequenced %>% group_by(Population) %>%
+  summarize(Seq_PopFlwrMean = mean(Short_Stamens))
+
+
+# Create an output file (.ROBJ is good enough I think) with the Population, SSN, and elevation as metadata
+Elev_Means <- merge(Full_RawMeans, Seq_RawMeans, by = "Population")
+Elev_Means$Elev_m <- PopMetaData$Elev_m[match(Elev_Means$Population, PopMetaData$PopCode)]
+save(Elev_Means, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/Elev_Means_Feb2022.ROBJ")
+```
+
+# Compare values
+
+Here is a comparison of the 4 different means calculated (LSMs and Raw means for both Sequenced and Full datasets)
+
+```{r}
+LSMs <- data.frame("Population" = Full_LSM$Population, "Full_LSM" = Full_LSM$emmean, "Pop2" = Seq_LSM$Population, "Seq_LSM" = Seq_LSM$emmean)
+Comp <- merge(Elev_Means, LSMs, by = "Population")
+
+# let's see some correlations
+cor.test(Comp$Full_PopFlwrMean, Comp$Full_LSM)
+cor.test(Comp$Full_PopFlwrMean, Comp$Seq_PopFlwrMean)
+cor.test(Comp$Seq_PopFlwrMean, Comp$Seq_LSM)
+
+# so all are highly correlated. Let's make a few plots just to visualize that
+plot(Comp$Full_PopFlwrMean ~ Comp$Full_LSM)
+lines(x = c(0,1,2), y = c(0,1,2))
+plot(Comp$Full_PopFlwrMean ~ Comp$Seq_PopFlwrMean)
+lines(x = c(0,1,2), y = c(0,1,2))
+plot(Comp$Seq_PopFlwrMean ~ Comp$Seq_LSM)
+lines(x = c(0,1,2), y = c(0,1,2))
+
+```

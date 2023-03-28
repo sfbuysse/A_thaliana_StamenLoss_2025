@@ -1,0 +1,1001 @@
+---
+title: "Fst_01172022"
+author: "Sophia Buysse"
+date: "1/17/2022"
+output: html_document
+---
+Need document with less strict filtering parameters... why not just use the allsites one? try that first to see if it works honestly.
+script is called Fst_sub_SNPs_2022.R for the January version
+Fst_sub_2022 for the May 2022 version
+
+load R/4.2.2 so the version of R that I am loading matches the version of R that I am running on both my laptop and my lab PC
+
+module purge
+module load  GCC/11.2.0  OpenMPI/4.1.1 R/4.2.2
+R
+
+scratch that! can't get diveRisty to install on that version on the HPCC???? why I don't know, but as a result I'm using version R/4.1.2 on the HPCC because I know that one works at least.
+
+The install error seems to be something with GNU and there is something required in my linux background that includes libtoolize but I haven't found a way to get that without making R/4.2.2 unable to be loaded
+
+
+# Plink Filtered Files
+
+## With centromeres
+```{r pairwise_fst_HPCC, eval = FALSE}
+library(dplyr)
+library(tidyr)
+library(ape)
+
+library(diveRsity)
+#library(pegas)
+
+library(genio)
+
+##### genio to read in data #####
+
+SNPs_Cent <- read_plink("/mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest", verbose = TRUE)
+
+tmp <- geno_to_char(SNPs_Cent$X, SNPs_Cent$bim)
+
+# may want geno_to_char for reformatting data into what I need.
+
+########## Keep Line ID ##########
+
+##### format data #####
+colnames(tmp) <- gsub(pattern = "-", replacement = "", colnames(tmp))
+colnames(tmp) <- toupper(colnames(tmp))
+colnames(tmp)
+# make column names all uppercase and remove dashes so all in the same format. Still identifiable by unique plant here, not by population. Might need to change this b/c Fst is between populations.
+class(tmp)
+
+# add column of the rownames to function as SNP_ID because the location didn't come through with the vcf
+# used cbind!
+tmp2 <- as.data.frame(cbind(rownames(tmp),tmp))
+colnames(tmp2)[1] <- "SNP_ID"
+head(tmp2)
+class(tmp2)
+#data.frame
+
+# same for rownames
+tmp2 <- rbind(colnames(tmp2), tmp2)
+head(tmp2)
+
+# lapply! make characters into readable format
+#dat2 <- lapply(dat2, chartr, old = "|", new = "/")
+tmp2 <- lapply(tmp2, gsub, pattern = "/", replacement = "")
+
+# need to do both of these because some are / and some |
+# can't use this gsub for the period because it interprets the . as an anything character
+#dat2 <- lapply(dat2, chartr, old = ".", new = "-")
+# there was definitely an easier way to do this. oh well!
+tmp2 <- as.data.frame(tmp2)
+head(tmp2)
+
+save(tmp2, file = "~/R/GenotypeMatrix_plinkFiltered_Cent_Dec2022.ROBJ")
+
+#### subset 10,000 randomly chosen SNPs for fst matrix ####
+
+# this does include the centromeres.
+rows_keep <- runif(n = 10000, min = 2, max = length(tmp2$SNP_ID))
+rows_keep <- c(1,rows_keep)
+# need to keep row one for the ID, set rows_keep to start at two so I never have row 1 twice
+# want to keep all columns because each column is an individual, only filter rows
+dat_sub <- tmp2[rows_keep, ]
+str(dat_sub)
+class(dat_sub)
+length(dat_sub$SNP_ID)
+#10,001
+
+# writes to working directory and I can't change it
+# I also can't change the writing name in the output file here. which is not ideal so it is manually changed.
+setwd("~/R")
+snp2gen(infile = dat_sub, prefix_length = 3)
+
+#clear list to clear up space
+
+rm(list = ls())
+
+### let's try to get some stats out
+## I can just start at this point when I come back because it reads in a file that was saved
+# BUT note that this will be the last file that was saved so rerunning all the code if coming back on a different day is a good idea
+
+test_output <- fastDivPart(infile = "~/R/snp2gen_converted.gen", outfile = "fastDivPart_plinkFilter_sub_SNPs_Dec16_2022", gp = 2, pairwise = TRUE, fst = TRUE)
+# started at 2:17pm on 12/16/2022 for a subset of 10,000 snps
+# ended by  2:29pm on 12/16/2022
+# this output is an excel file that cannot be looked at with mobaxterm.
+
+save(test_output, file = "~/R/fastDivPart_plinkFilter_sub_SNPS_Dec2022.ROBJ")
+
+########## Only POP ID ##########
+
+##### load data #####
+rm(list = ls())
+load("~/R/GenotypeMatrix_plinkFiltered_Cent_Dec2022.ROBJ")
+
+##### format data #####
+colnames(tmp2)[2:62] <- substr(toupper(colnames(tmp2)[2:62]), 1, 3)
+colnames(tmp2)
+
+tmp2[1, ] <- colnames(tmp2)
+head(tmp2)
+
+save(tmp2, file = "~/R/GenotypeMatrix_plinkFiltered_Cent_Pop_Dec2022.ROBJ")
+
+#### subset 10,000 randomly chosen SNPs for fst matrix ####
+
+# this does include the centromeres.
+rows_keep <- runif(n = 10000, min = 2, max = length(tmp2$SNP_ID))
+rows_keep <- c(1,rows_keep)
+# need to keep row one for the ID, set rows_keep to start at two so I never have row 1 twice
+# want to keep all columns because each column is an individual, only filter rows
+dat_sub <- tmp2[rows_keep, ]
+str(dat_sub)
+class(dat_sub)
+length(dat_sub$SNP_ID)
+#10,001
+
+# writes to working directory and I can't change it
+# I also can't change the writing name in the output file here. which is not ideal so it is manually changed.
+setwd("~/R")
+snp2gen(infile = dat_sub, prefix_length = 3)
+
+#clear list to clear up space
+
+rm(list = ls())
+
+### let's try to get some stats out
+## I can just start at this point when I come back because it reads in a file that was saved
+# BUT note that this will be the last file that was saved so rerunning all the code if coming back on a different day is a good idea
+
+test_output <- fastDivPart(infile = "~/R/snp2gen_converted.gen", outfile = "fastDivPart_plinkFilter_sub_SNPs_Pop_Dec16_2022", gp = 2, pairwise = TRUE, fst = TRUE)
+# started at 10:12am on 1/6/2023 for a subset of 10,000 snps
+# ended at  10:20
+
+save(test_output, file = "~/R/fastDivPart_plinkFilter_sub_SNPS_Pop_Dec2022.ROBJ")
+
+
+```
+
+## Without Centromeres
+
+```{r pairwise_fst_HPCC2, eval = FALSE}
+library(dplyr)
+library(tidyr)
+library(ape)
+library(diveRsity)
+library(genio)
+
+##### genio to read in data #####
+
+SNPs_NoCent <- read_plink("/mnt/scratch/buysseso/GVCF/allChrs_SNPs_NoCent", verbose = TRUE)
+
+tmp <- geno_to_char(SNPs_NoCent$X, SNPs_NoCent$bim)
+
+# may want geno_to_char for reformatting data into what I need.
+
+########## Individual ID ###########
+
+##### format data #####
+colnames(tmp) <- gsub(pattern = "-", replacement = "", colnames(tmp))
+colnames(tmp) <- toupper(colnames(tmp))
+colnames(tmp)
+# make column names all uppercase and remove dashes so all in the same format. Still identifiable by unique plant here, not by population. Might need to change this b/c Fst is between populations.
+class(tmp)
+
+
+# used cbind to make SNp location a SNP_ID column!
+tmp2 <- as.data.frame(cbind(rownames(tmp),tmp))
+colnames(tmp2)[1] <- "SNP_ID"
+head(tmp2)
+class(tmp2)
+#data.frame
+
+# same for rownames
+tmp2 <- rbind(colnames(tmp2), tmp2)
+head(tmp2)
+
+# lapply! make characters into readable format
+tmp2 <- lapply(tmp2, gsub, pattern = "/", replacement = "")
+
+tmp2 <- as.data.frame(tmp2)
+head(tmp2)
+
+save(tmp2, file = "~/R/GenotypeMatrix_plinkFiltered_NoCent_Dec2022.ROBJ")
+
+#### subset 10,000 randomly chosen SNPs for fst matrix ####
+
+# this does not include the centromeres.
+rows_keep <- runif(n = 10000, min = 2, max = length(tmp2$SNP_ID))
+rows_keep <- c(1,rows_keep)
+# need to keep row one for the ID, set rows_keep to start at two so I never have row 1 twice
+# want to keep all columns because each column is an individual, only filter rows
+dat_sub <- tmp2[rows_keep, ]
+str(dat_sub)
+class(dat_sub)
+length(dat_sub$SNP_ID)
+#10,001
+
+# writes to working directory and I can't change it
+# I also can't change the writing name in the output file here. which is not ideal so it is manually changed.
+setwd("~/R")
+snp2gen(infile = dat_sub, prefix_length = 3)
+
+#clear list to clear up space
+
+rm(list = ls())
+
+### let's try to get some stats out
+## I can just start at this point when I come back because it reads in a file that was saved
+# BUT note that this will be the last file that was saved so rerunning all the code if coming back on a different day is a good idea
+
+test_output <- fastDivPart(infile = "~/R/snp2gen_converted.gen", outfile = "fastDivPart_plinkFilter_sub_NoCent_SNPs_Jan5_2023", gp = 2, pairwise = TRUE, fst = TRUE)
+# started at 9:45am on 1/6/2023 for a subset of 10,000 snps
+# ended by  9:56 
+# this output is an excel file that cannot be looked at with mobaxterm or a text file, depending on if all the dependencies loaded.
+
+save(test_output, file = "~/R/fastDivPart_plinkFilter_sub_NoCent_SNPS_Dec2022.ROBJ")
+#keeping the Dec date just so all the files show up together.
+
+########## Only POP ID ##########
+
+##### load data #####
+rm(list = ls())
+load("~/R/GenotypeMatrix_plinkFiltered_NoCent_Dec2022.ROBJ")
+
+##### format data #####
+colnames(tmp2)[2:62] <- substr(toupper(colnames(tmp2)[2:62]), 1, 3)
+colnames(tmp2)
+
+tmp2[1, ] <- colnames(tmp2)
+head(tmp2)
+
+save(tmp2, file = "~/R/GenotypeMatrix_plinkFiltered_NoCent_Pop_Dec2022.ROBJ")
+
+#### subset 10,000 randomly chosen SNPs for fst matrix ####
+
+# this does include the centromeres.
+rows_keep <- runif(n = 10000, min = 2, max = length(tmp2$SNP_ID))
+rows_keep <- c(1,rows_keep)
+# need to keep row one for the ID, set rows_keep to start at two so I never have row 1 twice
+# want to keep all columns because each column is an individual, only filter rows
+dat_sub <- tmp2[rows_keep, ]
+str(dat_sub)
+class(dat_sub)
+length(dat_sub$SNP_ID)
+#10,001
+
+# writes to working directory and I can't change it
+# I also can't change the writing name in the output file here. which is not ideal so it is manually changed.
+setwd("~/R")
+snp2gen(infile = dat_sub, prefix_length = 3)
+
+#clear list to clear up space
+
+
+
+### let's try to get some stats out
+## I can just start at this point when I come back because it reads in a file that was saved
+# BUT note that this will be the last file that was saved so rerunning all the code if coming back on a different day is a good idea
+
+test_output <- fastDivPart(infile = "~/R/snp2gen_converted.gen", outfile = "fastDivPart_plinkFilter_sub_NoCent_SNPs_Pop_Jan6_2023", gp = 2, pairwise = TRUE, fst = TRUE)
+# started at 10:23am on 1/6/2023 for a subset of 10,000 snps
+# ended by  10:31
+
+save(test_output, file = "~/R/fastDivPart_plinkFilter_sub_NoCent_SNPS_Pop_Dec2022.ROBJ")
+
+```
+
+# Visualizing Fst pairwise matrix: diveRsity
+
+This was done on my local machine. Did some manual renaming of files and changing text files to .csv files cause I"m being lazy.
+
+## With centromeres
+
+```{r fst_heatmap, eval = TRUE}
+##### visualizing fst matrices
+library(RColorBrewer)
+library(pheatmap)
+
+##### functions
+## to fill in top part of matrix
+makeSym <- function(m) {
+  m[upper.tri(m)] <- t(m)[upper.tri(m)]
+  return(m)
+}
+
+##### start with when Fst was calculated with individual identifiers #####
+
+## read in the matrix
+sub_10k <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/PopGen/fastDivPart_plinkFilter_sub_SNPs_Dec16_2022/pairwiseFst_WC.csv", header = TRUE)
+
+## reorganize
+rownames(sub_10k) <- sub_10k[,1]
+sub_10k <- sub_10k[1:16,2:17]
+sub_10k <- lapply(sub_10k, as.numeric)
+sub_10k <- as.matrix(as.data.frame(sub_10k))
+rownames(sub_10k) <- colnames(sub_10k)
+# simplify for plotting
+rownames(sub_10k) <- substr(rownames(sub_10k), start = 1, stop = 3)
+colnames(sub_10k) <- substr(colnames(sub_10k), start = 1, stop = 3)
+
+# get a mean and sd
+stats <- as.vector(sub_10k)
+sum_fst <- c(mean(stats, na.rm = TRUE), sd(stats, na.rm = TRUE), min(stats, na.rm = TRUE), max(stats, na.rm = TRUE))
+# mean= 0.473, sd = 0.169
+# min = 0.1057
+# max = 0.865
+
+sub_10k <- makeSym(sub_10k)
+str(sub_10k)
+
+diag(sub_10k) <- 0
+
+str(sub_10k)
+fst_mat <- sub_10k
+substr(rownames(fst_mat),1,3)[substr(rownames(fst_mat),1,3) == 'ARB'] <- "ARU"
+substr(colnames(fst_mat),1,3)[substr(colnames(fst_mat),1,3) == 'ARB'] <- "ARU"
+substr(rownames(fst_mat),1,3)[substr(rownames(fst_mat),1,3) == 'SPE'] <- "SAL"
+substr(colnames(fst_mat),1,3)[substr(colnames(fst_mat),1,3) == 'SPE'] <- "SAL"
+save(fst_mat, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Fst_matrix_Dec2022_10k.ROBJ")
+
+pdf("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/Fst_heatmap_Dec2022_10k.pdf", height = 9, width = 11)
+heatmap(x = fst_mat, symm = TRUE,
+        xlab = "Population",
+        ylab = "Population",
+        main = "Fst Heatmap", 
+        keep.dendro = FALSE,
+        #Rowv = NA,
+        col= colorRampPalette(brewer.pal(8, "Oranges"))(255))
+legend(x="bottomright", legend=c("0", "0.5", "1"),
+     fill=colorRampPalette(brewer.pal(8, "Oranges"))(3))
+dev.off()
+
+## add in elevation information
+elev.nam <- c('RAB', 'PIN', 'SAL', 'HOR', 'ARU', 'BAR', 'COC', 'POB', 'BOS', 'MUR', 'VDM', 'ALE', 'BIS', 'PAL', 'VIE', 'PAN')
+elev <- c(1229, 416, 441, 1444, 715, 519, 413, 836, 1585, 1706, 177, 665, 61, 303, 991, 1605)
+elev_mat <- as.data.frame(sub_10k)
+colnames(elev_mat) <- substr(colnames(elev_mat), start = 1, stop = 3)
+colnames(elev_mat)[colnames(elev_mat) == 'ARB'] <- "ARU"
+colnames(elev_mat)[colnames(elev_mat) == 'SPE'] <- "SAL"
+rownames(elev_mat) <- colnames(elev_mat)
+elev_mat <- makeSym(elev_mat)
+elev_mat <- as.matrix(elev_mat[elev.nam , elev.nam])
+row.labs <- paste0(elev.nam, " - ", elev[order(elev)], "m")
+
+
+pheatmap(elev_mat, cluster_rows = FALSE, cluster_cols = FALSE, color = colorRampPalette(brewer.pal(n = 9, name =
+  "YlOrRd"))(100), border_color = NA, labels_row = row.labs, fontsize_row = 15, fontsize_col = 15, filename = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/fst_heatmap_elevation_Dec2022_10k.png",height = 9, width = 9)
+
+# cool! This went way easier than I thought it would. I should try and find a resource that uses diveRsity so I make sure I have something to cite and there isn't general backlash against this method...
+
+##### Now with when Fst was calculated with population identifiers #####
+
+sub_10k_pop <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/PopGen/fastDivPart_plinkFilter_sub_SNPs_Pop_Dec16_2022/pairwiseFst_WC.csv", header = TRUE)
+
+## reorganize
+rownames(sub_10k_pop) <- sub_10k_pop[,1]
+sub_10k_pop <- sub_10k_pop[1:16,2:17]
+sub_10k_pop <- lapply(sub_10k_pop, as.numeric)
+sub_10k_pop <- as.matrix(as.data.frame(sub_10k_pop))
+rownames(sub_10k_pop) <- colnames(sub_10k_pop)
+# simplify for plotting
+rownames(sub_10k_pop) <- substr(rownames(sub_10k_pop), start = 1, stop = 3)
+colnames(sub_10k_pop) <- substr(colnames(sub_10k_pop), start = 1, stop = 3)
+
+# get a mean and sd
+stats_pop <- as.vector(sub_10k_pop)
+sum_fst_pop <- c(mean(stats_pop, na.rm = TRUE), sd(stats_pop, na.rm = TRUE), min(stats_pop, na.rm = TRUE), max(stats_pop, na.rm = TRUE))
+# mean = 0.478 sd = 0.17
+# min = 0.115
+# max = 0.868
+
+sub_10k_pop <- makeSym(sub_10k_pop)
+str(sub_10k_pop)
+
+diag(sub_10k_pop) <- 0
+
+str(sub_10k_pop)
+fst_mat <- sub_10k_pop
+substr(rownames(fst_mat),1,3)[substr(rownames(fst_mat),1,3) == 'ARB'] <- "ARU"
+substr(colnames(fst_mat),1,3)[substr(colnames(fst_mat),1,3) == 'ARB'] <- "ARU"
+substr(rownames(fst_mat),1,3)[substr(rownames(fst_mat),1,3) == 'SPE'] <- "SAL"
+substr(colnames(fst_mat),1,3)[substr(colnames(fst_mat),1,3) == 'SPE'] <- "SAL"
+save(fst_mat, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Fst_matrix_Dec2022_10k_pop.ROBJ")
+
+pdf("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/Fst_heatmap_Dec2022_10k_pop.pdf", height = 9, width = 11)
+heatmap(x = fst_mat, symm = TRUE,
+        xlab = "Population",
+        ylab = "Population",
+        main = "Fst Heatmap", 
+        keep.dendro = FALSE,
+        #Rowv = NA,
+        col= colorRampPalette(brewer.pal(8, "Oranges"))(255))
+legend(x="bottomright", legend=c("0", "0.5", "1"),
+     fill=colorRampPalette(brewer.pal(8, "Oranges"))(3))
+dev.off()
+
+## add in elevation information - run from above if only doing this, but can use elev lists from earlier
+elev_mat <- as.data.frame(sub_10k_pop)
+colnames(elev_mat)[colnames(elev_mat) == 'ARB'] <- "ARU"
+colnames(elev_mat)[colnames(elev_mat) == 'SPE'] <- "SAL"
+rownames(elev_mat) <- colnames(elev_mat)
+elev_mat <- as.matrix(elev_mat[elev.nam , elev.nam])
+
+pheatmap(elev_mat, cluster_rows = FALSE, cluster_cols = FALSE, color = colorRampPalette(brewer.pal(n = 9, name =
+  "YlOrRd"))(100), border_color = NA, labels_row = row.labs, fontsize_row = 15, fontsize_col = 15, filename = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/fst_heatmap_elevation_Dec2022_10k_pop.png",height = 9, width = 9)
+
+```
+
+## Without Centromeres
+Repeat for the no centromere file
+
+Note: code seems to be out of order here but I did the Fst calculation without the centromeres, and then visualized it so this code is reading in the no centromere results. I might need to search around on the HPCC to find that code.
+```{r fst_heatmap2, eval = TRUE}
+# clear everything
+rm(l-st= ls())
+
+##### visualizing fst matrices
+library(RColorBrewer)
+library(pheatmap)
+
+## to fill in top part of matrix
+makeSym <- function(m) {
+  m[upper.tri(m)] <- t(m)[upper.tri(m)]
+  return(m)
+}
+
+##### start with when Fst was calculated with individual identifiers #####
+
+## read in the matrix
+sub_10k <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/PopGen/fastDivPart_plinkFilter_sub_NoCent_SNPs_Jan5_2023/pairwiseFst_WC.csv", header = TRUE)
+
+## reorganize
+rownames(sub_10k) <- sub_10k[,1]
+sub_10k <- sub_10k[1:16,2:17]
+sub_10k <- lapply(sub_10k, as.numeric)
+sub_10k <- as.matrix(as.data.frame(sub_10k))
+rownames(sub_10k) <- colnames(sub_10k)
+# simplify for plotting
+rownames(sub_10k) <- substr(rownames(sub_10k), start = 1, stop = 3)
+colnames(sub_10k) <- substr(colnames(sub_10k), start = 1, stop = 3)
+str(sub_10k)
+
+# get a mean and sd
+stats <- as.vector(sub_10k)
+sum_fst <- c(mean(stats, na.rm = TRUE), sd(stats, na.rm = TRUE), min(stats, na.rm = TRUE), max(stats, na.rm = TRUE))
+# mean= 0.504, sd = 0.178
+# min = 0.111
+# max = 0.91
+
+sub_10k <- makeSym(sub_10k)
+str(sub_10k)
+
+diag(sub_10k) <- 0
+
+str(sub_10k)
+fst_mat <- sub_10k
+substr(rownames(fst_mat),1,3)[substr(rownames(fst_mat),1,3) == 'ARB'] <- "ARU"
+substr(colnames(fst_mat),1,3)[substr(colnames(fst_mat),1,3) == 'ARB'] <- "ARU"
+substr(rownames(fst_mat),1,3)[substr(rownames(fst_mat),1,3) == 'SPE'] <- "SAL"
+substr(colnames(fst_mat),1,3)[substr(colnames(fst_mat),1,3) == 'SPE'] <- "SAL"
+save(fst_mat, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Fst_matrix_NoCent_Dec2022_10k.ROBJ")
+
+pdf("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/Fst_heatmap_NoCent_Dec2022_10k.pdf", height = 9, width = 11)
+heatmap(x = fst_mat, symm = TRUE,
+        xlab = "Population",
+        ylab = "Population",
+        main = "Fst Heatmap", 
+        keep.dendro = FALSE,
+        #Rowv = NA,
+        col= colorRampPalette(brewer.pal(8, "Oranges"))(255))
+legend(x="bottomright", legend=c("0", "0.5", "1"),
+     fill=colorRampPalette(brewer.pal(8, "Oranges"))(3))
+dev.off()
+
+## add in elevation information
+elev.nam <- c('RAB', 'PIN', 'SAL', 'HOR', 'ARU', 'BAR', 'COC', 'POB', 'BOS', 'MUR', 'VDM', 'ALE', 'BIS', 'PAL', 'VIE', 'PAN')
+elev <- c(1229, 416, 441, 1444, 715, 519, 413, 836, 1585, 1706, 177, 665, 61, 303, 991, 1605)
+elev_mat <- as.data.frame(sub_10k)
+colnames(elev_mat)[colnames(elev_mat) == 'ARB'] <- "ARU"
+colnames(elev_mat)[colnames(elev_mat) == 'SPE'] <- "SAL"
+rownames(elev_mat) <- colnames(elev_mat)
+elev_mat <- as.matrix(elev_mat[elev.nam , elev.nam])
+row.labs <- paste0(elev.nam, " - ", elev[order(elev)], "m")
+
+pheatmap(elev_mat, cluster_rows = FALSE, cluster_cols = FALSE, color = colorRampPalette(brewer.pal(n = 9, name =
+  "YlOrRd"))(100), border_color = NA, labels_row = row.labs, fontsize_row = 15, fontsize_col = 15, filename = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/fst_heatmap_NoCent_elevation_Dec2022_10k.png",height = 9, width = 9)
+
+
+##### Now with when Fst was calculated with population identifiers #####
+
+sub_10k_pop <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/PopGen/fastDivPart_plinkFilter_sub_NoCent_SNPs_Pop_Jan6_2023/pairwiseFst_WC.csv", header = TRUE)
+
+## reorganize
+rownames(sub_10k_pop) <- sub_10k_pop[,1]
+sub_10k_pop <- sub_10k_pop[1:16,2:17]
+sub_10k_pop <- lapply(sub_10k_pop, as.numeric)
+sub_10k_pop <- as.matrix(as.data.frame(sub_10k_pop))
+rownames(sub_10k_pop) <- colnames(sub_10k_pop)
+
+#change some row names
+substr(rownames(sub_10k_pop),1,3)[substr(rownames(sub_10k_pop),1,3) == 'ARB'] <- "ARU"
+substr(colnames(sub_10k_pop),1,3)[substr(colnames(sub_10k_pop),1,3) == 'ARB'] <- "ARU"
+substr(rownames(sub_10k_pop),1,3)[substr(rownames(sub_10k_pop),1,3) == 'SPE'] <- "SAL"
+substr(colnames(sub_10k_pop),1,3)[substr(colnames(sub_10k_pop),1,3) == 'SPE'] <- "SAL"
+
+# get a mean and sd
+stats_pop <- as.vector(sub_10k_pop)
+sum_fst_pop <- c(mean(stats_pop, na.rm = TRUE), sd(stats_pop, na.rm = TRUE), min(stats_pop, na.rm = TRUE), max(stats_pop, na.rm = TRUE))
+# mean = 0.506 sd = 0.178
+# min = 0.119
+# max = 0.914
+
+sub_10k_pop <- makeSym(sub_10k_pop)
+str(sub_10k_pop)
+
+diag(sub_10k_pop) <- 0
+
+str(sub_10k_pop)
+
+fst_mat <- sub_10k_pop
+save(fst_mat, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Fst_matrix_NoCent_Dec2022_10k_pop.ROBJ")
+
+pdf("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/Fst_heatmap_NoCent_Dec2022_10k_pop.pdf", height = 9, width = 11)
+heatmap(x = fst_mat, symm = TRUE,
+        xlab = "Population",
+        ylab = "Population",
+        main = "Fst Heatmap", 
+        keep.dendro = FALSE,
+        #Rowv = NA,
+        col= colorRampPalette(brewer.pal(8, "Oranges"))(255))
+legend(x="bottomright", legend=c("0", "0.5", "1"),
+     fill=colorRampPalette(brewer.pal(8, "Oranges"))(3))
+dev.off()
+
+## add in elevation information - run from above if only doing this, but can use elev lists from earlier
+elev_mat <- as.data.frame(sub_10k_pop)
+elev_mat <- as.matrix(elev_mat[elev.nam , elev.nam])
+
+pheatmap(elev_mat, cluster_rows = FALSE, cluster_cols = FALSE, color = colorRampPalette(brewer.pal(n = 9, name =
+  "YlOrRd"))(100), border_color = NA, labels_row = row.labs, fontsize_row = 15, fontsize_col = 15, filename = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/fst_heatmap_NoCent_elevation_Dec2022_10k_pop.png",height = 9, width = 9)
+
+```
+
+Based on these results, there is not really a difference in if the centromere is removed or not for calculating Fst.Values without the centromere are a little bit higher. This might be because I am only choosing a small proportion of the snps to use to calculate Fst so it is unlikely I was choosing snps in the centromere region.
+
+Also doesn't seem to matter if the calculation had the full ID names or just the Pop names, which is expected because I tell the diveRsity code that only the first three characters of the ID name determine the population
+
+#ARCHIVE: VCFtools filtered files
+
+```{r pairwise_fst_HPCC, eval = FALSE}
+library(dplyr)
+library(tidyr)
+library(ape)
+
+library(diveRsity)
+library(pegas)
+
+##### pegas #####
+
+# number of rows
+# how did I figure this out? from variants kept while filtering
+e <- 99202614 # this is the allsites file
+e1 <- 1243031 # this is the GWAS file (variant sites only)
+# both of these include the centromere regions
+
+
+# read in data
+# use the gwas file to start b/c it is only the variant sites.
+
+dat1 <- read.vcf("/mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz",
+                 from = 1, to = e1)
+
+##### diveRsity #####
+
+# transpose (switch columns and rows)
+dat2 <- t(dat1)
+
+str(dat2)
+colnames(dat2) <- toupper(substr(colnames(dat2), start = 1, stop = 3))
+colnames(dat2)
+# make column names all uppercase so can classify population by first three characters and make shorter
+class(dat2)
+
+rownames(dat2) <- 1:e1
+# remove .. from rownames and just have them be numbers
+head(dat2)
+class(dat2)
+# still matrix array
+
+# add column of the rownames to function as SNP_ID because the location didn't come through with the vcf
+# used cbind!
+dat2 <- as.data.frame(cbind(rownames(dat2),dat2))
+colnames(dat2)[1] <- "SNP_ID"
+head(dat2)
+class(dat2)
+#data.frame
+
+# same for rownames
+dat2 <- rbind(colnames(dat2), dat2)
+head(dat2)
+
+# lapply! make characters into readable format
+dat2 <- lapply(dat2, chartr, old = "|", new = "/")
+dat2 <- lapply(dat2, gsub, pattern = "/", replacement = "")
+
+# need to do both of these because some are / and some |
+# can't use this gsub for the period because it interprets the . as an anything character
+dat2 <- lapply(dat2, chartr, old = ".", new = "-")
+# there was definitely an easier way to do this. oh well!
+dat2 <- as.data.frame(dat2)
+head(dat2)
+
+save(dat2, file = "~/R/GenotypeMatrix_filtered_biallelic_May2022_100k.ROBJ")
+
+#### subset 100,000 randomly chosen SNPs for fst matrix ####
+
+# note: the 100,000 SNPs job failed. the reported results are from 10,000 SNPs
+# this is about 1/12 of all locations. this does include the centromeres.
+rows_keep <- runif(n = 100000, min = 2, max = e1)
+rows_keep <- c(1,rows_keep)
+# need to keep row one for the ID, set rows_keep to start at two so I never have row 1 twice
+# want to keep all columns because each column is an individual, only filter rows
+dat_sub <- dat2[rows_keep, ]
+str(dat_sub)
+class(dat_sub)
+length(dat_sub$SNP_ID)
+
+# writes to working directory and I can't change it
+setwd("~/R")
+snp2gen(infile = dat_sub, prefix_length = 3)
+
+#clear list to clear up space
+
+rm(list = ls())
+
+### let's try to get some stats out
+## I can just start at this point when I come back because it reads in a file that was saved
+# BUT note that this will be the last file that was saved so rerunning all the code if coming back on a different day is a good idea
+
+test_output <- fastDivPart(infile = "~/R/snp2gen_converted.gen", outfile = "fastDivPart_sub_SNPs", gp = 2, pairwise = TRUE, fst = TRUE)
+# started at 3:10pm on 5/10/2022 for a subset of 10,000 snps
+# ended by  3:21pm on 5/10/2022
+# this output is an excel file that cannot be looked at with mobaxterm. also is likely why I got the weird warnings.
+# write test_output to a file... or maybe save as an R object?
+# maybe not necessary because the matrix will be in the output file, but let's save as a
+#save(test_output, file = "~/R/fastDivPart_sub_SNPS_May2022_100k.R")
+#save(test_output, file = "~/R/fastDivPart_sub_SNPS_May2022.R")
+
+```
+Part of me wants to try this again but rename things just by pop and lose the line identifier and see if that matters for the calculation
+
+So I did it, and it did not make a noticeable difference in the pattern of the heatmap though some of the pairwise values did change (likely because of which random sites where chosen becuase I did not set seed). What I should do for better estimates is include additional sites.
+
+Values are much lower than before
+
+I also then updated it to run for 100,000 SNPs instead of 10,000
+
+fst_sub_2022.sh sbatch script to run the script called Fst_sub_2022.R
+batch job  53313702
+
+This first job failed but I don't know why. Trying again with increased memory space
+batch job 53517664 - failed for memory issue. so staying with the 10,000 SNPs results but know that this is a low percentage of the actual SNPs that I have. this is also the SNP set that is used in the GWAS. my next step is to try to exclude the centromere and calculate Fst again to see if it makes a difference.
+
+Submitted batch job 53633334
+
+
+## Visualizing Fst pairwise matrix: diveRsity
+
+This was done on my local machine
+
+```{r fst_heatmap, eval = TRUE}
+
+##### visualizing fst matrices
+library(RColorBrewer)
+library(pheatmap)
+## functions
+
+## to fill in top part of matrix
+makeSym <- function(m) {
+  m[upper.tri(m)] <- t(m)[upper.tri(m)]
+  return(m)
+}
+
+##### for 10,000 randomly chosen snps #####
+## read in the matrix
+sub_10k <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/PopGen/Fst_diveRsity_sub_May2022.csv", header = TRUE)
+#sub_10k <- read.delim("~/Documents/fastDivPart_sub_SNPS_2022", quote = "")
+
+sub_10k_pop <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/PopGen/Fst_diveRsity_sub_May2022_pop.csv", header = TRUE)
+
+## reorganize
+rownames(sub_10k) <- sub_10k[,1]
+sub_10k <- sub_10k[1:16,2:17]
+sub_10k <- lapply(sub_10k, as.numeric)
+test <- as.matrix(as.data.frame(sub_10k))
+rownames(test) <- colnames(test)
+str(test)
+
+rownames(sub_10k_pop) <- sub_10k_pop[,1]
+sub_10k_pop <- sub_10k_pop[1:16,2:17]
+sub_10k_pop <- lapply(sub_10k_pop, as.numeric)
+test_pop <- as.matrix(as.data.frame(sub_10k_pop))
+rownames(test_pop) <- colnames(test_pop)
+str(test_pop)
+
+# get a mean and sd
+test2 <- as.vector(test)
+sum_fst <- c(mean(test2, na.rm = TRUE), sd(test2, na.rm = TRUE))
+# mean= 0.2272733, sd = 0.1045859
+# min = 0.0763
+# max = 0.6327
+
+test2_pop <- as.vector(test_pop)
+sum_fst_pop <- c(mean(test2_pop, na.rm = TRUE), sd(test2_pop, na.rm = TRUE))
+# mean = 0.2236100 sd = 0.0985778
+# min = 0.066
+# max = 0.6093
+
+test <- makeSym(test)
+str(test)
+
+diag(test) <- 0
+
+str(test)
+fst_mat <- test
+rownames(fst_mat) <- substr(rownames(fst_mat), start = 1, stop = 3)
+colnames(fst_mat) <- substr(colnames(fst_mat), start = 1, stop = 3)
+substr(rownames(fst_mat),1,3)[substr(rownames(fst_mat),1,3) == 'ARB'] <- "ARU"
+substr(colnames(fst_mat),1,3)[substr(colnames(fst_mat),1,3) == 'ARB'] <- "ARU"
+substr(rownames(fst_mat),1,3)[substr(rownames(fst_mat),1,3) == 'SPE'] <- "SAL"
+substr(colnames(fst_mat),1,3)[substr(colnames(fst_mat),1,3) == 'SPE'] <- "SAL"
+#save(fst_mat, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Fst_matrix_May2022_10k.ROBJ")
+# did not save the _pop file
+
+pdf("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/Fst_heatmap_May2022_10k.pdf", height = 9, width = 11)
+heatmap(x = fst_mat, symm = TRUE,
+        xlab = "Population",
+        ylab = "Population",
+        main = "Fst Heatmap", 
+        keep.dendro = FALSE,
+        #Rowv = NA,
+        col= colorRampPalette(brewer.pal(8, "Oranges"))(255))
+legend(x="bottomright", legend=c("0", "0.5", "1"),
+     fill=colorRampPalette(brewer.pal(8, "Oranges"))(3))
+dev.off()
+
+## maybe it would be easier to reorder the matrix? scary time.
+## to do that, would want to go back to before I make it symmetric I think (sub_10k object)
+elev.nam <- c('RAB', 'PIN', 'SAL', 'HOR', 'ARU', 'BAR', 'COC', 'POB', 'BOS', 'MUR', 'VDM', 'ALE', 'BIS', 'PAL', 'VIE', 'PAN')
+elev <- c(1229, 416, 441, 1444, 715, 519, 413, 836, 1585, 1706, 177, 665, 61, 303, 991, 1605)
+elev_mat <- as.data.frame(sub_10k_pop)
+colnames(elev_mat) <- substr(colnames(elev_mat), start = 1, stop = 3)
+colnames(elev_mat)[colnames(elev_mat) == 'ARB'] <- "ARU"
+colnames(elev_mat)[colnames(elev_mat) == 'SPE'] <- "SAL"
+rownames(elev_mat) <- colnames (elev_mat)
+elev_mat <- makeSym(elev_mat)
+elev_mat <- as.matrix(elev_mat[elev.nam , elev.nam])
+row.labs <- paste0(elev.nam, " - ", elev[order(elev)], "m")
+
+
+pheatmap(elev_mat, cluster_rows = FALSE, cluster_cols = FALSE, color = colorRampPalette(brewer.pal(n = 9, name =
+  "YlOrRd"))(100), border_color = NA, labels_row = row.labs, fontsize_row = 15, fontsize_col = 15, filename = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/fst_heatmap_elevation_May2022_10k_pop.png",height = 9, width = 9)
+
+# cool! This went way easier than I thought it would. I should try and find a resource that uses diveRsity so I make sure I have something to cite and there isn't general backlash against this method...
+```
+
+Repeat for the no centromere file
+
+Note: code seems to be out of order here but I did the Fst calculation without the centromeres, and then visualized it so this code is reading in the no centromere results. I might need to search around on the HPCC to find that code.
+```{r fst_heatmap, eval = TRUE}
+
+##### visualizing fst matrices
+library(RColorBrewer)
+library(pheatmap)
+## functions
+
+## to fill in top part of matrix
+makeSym <- function(m) {
+  m[upper.tri(m)] <- t(m)[upper.tri(m)]
+  return(m)
+}
+
+##### for 10,000 randomly chosen snps #####
+## read in the matrix
+sub_10k <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/PopGen/Fst_diveRsity_sub_noCent_May2022.csv", header = TRUE)
+#sub_10k <- read.delim("~/Documents/fastDivPart_sub_SNPS_2022", quote = "")
+
+
+## reorganize
+rownames(sub_10k) <- sub_10k[,1]
+sub_10k <- sub_10k[1:16,2:17]
+sub_10k <- lapply(sub_10k, as.numeric)
+test <- as.matrix(as.data.frame(sub_10k))
+rownames(test) <- colnames(test)
+str(test)
+
+# get a mean and sd, and a min and max
+test2 <- as.vector(test)
+sum_fst <- c(mean = mean(test2, na.rm = TRUE), sd = sd(test2, na.rm = TRUE), min = min(test2, na.rm = TRUE), max = max(test2, na.rm = TRUE))
+
+elev.nam <- c('RAB', 'PIN', 'SAL', 'HOR', 'ARU', 'BAR', 'COC', 'POB', 'BOS', 'MUR', 'VDM', 'ALE', 'BIS', 'PAL', 'VIE', 'PAN')
+elev <- c(1229, 416, 441, 1444, 715, 519, 413, 836, 1585, 1706, 177, 665, 61, 303, 991, 1605)
+elev_mat <- as.data.frame(sub_10k)
+colnames(elev_mat) <- substr(colnames(elev_mat), start = 1, stop = 3)
+colnames(elev_mat)[colnames(elev_mat) == 'ARB'] <- "ARU"
+colnames(elev_mat)[colnames(elev_mat) == 'SPE'] <- "SAL"
+rownames(elev_mat) <- colnames (elev_mat)
+elev_mat <- makeSym(elev_mat)
+elev_mat <- as.matrix(elev_mat[elev.nam , elev.nam])
+row.labs <- paste0(elev.nam, " - ", elev[order(elev)], "m")
+
+
+pheatmap(elev_mat, cluster_rows = FALSE, cluster_cols = FALSE, color = colorRampPalette(brewer.pal(n = 9, name =
+  "YlOrRd"))(100), border_color = NA, labels_row = row.labs, fontsize_row = 15, fontsize_col = 15, filename = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/fst_heatmap_elevation_May2022_10k_noCent.png",height = 9, width = 9)
+
+
+```
+
+Based on these results, there is not really a difference in if the centromere is removed or not for calculating Fst. This might be because I am only choosing a small proportion of the snps to use to calculate Fst so it is unlikely I was choosing snps in the centromere region.
+
+#ARCHIVE: Using genind for hierfstat
+
+The modules needed to load changed on 1/24/2022,
+
+Ultimately not used, so this code is archive code.
+
+```{bash}
+module purge
+module load iccifort/2020.1.217  impi/2019.7.217 R/4.0.3
+R
+
+```
+
+```{r}
+library(vctrs)
+library(pegas)
+library('adegenet')
+e1 <- 3230225 # less strict filtering
+dat1 <- read.vcf("/mnt/research/josephslab/Sophie/Athal_2/GVCF/biallelic.variant.vcf.gz",
+                 from = 1, to = e1)
+class(dat1)
+#loci, dataframe
+
+# make a subset so this doesn't take FOREVER
+
+#### subset 100,000 randomly chosen SNPs for fst matrix ####
+cols_keep <- runif(n = 100000, min = 2, max = e1)
+# want to keep all rows because each is an individual, only filter the columns
+dat_sub <- dat1[,cols_keep ]
+str(dat_sub)
+class(dat_sub)
+# add a population column
+dat_sub$population <- toupper(substr(rownames(dat_sub), 1, 3))
+class(dat_sub)
+dat_sub2 <- as.loci(dat_sub, col.pop = 'population', checkSNP = FALSE)
+class(dat_sub2)
+
+dat2 <- loci2genind(dat_sub2, ploidy = 2)
+save(dat2, file = '~/R/Documents/SNPs_sub_2022_genind.ROBJ')
+```
+
+Successfully made this file on 1/19/2022! Now to actually do the calculations with it.
+
+```{r}
+library(dplyr)
+library(adegenet)
+library(hierfstat)
+library(poppr)
+
+load('~/Documents/SNPs_sub_2022_genind.ROBJ')
+dat2
+popNames(dat2)
+
+# these are stats that should be calculated with the whole dataset rather than the subset
+locmiss = propTyped(dat2, by = "loc")
+#locmiss[which(locmiss < 0.80)] # print iff more than 20% missing
+# could also plot this as a bar plot
+hist(locmiss)
+# everything is above 0.75 so most do not have more than 20% missing which is good
+
+# there are actually like a lot of NAs which might be a problem.
+
+indmiss = propTyped(dat2, by = "ind")
+#indmiss[which(indmiss < 0.80)]
+hist(indmiss)
+# everything is above 0.65. most above 0.90. looks like only 2 or 4 are below 0.80
+dat_filtered = missingno(dat2, type = "geno", cutoff = 0.20)
+# Removing 2 genotypes: ALE16_GCTACGCT-TAGATCGC, BAR11_CAGAGAGG-TATCCTCT
+# these genotypes had more than 20% missing. I don't really like this because it is just a subset so that feels wrong...
+
+### check for unique genotypes
+##mlg(dat_filtered)
+### identify duplicates and remove (should already be done)
+##dups = mlg.id(dat_filtered)
+##for (i in dat_filtered){ # for each element in the list object
+##if (length(dat_filtered[i]) > 1){ # if the length is greater than 1
+##print(i) # print individuals that are duplicates
+##  }
+##}
+### see webpage if  Ineed to remove any duplicates.
+
+isPoly(dat2) %>% summary
+##   Mode   FALSE    TRUE
+##  logical    6295   93705
+
+
+## Basic info
+#table(dat2$loc.fac) # num alleles per locus
+summary(dat2$pop) #sample size for each pop
+# 3 or 4 for all, as expected
+##private_alleles(dat2) %>% apply(MARGIN = 1, FUN = sum) # private alleles per site across all loci
+
+## now miving into hierfstat, so change the data format
+dat3 <- genind2hierfstat(dat2)
+dat3
+allelic.richness(dat3$Ar %>% apply(MARGIN = 2, FUN = mean)) %>%
+  round(digits = 3) # mean allelic richness per site
+# this did not work 
+
+# Hierfstat basic stats
+basic_stats = basic.stats(dat2, diploid = TRUE)
+
+# Mean observed heterozygosity per site
+Ho_lobster = apply(basic_lobster$Ho, MARGIN = 2, FUN = mean, na.rm = TRUE) %>%
+round(digits = 2)
+Ho_lobster
+# Mean expected heterozygosity per site
+He_lobster = apply(basic_lobster$Hs, MARGIN = 2, FUN = mean, na.rm = TRUE) %>%
+round(digits = 2)
+He_lobster
+# Create a data.frame of site names, Ho and He and then convert to long format
+Het_lobster_df = data.frame(Site = names(Ho_lobster), Ho = Ho_lobster, He = He_lobster) %>%
+melt(id.vars = "Site")
+
+#inbreeding coefficient
+apply(basic_lobster$Fis, MARGIN = 2, FUN = mean, na.rm = TRUE) %>%
+round(digits = 3)
+
+# Fst
+# Subset data sets to reduce computation time
+lobster_gen_sub = popsub(lobster_gen, sublist = c("Ale","Ber","Brd","Pad","Sar17","Vig"))
+seafan_gen_sub = popsub(seafan_gen, sublist = c("Bla","Bov","Bre","Lun","PorI","Sko"))
+# Compute pairwise Fsts
+all_fst = genet.dist(dat2, method = "WC84")
+all_fst %>% round(digits = 3)
+# one visualization option
+# Convert dist object to data.frame
+fst.matrix = as.matrix(lobster_fst)
+ind = which( upper.tri(fst.matrix), arr.ind = TRUE)
+fst.df = data.frame(Site1 = dimnames(fst.matrix)[[2]][ind[,2]],
+Site2 = dimnames(fst.matrix)[[1]][ind[,1]],
+Fst = fst.matrix[ ind ] %>% round(digits = 3))
+# Convert minus values to zero
+fst.df$Fst[fst.df$Fst < 0] = 0
+# Print data.frame summary
+fst.df %>% str
+## 'data.frame': 15 obs. of 3 variables:
+## $ Site1: chr "Ber" "Brd" "Brd" "Pad" ...
+## $ Site2: chr "Ale" "Ale" "Ber" "Ale" ...
+## $ Fst : num 0.12 0.131 0.007 0.14 0.025 0.008 0.066 0.174 0.171 0.161 ...
+# Fst italic label
+fst.label = expression(italic("F")[ST])
+# Extract middle Fst value for gradient argument
+mid = max(fst.df$Fst) / 2
+# Plot heatmap
+ggplot(data = fst.df, aes(x = Site1, y = Site2, fill = Fst))+
+16
+  geom_tile(colour = "black")+
+  geom_text(aes(label = Fst), color="black", size = 3)+
+  scale_fill_gradient2(low = "blue", mid = "pink", high = "red", midpoint = mid, name = fst.label, limits = c(0, max(fst.df$Fst)), breaks = c(0, 0.05, 0.10, 0.15))+
+  scale_x_discrete(expand = c(0,0))+
+  scale_y_discrete(expand = c(0,0), position = "right")+
+  theme(axis.text = element_text(colour = "black", size = 10, face = "bold"),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    panel.background = element_blank(),
+    legend.position = "right",
+    legend.title = element_text(size = 14, face = "bold"))
+
+```

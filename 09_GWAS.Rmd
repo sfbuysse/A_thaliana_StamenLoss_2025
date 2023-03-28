@@ -1,0 +1,1509 @@
+---
+title: "GWAS"
+author: "Sophie Buysse"
+date: '2022-08-09'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Code to run GWAS with Gemma and make the output.
+
+# Step 1: create fam file. 
+You can do this with R. This is also where you will want to do any transformations
+
+### Prep ###
+
+Load packages,  read in the data, do some formatting, and calculate raw line means.
+```{r, warning = FALSE}
+## load packages 
+library(emmeans)
+library(lme4)
+library(dplyr)
+library(rcompanion) ## for plotNormalHistogram and blom functions (really don't need anymore if use hist() function)
+library(MASS) ## for boxcox transformation
+library(bestNormalize)
+
+
+## load data
+Sequenced <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/SpanishMasterDataset_Sequenced.csv")
+PopMetaData <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/SpanishMasterDataset_PopMetaData.csv")
+
+## format columns as factors
+Sequenced <- Sequenced[,1:9]
+Sequenced$SeqSampleID <- as.factor(Sequenced$SeqSampleID)
+Sequenced$Population <- as.factor(Sequenced$Population)
+Sequenced$Line <- as.factor(Sequenced$Line)
+Sequenced$Rep <- as.factor(toupper(Sequenced$Rep))
+# Plant is equivalent to Rep 
+Sequenced$Tube <- as.factor(Sequenced$Tube)
+str(Sequenced)
+
+## calculate raw means
+Seq_RawMeans <- Sequenced %>% group_by(SeqSampleID) %>%
+  summarize(Seq_LineFlwrMean = mean(Short_Stamens))
+
+# only keep some of the metadata that will be important later on
+PopMetaData <- PopMetaData[, c("PopCode", "Elev_m")]
+```
+
+### Line LSMs? ###
+Set up some stuff to check if I should use raw means or least squared means.
+ 
+Now summarize by Line for the sequenced plants only because the purpose of these means is for GWAS.
+
+```{r}
+# LSMs
+## create a fully nested random model
+colnames(Sequenced)
+# the important ones are Pop, Line, Rep, Tube to mimic what Jeff used
+# Population
+# line
+# Rep
+# Tube
+# this doesn't include the flower b/c we want a mean
+
+# mixed model
+S_m2 <- lmer(Short_Stamens ~ SeqSampleID + (1|Rep:Line:Population) + (1|Tube:Rep:Line:Population), 
+         data = Sequenced)
+S_m3 <- lmer(Short_Stamens ~ Line:Population + (1|Rep:Line:Population) + (1|Tube:Rep:Line:Population), 
+         data = Sequenced)
+# problem that data was dropped? 
+summary(S_m2)
+summary(S_m3)
+# hmm. those summaries are not identical which might be a problem. Actually! they have different references. By looking further I think they are the same.
+
+anova(S_m2)
+
+Seq_LSM <- summary(emmeans(S_m2, spec = "SeqSampleID"))
+
+# compare values
+Comp <- merge(Seq_RawMeans, Seq_LSM, by = "SeqSampleID")
+
+# let's see a correlations
+cor.test(Comp$Seq_LineFlwrMean, Comp$emmean)
+# so highly correlated. Let's make a plot just to visualize that
+# r = 0.9992486 p = <2.2e-16
+plot(Comp$Seq_LineFlwrMean ~ Comp$emmean)
+lines(x = c(0,1,2), y = c(0,1,2))
+
+# coolio
+
+```
+
+based on these results, I should use the raw means when I think about transformations. Do that on a different day. Today (8/9/2022) my goal is to make a relatedness matrix with gemma but I need to have a fam file in order to do that, so just use the raw line means.
+
+### Transformations ###
+Set up for transformations. I want to keep these to ones that make sense. I also want to somehow have a comparison that is easier to do than just honestly doing this a million times.
+```{r transform}
+# to do transformations, I really only care about the distribution of the means, not which line they belong to
+raw_means <- Seq_RawMeans$Seq_LineFlwrMean
+plotNormalHistogram(raw_means)
+shapiro.test(raw_means)
+# w=0.85331, p = 3.273-06
+
+# can same shapiro wilk test results and put into a data frame to make a comparison?
+
+# best normalize package
+# tests Yeo-Johnson, Box Cox, log10(x+a), sqrt(x+a), and arcsinh
+# a = max(0, -min(x)+eps)
+# can use new_transform argument to give best Normalise a list of functions to also use (I think this is basically what I am doing by hand below??)
+bestNormalize(raw_means, standardize = FALSE, warm = TRUE)
+# best is the lowest value. Ordernorm transform is the best but I don't want that, then yeo-johnson, exp, boxcox
+#sqrt(x + a) isn't great but is the same value as arcsinh(x)
+
+# squared
+means_squared <- raw_means^2
+# square root
+means_sqrt <- sqrt(raw_means)
+# cubic root
+means_cubrt <- (raw_means)^(1/3)
+# log10
+means_log10 <- log10(raw_means)
+# natural log
+means_log <- log(raw_means)
+#inverse
+means_inv <- (raw_means)^(-1)
+# exponential
+means_exp <- exp(raw_means)
+# asin_proportion
+# doesn't work on values greater than 1 b/c is for proportions
+means_asin <- asin(raw_means/2)
+# asin_prop_sqrt
+# some sources (https://www.programmingr.com/tutorial/arcsine-transformation/) describe the arcsine transformation as needing to be arcsine of the square root
+means_asin_sqrt <- asin(sqrt(raw_means/2))
+# tukey
+means_tukey <- transformTukey(raw_means)
+# boxcox
+bc <- bestNormalize::boxcox(raw_means)
+box <- MASS::boxcox(raw_means ~ 1, lambda = seq(-5,5,0.1))
+cox <- data.frame(box$x, box$y)
+cox2 <- cox[with(cox, order(-cox$box.y)),]
+cox2[1,]
+lambda <- cox2[1, "box.x"]
+# confusing that I got 2 values here?
+
+means_bc_bn <- predict(bc)
+means_bc_MASS <- ((raw_means^lambda)-1)/lambda
+
+# rank (don't want to use this one b/c it basically forces a normal distribution)
+# could be an comparison though? maybe not.
+means_qqnorm <- qqnorm(raw_means, plot = F)
+means_rank <- means_qqnorm[["x"]]
+
+# blom - is a rank based method
+means_blom <- blom(raw_means, method = "blom", alpha = 3/8, complete = T, na.last = NA)
+
+###### make a list of my new phenotype lists #####
+transformations <- list("raw" = raw_means, "squared" = means_squared, "sqrt" = means_sqrt, "Cube rt" = means_cubrt, "Log 10" = means_log10, "Natural Log" = means_log, "inverse" = means_inv, "exponential" = means_exp, "Asin of Proportion" = means_asin, "Asin of Sqrt(proportion)" = means_asin_sqrt, "Tukey" = means_tukey, "BoxCox (BestNormalize)" = means_bc_bn, "BoxCox (MASS)" = means_bc_MASS, "Rank" = means_rank, "Blom" = means_blom)
+
+## make plots of everything
+for (i in 1:length(transformations)){
+  plotNormalHistogram(transformations[[i]], main = names(transformations)[i])
+}
+
+## and do shapiro wilks tests
+SW_test <- lapply(transformations, shapiro.test)
+# make dummy vector
+SW_pval <- rep(NA, times = length(SW_test))
+for (i in 1:length(SW_test)){
+  SW_pval[[i]] <- SW_test[[i]]$p.value
+}
+best_transformations <- data.frame("function" = names(transformations), "p.value" = SW_pval)
+best_transformations[order(best_transformations$p.value, decreasing = TRUE), ]
+# reminder: for a shapiro-wilks test, we are testing for normality. This means that a p value less than 0.05 means you reject the hypothesis that the data is normal, so we are looking for higher values to indicate a more normal dataset.
+
+# or 
+norm.compare <- data.frame(names = names(SW_test), stat = names(SW_test), p.val = names(SW_test))
+for (i in 1:length(transformations)) {
+  norm.compare$names[i] <- names(SW_test)[i] # if correct this shouldn't change anything
+  norm.compare$stat[i] <- SW_test[[i]][["statistic"]]
+  norm.compare$p.val[i] <- SW_test[[i]][["p.value"]]
+}
+
+# order of best to worst in terms of normality
+norm.compare[(order(norm.compare$stat, decreasing = TRUE)), ]
+```
+Order of Phenotype transformations, most normal to least normal:
+1. Rank - made phenos file
+2. Blom
+3. Asin of SQRT(proportion) - made phenos file
+4. Asin of proportion
+5. exponential
+6. Tukey
+7. BoxCox calculated by MASS
+8. squared
+9. BoxCox calculated by Best Normalize
+10. Raw phenotypes - made phenos file
+11. Square Root
+12. Cube root
+13. Log 10
+14. Natural Log
+15. Inverse
+
+Well this seems to support that arcsine is the best! Next to decide is if I should use the sqrt in the function or not. I"m going to and I can find a reference for doing that if need be. Make sure this makes it into the methods file!
+
+Nothing besides rank actually passes a normality test, so I definitely don't solve the problem. Not surprising that Rank and blom are the best. 
+
+Raw isn't the worse!This means Square root, cube root, both logs, and the inverse are out for sure. Otherwise I think I would need to shift everything so I had an opposite skew for them to increase the normality.
+
+### Binary Phenotype ###
+
+Here I want to create a file that has stamen loss coded as binary, so either loss or no loss.
+```{r}
+hist(Seq_RawMeans$Seq_LineFlwrMean, breaks = 30)
+
+no_2 <- Seq_RawMeans[Seq_RawMeans$Seq_LineFlwrMean < 2, ]
+hist(no_2$Seq_LineFlwrMean)
+
+no_close <- Seq_RawMeans[Seq_RawMeans$Seq_LineFlwrMean < 1.62, ]
+hist(no_close$Seq_LineFlwrMean)
+# ok totally still not normal.
+
+Seq_RawMeans$Binary <- c(rep(0, times = 61))
+
+# choosing strict definition of trait loss, but this can be adjusted as long as I not that in my methods.
+Seq_RawMeans$Binary[Seq_RawMeans$Seq_LineFlwrMean < 2] = 1
+# zero indicates little to no short stamen loss (control), one indicates that there is short stamen loss (case).
+
+## gemma says to use 0 for and 1 for binary. 
+
+## previously I had been using 1 for control and 2 for case.
+
+```
+
+### Create file to merge with genetic data ###
+So let's make a fam file or a phenotype file that plink can read.
+```{r}
+# make a fam file from scratch
+# column 1 (fam) and 2 (id) are sequence ID, column 3 (pat),4 (mat),5 (sex) are all zeros, column 6 (pheno) is the phenotype
+
+# to use the --phenos call in plink, I need 3 columns: FID, IID, pheno
+
+new_fam <- data.frame("FID" = as.character(Seq_RawMeans$SeqSampleID), "IID" = as.character(Seq_RawMeans$SeqSampleID), "pheno" = Seq_RawMeans$Seq_LineFlwrMean)
+# manually updated Pal-12 to PAL12 on all because the vcf has PAL12
+new_fam$FID[new_fam$FID == "Pal-12"] <- "PAL12"
+new_fam$IID[new_fam$IID == "Pal-12"] <- "PAL12"
+
+# raw phenotypes
+write.table(new_fam, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/FamFiles/RawLineMeans_08092022.txt", quote = FALSE, sep = " ", col.names = FALSE, row.names = FALSE)
+
+# rank phenotypes
+new_fam$rank <- means_rank
+new_fam$pheno <- NULL
+colnames(new_fam) <- c("FID", "IID", "pheno")
+write.table(new_fam, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/FamFiles/RankLineMeans_08152022.txt", quote = FALSE, sep = " ", col.names = FALSE, row.names = FALSE)
+
+# arcsin of sqrt of a proportion
+new_fam$asin <- means_asin_sqrt
+new_fam$pheno <- NULL
+colnames(new_fam) <- c("FID", "IID", "pheno")
+write.table(new_fam, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/FamFiles/AsinSqrtPropLineMeans_08152022.txt", quote = FALSE, sep = " ", col.names = FALSE, row.names = FALSE)
+
+# elevation as the phenotype
+new_fam$Pop <- toupper(substr(new_fam$FID, 1, 3))
+new_fam$Pop[new_fam$Pop == "ARB"] <- "ARU"
+new_fam$Pop[new_fam$Pop == "SPE"] <- "SAL"
+new_fam <- merge(new_fam, PopMetaData, by.x = "Pop", by.y = "PopCode")
+new_fam$Pop <- NULL
+new_fam$pheno <- NULL
+colnames(new_fam) <- c("FID", "IID", "pheno")
+write.table(new_fam, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/FamFiles/ElevationByLine_08152022.txt", quote = FALSE, sep = " ", col.names = FALSE, row.names = FALSE)
+
+# binary phenotype - strict definition
+## gemma says to use 0 for and 1 for 
+new_fam$binary <- Seq_RawMeans$Binary
+new_fam$pheno <- NULL
+colnames(new_fam) <- c("FID", "IID", "pheno")
+write.table(new_fam, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/FamFiles/BinaryPhenotype_01102023.txt", quote = FALSE, sep = " ", col.names = FALSE, row.names = FALSE)
+
+# note, the 09/01/2022 file is a definition of greater than 1.61 is control (1), less than is case (2)
+
+```
+
+Super important note! This fam file is organized in alphabetical order. This might become a problem later on when the fam joins up with the bed and the bim, but I'm hoping not. Move this file onto the HPCC. I moved it with File zilla. The order was actually not important when using the --pheno tag in plink because it matches things up by ID instead of row order.
+
+# Step 2: Make plink format files
+
+Load a module and run some line code
+
+### archived section with vcf filtering ###
+```{bash, eval = FALSE}
+### Archived code ###
+module load PLINK/1.9b_4.1-x86_64
+
+### Raw Phenotypes ###
+# all SNPs
+plink --vcf /mnt/scratch/buysseso/GVCF/allSNPs.NewSampleName.vcf --make-bed --double-id --keep-allele-order --allow-no-sex --pheno /mnt/scratch/buysseso/GWAS/RawLineMeans_08092022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+# so this works. but something goes wrong if I try to zip the New Sample Name vcf... and I'm not sure what that is. Just not zipping it for now.
+
+# No cent
+plink --vcf /mnt/scratch/buysseso/GVCF/NoCent.all.NewSampleName.vcf --make-bed --double-id --keep-allele-order --allow-no-sex --pheno /mnt/scratch/buysseso/GWAS/RawLineMeans_08092022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+
+# ok, now I have files in the correct format.
+
+### Rank Phenotypes ###
+# all
+plink --vcf /mnt/scratch/buysseso/GVCF/allSNPs.NewSampleName.vcf --make-bed --double-id --keep-allele-order --allow-no-sex --pheno /mnt/scratch/buysseso/GWAS/RankLineMeans_08152022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank
+
+# No cent
+plink --vcf /mnt/scratch/buysseso/GVCF/NoCent.all.NewSampleName.vcf --make-bed --double-id --keep-allele-order --allow-no-sex --pheno /mnt/scratch/buysseso/GWAS/RankLineMeans_08152022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank
+
+### Arcsin Sqrt(Prop) Phenotypes
+# all
+plink --vcf /mnt/scratch/buysseso/GVCF/allSNPs.NewSampleName.vcf --make-bed --double-id --keep-allele-order --allow-no-sex --pheno /mnt/scratch/buysseso/GWAS/AsinSqrtPropLineMeans_08152022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin
+
+# No cent
+plink --vcf /mnt/scratch/buysseso/GVCF/NoCent.all.NewSampleName.vcf --make-bed --double-id --keep-allele-order --allow-no-sex --pheno /mnt/scratch/buysseso/GWAS/AsinSqrtPropLineMeans_08152022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin
+
+### Elevation ###
+# all
+plink --vcf /mnt/scratch/buysseso/GVCF/allSNPs.NewSampleName.vcf --make-bed --double-id --keep-allele-order --allow-no-sex --pheno /mnt/scratch/buysseso/GWAS/ElevationByLine_08152022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev
+
+# No cent
+plink --vcf /mnt/scratch/buysseso/GVCF/NoCent.all.NewSampleName.vcf --make-bed --double-id --keep-allele-order --allow-no-sex --pheno /mnt/scratch/buysseso/GWAS/ElevationByLine_08152022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev
+
+```
+
+
+### plink filtering ###
+Plink Filtered files work much better for PCA, so below here are the good files
+
+```{bash}
+module load PLINK/1.9b_4.1-x86_64
+
+### Plink Filtered Files, include centromere
+
+# raw phenotypes
+plink -bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest --make-bed --allow-no-sex --threads 4 -pheno /mnt/scratch/buysseso/GWAS/RawLineMeans_08092022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/allSNPs.PlinkFiltering_raw
+
+# raw phenotypes, subset of only plants with some stamen loss
+plink -bfile /mnt/scratch/buysseso/GWAS/allSNPs.PlinkFiltering_raw --make-bed --keep /mnt/scratch/buysseso/GWAS/lines_with_loss.txt --allow-no-sex --threads 4 --out /mnt/scratch/buysseso/GWAS/allSNPs.PlinkFiltering_raw_subset
+#kept 43 lines
+
+# asin transformed
+plink -bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest --make-bed --allow-no-sex --threads 4 -pheno /mnt/scratch/buysseso/GWAS/AsinSqrtPropLineMeans_08152022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/allSNPs.PlinkFiltering_Asin
+
+# elevation
+plink -bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest --make-bed --allow-no-sex --threads 4 -pheno /mnt/scratch/buysseso/GWAS/ElevationByLine_08152022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/allSNPs.PlinkFiltering_Elev
+
+# binary
+plink -bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest --make-bed --allow-no-sex --threads 4 -pheno /mnt/scratch/buysseso/GWAS/BinaryPhenotype_01102023.txt --1 --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/allSNPs.PlinkFiltering_Binary
+# so this reads in the 0/1, but then it writes it as 1/2 which doesn't really help my issues b/c I want the fam to have 0/1 when I read it into gemma
+# Miles suggested using regular expressions to change 1 -> 0 and then 2 -> 1 hmm. that seems like too much effort honestly.
+# can also manually change them but that isn't good for reproducibility.
+# something like "sed 's/1$/zero/g' allSNPs.PlinkFiltering_Binary.fam | sed 's/2$/one/g' > temp_newfile.fam"
+# note: s/ indicates find/replace
+# then thing to replace. $ after means to ignore when 1 or 2 isn't on it's own
+# then to replace it with. don't add $ here or it will show up in the text
+# /g means to do all, otherwise just does first per line in the file.
+sed 's/1$/0/g' allSNPs.PlinkFiltering_Binary.fam | sed 's/2$/1/g' > allSNPs.PlinkFiltering_Binary2.fam
+mv allSNPs.PlinkFiltering_Binary2.fam allSNPs.PlinkFiltering_Binary.fam
+# ok, that should work. need to do the same thing for no cent.
+
+### Plink Filtered Files, exclude centromere
+
+# raw phenotypes
+plink -bfile /mnt/scratch/buysseso/GVCF/allChrs_SNPs_NoCent --make-bed --allow-no-sex --threads 4 -pheno /mnt/scratch/buysseso/GWAS/RawLineMeans_08092022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/NoCent.PlinkFiltering_raw
+
+# raw phenotypes, subset of only plants with some stamen loss
+plink -bfile /mnt/scratch/buysseso/GWAS/NoCent.PlinkFiltering_raw --make-bed --keep /mnt/scratch/buysseso/GWAS/lines_with_loss.txt --allow-no-sex --threads 4 --out /mnt/scratch/buysseso/GWAS/NoCent.PlinkFiltering_raw_subset
+#kept 43 lines
+
+# asin transformed
+plink -bfile /mnt/scratch/buysseso/GVCF/allChrs_SNPs_NoCent --make-bed --allow-no-sex --threads 4 -pheno /mnt/scratch/buysseso/GWAS/AsinSqrtPropLineMeans_08152022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/NoCent.PlinkFiltering_Asin
+
+# elevation
+plink -bfile /mnt/scratch/buysseso/GVCF/allChrs_SNPs_NoCent --make-bed --allow-no-sex --threads 4 -pheno /mnt/scratch/buysseso/GWAS/ElevationByLine_08152022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/NoCent.PlinkFiltering_Elev
+
+# binary
+plink -bfile /mnt/scratch/buysseso/GVCF/allChrs_SNPs_NoCent --make-bed --allow-no-sex --threads 4 -pheno /mnt/scratch/buysseso/GWAS/BinaryPhenotype_01102023.txt --1 --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/NoCent.PlinkFiltering_Binary
+
+sed 's/1$/0/g' NoCent.PlinkFiltering_Binary.fam | sed 's/2$/1/g' > NoCent.PlinkFiltering_Binary2.fam
+mv NoCent.PlinkFiltering_Binary2.fam NoCent.PlinkFiltering_Binary.fam
+
+```
+
+All log files confirm there are 61 individuals with phenotypes after running the code lines.
+
+# Step 3: Make relatedness matrix
+### VCFtools filtering ###
+```{bash}
+# don't need to load a gemma module because I have it installed locally.
+
+# No centromere matrices
+
+cd /mnt/scratch/buysseso/GWAS
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 -gk 1 -notsnp -miss 1.0 -o RelMat/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 -gk 2 -notsnp -miss 1.0 -o RelMat/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+##gk 1 = centered, 2 = standard
+
+# if SNPs with lower minor allele frequency tend to have larger effects, then the standardized matrix is preferred. If the SNp effect size does not depend on its minor allele frequency, then the centered is preferred. In their experience (from gemma manual) centered usually provides better control for population structure. 
+
+## from my recollection, I want to use a centered matrix for the GWAS but a standard matrix for doing PCA from the relatedness matrix.
+# -notsnp disables the minor allele frequency filter. I want to do this becuase I already filtered by maf to make this input file.
+
+```
+
+GEMMA 0.98.4 (2021-01-29) by Xiang Zhou and team (C) 2012-2021
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =   882938
+** number of analyzed SNPs         =   821198
+
+So there is still this odd issue where the number ofanalyzed SNPs doesn't completely match the total SNPs but I guess I just keep ignoring that issue?
+
+I also calculated standardized matrices.
+
+```{bash}
+# All SNP matrices
+cd /mnt/scratch/buysseso/GWAS
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 -gk 1 -notsnp -miss 1.0 -o RelMat/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 -gk 2 -notsnp -miss 1.0 -o RelMat/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+```
+GEMMA 0.98.4 (2021-01-29) by Xiang Zhou and team (C) 2012-2021
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =  1243031
+** number of analyzed SNPs         =  1171769
+Calculating Relatedness Matrix ...
+
+
+
+Then I calculated only the centered relatedness matrix for my transformed phenotypes (rank and arcsin) and for elevation. 
+```{bash}
+# Rank transformed
+cd /mnt/scratch/buysseso/GWAS
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank -gk 1 -notsnp -miss 1.0 -o RelMat/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank
+
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank -gk 1 -notsnp -miss 1.0 -o RelMat/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank
+
+```
+GEMMA 0.98.4 (2021-01-29) by Xiang Zhou and team (C) 2012-2021
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =   882938
+** number of analyzed SNPs         =   821198
+Calculating Relatedness Matrix ...
+
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =  1243031
+** number of analyzed SNPs         =  1171769
+Calculating Relatedness Matrix ...
+
+```{bash}
+# Arcsine(sqrt(SSN/2)) transformed
+cd /mnt/scratch/buysseso/GWAS
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin -gk 1 -notsnp -miss 1.0 -o RelMat/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin
+
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin -gk 1 -notsnp -miss 1.0 -o RelMat/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin
+
+# Elevation
+# Arcsine(sqrt(SSN/2)) transformed
+cd /mnt/scratch/buysseso/GWAS
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev -gk 1 -notsnp -miss 1.0 -o RelMat/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev
+
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev -gk 1 -notsnp -miss 1.0 -o RelMat/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev
+```
+
+The same number of SNPs were analyzed as for the rank transformed, so the results were not copied but are in the log file if I need that.
+
+### Plink Filtering ###
+```{bash}
+# Plink Filtering
+cd /mnt/scratch/buysseso/GWAS
+
+### with centromere ###
+# 1858694 of 1858706 SNPs analyzed
+
+## centered
+# raw
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering_raw -gk 1 -notsnp -miss 1.0 -o RelMat/All/allSNPs.PlinkFiltering_raw
+# subset
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering_raw_subset -gk 1 -notsnp -miss 1.0 -o RelMat/All/allSNPs.PlinkFiltering_raw_subset
+
+# Asin
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering_Asin -gk 1 -notsnp -miss 1.0 -o RelMat/All/allSNPs.PlinkFiltering_Asin
+# Elevation
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering_Elev -gk 1 -notsnp -miss 1.0 -o RelMat/All/allSNPs.PlinkFiltering_Elev
+# Binary
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering_Binary -gk 1 -notsnp -miss 1.0 -o RelMat/All/allSNPs.PlinkFiltering_Binary
+
+## standardized
+# raw
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering_raw -gk 2 -notsnp -miss 1.0 -o RelMat/All/allSNPs.PlinkFiltering_raw
+
+
+### without centromere ###
+# 1507319/1507328 SNPs analyzed
+
+## centered - only did centered here
+# raw
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.PlinkFiltering_raw -gk 1 -notsnp -miss 1.0 -o RelMat/NoCent/NoCent.PlinkFiltering_raw
+
+# subset raw
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.PlinkFiltering_raw_subset -gk 1 -notsnp -miss 1.0 -o RelMat/NoCent/NoCent.PlinkFiltering_raw_subset
+
+# Asin
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.PlinkFiltering_Asin -gk 1 -notsnp -miss 1.0 -o RelMat/NoCent/NoCent.PlinkFiltering_Asin
+# Elevation
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.PlinkFiltering_Elev -gk 1 -notsnp -miss 1.0 -o RelMat/NoCent/NoCent.PlinkFiltering_Elev
+# Binary
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.PlinkFiltering_Binary -gk 1 -notsnp -miss 1.0 -o RelMat/NoCent/NoCent.PlinkFiltering_Binary
+
+```
+
+# Step 4: Run GWAS
+
+There must have been a way for me to do this with a loop somehow, but I just didn't get it so I ran them each one by one.
+
+### VCFtools Filtering ###
+
+#### Raw Phenotype Means ####
+
+##### First for NoCent files. #####
+```{bash}
+cd /mnt/scratch/buysseso/GWAS
+# Raw phenotypes, centered Relatedness Matrix
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 -k output/RelMat/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.cXX.txt -lmm 2 -notsnp -miss 1.0 -o GWAS/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.c
+
+# Raw Phenotypes, Standard Relatedness Matrix
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 -k output/RelMat/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.sXX.txt -lmm 2 -notsnp -miss 1.0 -o GWAS/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.s
+```
+
+Output for centered relatedness matrix, raw phenotypes:
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =   882938
+** number of analyzed SNPs         =   821198
+Start Eigen-Decomposition...
+pve estimate =0.921065
+se(pve) =0.0982761
+
+Output for standardized relatedness matrix, raw phenotypes:
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =   882938
+** number of analyzed SNPs         =   821198
+Start Eigen-Decomposition...
+pve estimate =0.99999 *this is almost 1!*
+se(pve) =0.00131999
+
+##### And for files with all SNPs #####
+```{bash}
+cd /mnt/scratch/buysseso/GWAS
+# Raw phenotypes, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 -k output/RelMat/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.cXX.txt -lmm 2 -notsnp -miss 1.0 -o GWAS/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.c
+
+# raw phenotypes, standard relmat
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 -k output/RelMat/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.sXX.txt -lmm 2 -notsnp -miss 1.0 -o GWAS/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.s
+```
+
+Output for centered relatedness matrix, raw phenotypes:
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =  1243031
+** number of analyzed SNPs         =  1171769
+Start Eigen-Decomposition...
+pve estimate =0.989266 *this seems quite high!*
+se(pve) =0.107185
+
+Output for standardized relatedness matrix, raw phenotypes:
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =  1243031
+** number of analyzed SNPs         =  1171769
+Start Eigen-Decomposition...
+pve estimate =0.99999 *this is almost 1!*
+se(pve) =0.00095522
+
+#### Rank Transformed Phenotypes ####
+
+##### First for NoCent files. #####
+```{bash}
+# Rank Transformed, centered RelMat
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank -k output/RelMat/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank.cXX.txt -lmm 2 -notsnp -miss 1.0 -o GWAS/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank.c
+```
+
+
+Output for centered relatedness matrix, rank transformed phenotypes:
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =   882938
+** number of analyzed SNPs         =   821198
+Start Eigen-Decomposition...
+pve estimate =0.709062
+se(pve) =0.14335
+
+##### And for files with all SNPs #####
+```{bash}
+cd /mnt/scratch/buysseso/GWAS
+# rank phenotypes, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank -k output/RelMat/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank.cXX.txt -lmm 2 -notsnp -miss 1.0 -o GWAS/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank.c
+```
+
+Output for centered relatedness matrix, rank transformed phenotypes:
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =  1243031
+** number of analyzed SNPs         =  1171769
+Start Eigen-Decomposition...
+pve estimate =0.758809
+se(pve) =0.150526
+
+#### Arcsine Transformed Phenotype ####
+The transformation is: Arcsine(sqrt(short stamen number /2))
+
+##### First for NoCent files. #####
+```{bash}
+cd /mnt/scratch/buysseso/GWAS
+# Asin, centered RelMat
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin -k output/RelMat/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin.cXX.txt -lmm 2 -notsnp -miss 1.0 -o GWAS/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin.c
+```
+
+Output for centered relatedness matrix, asin(sqrt(ssn/2)) phenotypes:
+
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =   882938
+** number of analyzed SNPs         =   821198
+Start Eigen-Decomposition...
+pve estimate =0.831131
+se(pve) =0.122826
+
+##### And for files with all SNPs #####
+```{bash}
+# asin phenotypes, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin -k output/RelMat/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin.cXX.txt -lmm 2 -notsnp -miss 1.0 -o GWAS/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin.c
+```
+
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =  1243031
+** number of analyzed SNPs         =  1171769
+Start Eigen-Decomposition...
+pve estimate =0.889535
+se(pve) =0.133727
+
+#### Elevation as the phenotype ####
+
+##### First for NoCent files. #####
+```{bash}
+cd /mnt/scratch/buysseso/GWAS
+# Elevation, centered RelMat
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev -k output/RelMat/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev.cXX.txt -lmm 2 -notsnp -miss 1.0 -o GWAS/NoCent/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev.c
+```
+
+Output for centered relatedness matrix, elevation as the phenotype:
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =   882938
+** number of analyzed SNPs         =   821198
+Start Eigen-Decomposition...
+pve estimate =0.999874
+se(pve) =0.0014907
+
+##### And for files with all SNPs #####
+```{bash}
+cd /mnt/scratch/buysseso/GWAS
+# elevation, centered rel mat
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev -k output/RelMat/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev.cXX.txt -lmm 2 -notsnp -miss 1.0 -o GWAS/All/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev.c
+```
+
+Reading Files ...
+** number of total individuals = 61
+** number of analyzed individuals = 61
+** number of covariates = 1
+** number of phenotypes = 1
+** number of total SNPs/var        =  1243031
+** number of analyzed SNPs         =  1171769
+Start Eigen-Decomposition...
+pve estimate =0.999861
+se(pve) =0.00177672
+
+### Plink Filtering ###
+
+Updated 1/24/2023 so that all files are using -lmm 4 to run all 3 ways of calculating the p value. The beta and se are included when using the wald test.
+
+#### with the centromere included ####
+```{bash}
+# start in correct location
+cd /mnt/scratch/buysseso/GWAS
+
+# Raw phenotypes, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering_raw -k output/RelMat/All/allSNPs.PlinkFiltering_raw.cXX.txt -lmm 4 -notsnp -miss 1.0 -o GWAS/All/allSNPs.PlinkFiltering_raw.c
+# pve estimate = 0.778955, se(pve) = 0.101311
+
+## Raw phenotypes, centered relmat, but do all the p value tests just to see
+#~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering_raw -k output/RelMat/All/allSNPs.PlinkFiltering_raw.cXX.txt #-lmm 4 -notsnp -miss 1.0 -o GWAS/All/allSNPs.PlinkFiltering_raw.c_testing
+## pve estimate = 0.778955, se(pve) = 0.101311 - stayed the same! interesting
+
+# Subset of raw phenotypes, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering_raw_subset -k output/RelMat/All/allSNPs.PlinkFiltering_raw_subset.cXX.txt -lmm 4 -notsnp -miss 1.0 -o GWAS/All/allSNPs.PlinkFiltering_raw_subset.c
+# pve estimate = 0.791614, se(pve) = 0.115285
+
+# Asin phenotypes, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering_Asin -k output/RelMat/All/allSNPs.PlinkFiltering_Asin.cXX.txt -lmm 4 -notsnp -miss 1.0 -o GWAS/All/allSNPs.PlinkFiltering_Asin.c
+# pve estimate = 0.7064, se(pve) = 0.123102
+
+# Elevation, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering_Elev -k output/RelMat/All/allSNPs.PlinkFiltering_Elev.cXX.txt -lmm 4 -notsnp -miss 1.0 -o GWAS/All/allSNPs.PlinkFiltering_Elev.c
+# pve estimate = 0.999978, se(pve) = 0.000431783
+
+# Binary phenotypes, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering_Binary -k output/RelMat/All/allSNPs.PlinkFiltering_Binary.cXX.txt -lmm 4 -notsnp -miss 1.0 -o GWAS/All/allSNPs.PlinkFiltering_Binary.c
+# pve = 0.29391 se(pve) = 0.160083
+```
+
+###### does the test matter? ######
+```{r}
+result_table <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/allSNPs.PlinkFiltering_raw.c_testing.assoc.txt")
+
+#plot(x = result_table$p_wald, y = result_table$p_lrt)
+
+cor(result_table$p_wald, result_table$p_lrt, method = "pearson")
+# correlation is 0.9984886
+
+tmp1 <- result_table[order(result_table$p_wald), ]
+top_wald <- tmp1[1:50, ]
+tmp2 <- result_table[order(result_table$p_lrt), ]
+top_lrt <- tmp2[1:50, ]
+
+# what do these lists have in common?
+intersect(top_lrt$rs, top_wald$rs)
+
+# 23 of them are in common, so that is a little less than half. HOnestly not as great as i was hoping for actually...
+
+# of the lrt top 10, all but 7 and 10 are in common which is a good sign b/c really only 6 pop up on the bonferroni corrected scale
+
+# Is p value correlated with effect size?
+cor(result_table$p_wald, result_table$beta, method = "pearson")
+# 0.16073727
+# so no! wow. interesting. not really sure what that means for the results honestly...
+
+
+
+```
+
+So since the results are so highly correlated, I'm guessing there is no difference in the plots made as well but I would need to run some code to test it. What about just taking out the top 50 points from each one? how much overlap is there?
+
+Kind of confusing results. Going to take a bit to think about this, and maybe just bring it up in my meeting on Wednesday or try to find any other type of guidance for which test to choose when.
+
+
+#### without the centromere ####
+
+Updated 1/24/2023 to use -lmm 4 and run all of the p value tests
+
+```{bash}
+# start in correct location
+cd /mnt/scratch/buysseso/GWAS
+
+# Raw phenotypes, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.PlinkFiltering_raw -k output/RelMat/NoCent/NoCent.PlinkFiltering_raw.cXX.txt -lmm 4 -notsnp -miss 1.0 -o GWAS/NoCent/NoCent.PlinkFiltering_raw.c
+# pve estimate = 0.761723, se(pve) = 0.0996641
+
+# subset raw phenotypes, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.PlinkFiltering_raw_subset -k output/RelMat/NoCent/NoCent.PlinkFiltering_raw_subset.cXX.txt -lmm 4 -notsnp -miss 1.0 -o GWAS/NoCent/NoCent.PlinkFiltering_raw_subset.c
+# pve estimate = 0.774126, se(pve) = 0.11436
+
+# Asin phenotypes, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.PlinkFiltering_Asin -k output/RelMat/NoCent/NoCent.PlinkFiltering_Asin.cXX.txt -lmm 4 -notsnp -miss 1.0 -o GWAS/NoCent/NoCent.PlinkFiltering_Asin.c
+# pve estimate = 0.689438, se(pve) = 0.120383
+
+# Elevation, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.PlinkFiltering_Elev -k output/RelMat/NoCent/NoCent.PlinkFiltering_Elev.cXX.txt -lmm 4 -notsnp -miss 1.0 -o GWAS/NoCent/NoCent.PlinkFiltering_Elev.c
+# pve estimate = 0.99998, se(pve) = 0.000382316
+
+# Binary phenotypes, centered relmat
+~/Apps/gemma-0.98.4-linux-static -bfile NoCent.PlinkFiltering_Binary -k output/RelMat/NoCent/NoCent.PlinkFiltering_Binary.cXX.txt -lmm 4 -notsnp -miss 1.0 -o GWAS/NoCent/NoCent.PlinkFiltering_Binary.c
+# pve estimate = 0.291117, se(pve) = 0.156126
+```
+
+Trend is that percent variance explained (pve) is slightly lower for all of the NoCent files with short stamen as the phenotypes (continuous or binary). That is not the case for the elevation one though; no cent explains slightly more but the change is SUPER small.\
+
+Should I be including elevation as -gxe ? I don't think so, but it is an option to include environmental interactions.
+
+# Step 5: Make plots #
+I can do this with R on the HPCC, or I can do it with R on my local machine. I think it mostly depends if I want to be moving files back and forth or moving images back and forth... neither is ideal. Deciding to move files because I can't load all the packages with R on the HPCC.
+
+So at this point, manually move files between the HPCC and my local machine.
+
+Done 1/11/2023 at 11:11AM
+
+### New Code In Jan 2023 ###
+Purpose of this code is to hopefully solve my weird significance line issue and to rely on plotting more within the qqman package to hopefully do this.
+
+```{r}
+# load packages
+library(ggplot2)
+library(dplyr)
+library(qqman)
+
+rm(list = ls())
+
+### multiple testing stuff ###
+# use p.adjust and plot the adjusted p values to see how many points should be significant at my threshold
+# do the same for bonferoni
+
+# compare this to the bonferroni line drawn on unadjusted p values and the fdr line drawn on unadjusted p values wth the coe from the NAM package
+
+# after testing, I am deciding that I should make the adjusted graphs for everything, so I am going to join that in with the function, and my function will make 4 plots per identifier: qq plot, fdr adjusted p value gwas, bonferroni adjusted p value gwas, gwas with bonferroni line of significance.
+
+
+### Info to read in the file ###
+
+# this happens within the graphing function, so I need a list of identifier names
+
+# so let's start a list of samples I'm using:
+files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c","NoCent.PlinkFiltering_raw.c_testing" )
+# could then theoretically lapply my function to this list of names, but I didn't do that.
+
+##### Graphing Function #####
+# for testing out
+#identifier <- "allSNPs.PlinkFiltering_raw.c"
+
+gwas_plots <- function(type, identifier, sig.level = 0.05){
+  ##### Set filenames and read in file #####
+  
+  filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+  mplot_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/mplot_", identifier)
+  qqplot_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/qq_",identifier,".png")
+  
+  results <- read.delim(file= filename, header = T, stringsAsFactors = F)
+  
+  # reorganize dataframe - Note I am using the wald test now!
+  
+  forplot <- data.frame("BP" = results$ps, "CHR" = results$chr, "P" = results$p_wald, "SNP" = results$rs)
+  
+  forplot$fdr <- p.adjust(p= forplot$P, method = "fdr")
+
+  forplot$bon <- p.adjust(forplot$P, method = "bonferroni")
+
+  # how similar are these
+  min(forplot$fdr)
+  min(forplot$bon)
+  hist(forplot$fdr)
+  hist(forplot$bon)
+  # they are different, but it seems a smidge subtle for the raw phenotypes
+  
+  ##### QQ plot with qqman #####
+
+  png(qqplot_name)
+  qq(forplot$P)
+  dev.off()
+  
+  ###### Manhattan plot with qqman #####
+  #
+  #png(mplot_name)
+  #manhattan(forplot)
+  ## takes a super long time because I"m not running it within dev so it is trying to show up on the screen
+  #dev.off()
+  #
+
+  # prep to plot
+  don <- forplot %>%
+    # compute chromosome size in bp
+    group_by(CHR) %>%
+    summarize(chr_len=max(BP)) %>%
+    
+    #calculate cumulative position of each chromosome (again in bp)
+    mutate(tot=cumsum(chr_len)-chr_len) %>%
+    dplyr::select(-chr_len) %>%
+    
+    #add this info to the initial data set (so like adding new column and sorting by it)
+    left_join(forplot, ., by=c("CHR"="CHR")) %>%
+    
+    #add cum position of each SNP
+    arrange(CHR, BP) %>%
+    mutate( psCum=BP+tot)
+  
+  axisdf = don %>% group_by(CHR) %>% summarize(center=( max(psCum) + min(psCum) ) /2 )
+  
+  #sig.level is set in the function line. is 0.05 default but not expecting hits above that.
+  bonferroni_sig <- 0.05/length(forplot$P)
+  
+# and plot. should make 3 plots.
+  
+  mplot_fdr <- ggplot(don, aes(x=psCum, y=-log10(fdr))) +
+    geom_point( aes(color=as.factor(CHR)), alpha=0.8, size=1.3)+
+    geom_hline(yintercept = -log10(0.05), color = "blue", linetype = "dashed")+
+    geom_hline(yintercept = -log10(0.10), color = "yellow", linetype = "solid")+
+    scale_color_manual(values = rep(c("grey", "black"), 22)) +
+    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
+    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + #choosing not to set this
+    labs(x="Chromosome", y= "-log10(fdr adjusted wald p)")+
+    theme_bw() +
+    theme(
+      legend.position="none",
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+    )
+  ggsave(paste0(mplot_name, "_fdr.png"), plot = mplot_fdr, width = 7, height = 3, units = "in")
+  
+  mplot_bon <- ggplot(don, aes(x=psCum, y=-log10(bon))) +
+    geom_point( aes(color=as.factor(CHR)), alpha=0.8, size=1.3)+
+    geom_hline(yintercept = -log10(0.05), color = "blue", linetype = "dashed")+
+    geom_hline(yintercept = -log10(0.10), color = "yellow", linetype = "solid")+
+    scale_color_manual(values = rep(c("grey", "black"), 22)) +
+    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
+    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) +
+    labs(x="Chromosome", y= "-log10(bonferroni adjusted wald p)")+
+    theme_bw() +
+    theme(
+      legend.position="none",
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+    )
+  ggsave(paste0(mplot_name, "_bonf.png"), plot = mplot_bon, width = 7, height = 3, units = "in")
+ 
+  mplot <- ggplot(don, aes(x=psCum, y=-log10(P))) +
+    geom_point( aes(color=as.factor(CHR)), alpha=0.8, size=1.3)+
+    geom_hline(yintercept = -log10(bonferroni_sig), color = "blue", linetype = "dashed")+
+    #geom_hline(yintercept = -log10(sig.level), color = "red", linetype = "dotdash")+
+    scale_color_manual(values = rep(c("grey", "black"), 22)) +
+    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
+    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + # might add this back in later for better comparison
+    labs(x="Chromosome", y= "-log10( wald P)")+
+    theme_bw() +
+    theme(
+      legend.position="none",
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+    )
+  ggsave(paste0(mplot_name,".png"), plot = mplot, width = 7, height = 3, units = "in")
+  
+  print(paste0("Done making plots for: ", identifier))
+}
+  
+  # need to figure out what the suggested lines are drawn at
+  # they are just hard coded to be drawn at certain places
+  # suggestive lower is at e-5 and genome wise higher is at e-8
+  # I can set them to be whatever I want, but then I need to do some work to figure out where a bonferroni line would be and I"m back to stage 1 with deciding where a fdr line should be
+  # it also makes a square plot instead of a more rectangular one... maybe I should just do it by hand?? ugh.
+  # so commented out that code and going back to my ggplot graphs cause theyjust honestly look better to me.
+
+# does the function work?? 
+
+##### Raw Phenotypes #####
+gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_raw.c")
+gwas_plots(type = "NoCent", identifier = "NoCent.PlinkFiltering_raw.c")
+
+
+##### Subset Raw Phenotypes #####
+# only include if less than 2 as mean short stamen number
+gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_raw_subset.c")
+gwas_plots(type = "All", identifier = "NoCent.PlinkFiltering_raw_subset.c")
+
+##### Asin Phenotypes #####
+gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_Asin.c")
+gwas_plots(type = "NoCent", identifier = "NoCent.PlinkFiltering_Asin.c")
+
+##### Binary Phenotypes #####
+gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_Binary.c")
+gwas_plots(type = "NoCent", identifier = "NoCent.PlinkFiltering_Binary.c")
+
+##### Elevation! #####
+gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_Elev.c")
+gwas_plots(type = "NoCent", identifier = "NoCent.PlinkFiltering_Elev.c")
+
+```
+
+##### Compare all the p values #####
+
+Reallly only need to make plots for the wald test because I don't want score and I already did lrt
+
+```{r}
+# load packages
+library(ggplot2)
+library(dplyr)
+library(qqman)
+
+
+identifier <- "allSNPs.PlinkFiltering_raw.c_testing"
+
+filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+mplot_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/mplot_", identifier)
+  
+results <- read.delim(file= filename, header = T, stringsAsFactors = F)
+  
+# reorganize dataframe for the different p values
+  
+forplot1 <- data.frame("BP" = results$ps, "CHR" = results$chr, "P" = results$p_wald, "SNP" = results$rs)
+forplot1$fdr <- p.adjust(p= forplot1$P, method = "fdr")
+forplot1$bon <- p.adjust(forplot1$P, method = "bonferroni")
+
+#forplot2 <- data.frame("BP" = results$ps, "CHR" = results$chr, "P" = results$p_lrt, "SNP" = results$rs)
+#forplot2$fdr <- p.adjust(p= forplot$P, method = "fdr")
+#forplot2$bon <- p.adjust(forplot$P, method = "bonferroni")
+
+##### QQ plot with qqman #####
+
+  png(paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/qq_", identifier, "_wald.png"))
+  qq(forplot1$P)
+  dev.off()
+  
+  # looks fine, nothing too concerning that isn't in the p_lrt one
+  
+###### Manhattan plot #####
+  # prep to plot
+  don <- forplot1 %>%
+    # compute chromosome size in bp
+    group_by(CHR) %>%
+    summarize(chr_len=max(BP)) %>%
+    
+    #calculate cumulative position of each chromosome (again in bp)
+    mutate(tot=cumsum(chr_len)-chr_len) %>%
+    dplyr::select(-chr_len) %>%
+    
+    #add this info to the initial data set (so like adding new column and sorting by it)
+    left_join(forplot1, ., by=c("CHR"="CHR")) %>%
+    
+    #add cum position of each SNP
+    arrange(CHR, BP) %>%
+    mutate( psCum=BP+tot)
+  
+  axisdf = don %>% group_by(CHR) %>% summarize(center=( max(psCum) + min(psCum) ) /2 )
+  
+  #sig.level is set in the function line. is 0.05 default but not expecting hits above that.
+  bonferroni_sig <- 0.05/length(forplot1$P)
+  
+# and plot. should make 3 plots.
+  
+  mplot_fdr <- ggplot(don, aes(x=psCum, y=-log10(fdr))) +
+    geom_point( aes(color=as.factor(CHR)), alpha=0.8, size=1.3)+
+    geom_hline(yintercept = -log10(0.05), color = "blue", linetype = "dashed")+
+    geom_hline(yintercept = -log10(0.10), color = "yellow", linetype = "solid")+
+    scale_color_manual(values = rep(c("grey", "black"), 22)) +
+    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
+    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + #choosing not to set this
+    labs(x="Chromosome", y= "-log10(fdr adjusted p)")+
+    theme_bw() +
+    theme(
+      legend.position="none",
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+    )
+  ggsave(paste0(mplot_name, "_wald_fdr.png"), plot = mplot_fdr, width = 7, height = 3, units = "in")
+  # only two points above the 0.05 line, many more above the 0.10 line which could be interesting to investigate.
+  
+  mplot_bon <- ggplot(don, aes(x=psCum, y=-log10(bon))) +
+    geom_point( aes(color=as.factor(CHR)), alpha=0.8, size=1.3)+
+    geom_hline(yintercept = -log10(0.05), color = "blue", linetype = "dashed")+
+    geom_hline(yintercept = -log10(0.10), color = "yellow", linetype = "solid")+
+    scale_color_manual(values = rep(c("grey", "black"), 22)) +
+    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
+    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) +
+    labs(x="Chromosome", y= "-log10(bonferroni adjusted p)")+
+    theme_bw() +
+    theme(
+      legend.position="none",
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+    )
+  ggsave(paste0(mplot_name, "_wald_bonf.png"), plot = mplot_bon, width = 7, height = 3, units = "in")
+  # still two points above the 0.05 line, no additional points when looking at 0.10
+  # oh these might actually be in the centromere, or the one on chromosome 1 is at least, sad.
+  #
+ 
+  mplot <- ggplot(don, aes(x=psCum, y=-log10(P))) +
+    geom_point( aes(color=as.factor(CHR)), alpha=0.8, size=1.3)+
+    geom_hline(yintercept = -log10(bonferroni_sig), color = "blue", linetype = "dashed")+
+    #geom_hline(yintercept = -log10(sig.level), color = "red", linetype = "dotdash")+
+    scale_color_manual(values = rep(c("grey", "black"), 22)) +
+    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
+    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + # might add this back in later for better comparison
+    labs(x="Chromosome", y= "-log10(P) - blue = bonferroni correct sig of 0.05")+
+    theme_bw() +
+    theme(
+      legend.position="none",
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+    )
+  ggsave(paste0(mplot_name,"_wald.png"), plot = mplot, width = 7, height = 3, units = "in")
+
+```
+
+takeaway: the plots look basicaly the same. So redo everything with a wald test.
+
+### Archive code from fall 2022 ###
+```{r}
+# load packages
+library(ggplot2)
+library(dplyr)
+library(qvalue) # cannot be installed in R/4.0.3 on the HPCC or in R/4.2.2 on my local machine. oh boy.
+library(qqman)
+
+rm(list = ls())
+
+### Info to read in the file ###
+
+identifier = "allSNPs.PlinkFiltering.c"
+filename = paste0("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+results <- read.delim(file= filename, header = T, stringsAsFactors = F)
+
+##### Find fdr 5% or 10% line location #####
+
+# note: for allSNPs files, sig.level = 4.27e-08 works
+#       for NoCent files, sig.level = 6.1e-08 works
+
+#note: went with 10% because for 5% with the raw results, it overlaps the bofnerroni correction line which isn't super helpful.
+### Need to do this by hand and switch for each file. can then run the rest of the code at once.
+## If something is significant
+qval <- qvalue(results$p_lrt)$qvalues
+# run the qvalue function and then extract the qvalues that result
+alpha <- 0.05
+# set false discovery rate
+outliers <- which(qval <= alpha)
+## only elev has some significant points, and binary (oh thats a lot...)! and 3 for the raw phenotype!
+tmp <- results[outliers, ]
+tmp$q <- qval[outliers]
+sig.level <- max(tmp$p_lrt)
+
+## If nothing significant
+## dummy data
+## trying to get the adjusted p value to be 0.05 to start
+min(results$p_lrt)
+sig.level <- 2.831643e-08
+test <- data.frame(6,"6:1",1,0,"B","B",0,0,0,sig.level)
+names(test) = c("chr","rs","ps","n_miss","allele1","allele0","af","logl_H1","l_mle","p_lrt")
+forPAdjust<- rbind.data.frame(results, test, stringsAsFactors=F)
+forPAdjust[!(complete.cases(forPAdjust)), ]
+# looks as expected and is also all complete cases.
+
+# so I want to calculate the p.adjust and add it to a new column
+forPAdjust$padjust <- p.adjust(forPAdjust$p_lrt, method = "fdr")
+min(forPAdjust$padjust)
+  # same value works for .c and .s for the no cent samples
+  # same for the all samples, which makes sense because it is related to how many tests I am doing.
+
+### double check
+qval <- qvalue(forPAdjust$p_lrt)$qvalues
+# run the qvalue function and then extract the qvalues that result
+min(qval)
+# if less than 0.05, I think that is okay because it is just a slightly more strict line, if things are close can come back up here
+alpha <- 0.05
+# set false discovery rate
+outliers <- which(qval <= alpha)
+tmp <- results[outliers, ]
+
+##### Graphing Function #####
+
+# note! If I figure out a stable fdr level to draw that line, I could use lappy with a list of identifier names and that would be pretty cool and easy.
+# so let's start a list of samples I'm using:
+files <- c("NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.c", "NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.s", "allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.c", "allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.s", "NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin.c", "NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank.c", "NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev.c", "allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin.c", "allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank.c", "allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c")
+
+gwas_plots <- function(type, identifier, sig.level = 0.05){
+  ##### Set filenames and read in file #####
+  # type is for reading files from the HPCC
+  
+  #filename = paste0("/mnt/scratch/GWAS/output/GWAS/", type, "/", identifier, ".assoc.txt" )
+  filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+  #mplot_name = paste0("/mnt/scratch/GWAS/output/GWAS/", type, "/plots/mplot_", identifier, ".png")
+  mplot_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/mplot_", identifier, ".png")
+  #qqplot_name = paste0("/mnt/scratch/GWAS/output/GWAS/", type, "/plots/qq_", identifier, ".png")
+  qqplot_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/qq_",identifier,".png")
+  
+  results <- read.delim(file= filename, header = T, stringsAsFactors = F)
+  
+  ##### QQ plot with qqman #####
+
+  png(qqplot_name)
+  qq(results$p_lrt)
+  dev.off()
+  
+  ##### Manhattan plot with ggplot2 #####
+  don <- results %>%
+    # compute chromosome size in bp
+    group_by(chr) %>%
+    summarize(chr_len=max(ps)) %>%
+    
+    #calculate cumulative position of each chromosome (again in bp)
+    mutate(tot=cumsum(chr_len)-chr_len) %>%
+    dplyr::select(-chr_len) %>%
+    
+    #add this info to the initial data set (so like adding new column and sorting by it)
+    left_join(results, ., by=c("chr"="chr")) %>%
+    
+    #add cum position of each SNP
+    arrange(chr, ps) %>%
+    mutate( psCum=ps+tot)
+  
+  axisdf = don %>% group_by(chr) %>% summarize(center=( max(psCum) + min(psCum) ) /2 )
+  ylim <- abs(floor(log10(min(results$p_lrt))))+0.5
+  
+  #sig.level is set in the function line. is 0.05 default but not expecting hits above that.
+  bonferroni_sig <- 0.05/length(results$p_lrt)
+  ifelse(-log10(bonferroni_sig) < ylim, ylim <- ylim, ylim <- abs(-log10(bonferroni_sig)) +0.5)
+  
+  # FDR sig line as calculated with NAM R. package code
+  # to get one value for all chrs together
+  
+  #MT2=length(forplot$P)
+  #A = 1-alpha/(MT2*(1-FDR))
+  #LRmax = qchisq(A,0.5)
+  #lim = -log(pchisq(LRmax, 0.5,lower.tail=FALSE),base = 10)
+  #lim2=pchisq(LRmax, 0.5,lower.tail=FALSE)
+  #lines(x = c(Ch0[i],Ch1[i]),y = c(lim,lim))
+  
+  mplot <- ggplot(don, aes(x=psCum, y=-log10(p_lrt))) +
+    geom_point( aes(color=as.factor(chr)), alpha=0.8, size=1.3)+
+    geom_hline(yintercept = -log10(bonferroni_sig), color = "blue", linetype = "dashed")+
+    geom_hline(yintercept = -log10(sig.level), color = "red", linetype = "dotdash")+
+    scale_color_manual(values = rep(c("grey", "black"), 22)) +
+    scale_x_continuous( label = axisdf$chr, breaks = axisdf$center ) +
+    scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) +
+    labs(x="Chromosome", y= "-log10(p_lrt)")+
+    theme_bw() +
+    theme(
+      legend.position="none",
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+    )
+  
+  ggsave(mplot_name, plot = mplot, width = 7, height = 3, units = "in")
+  print(paste0("Done making plots for: ", identifier))
+}
+
+# does the function work?? yes!
+
+##### Raw Phenotypes #####
+gwas_plots(type = "NoCent", identifier = "NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.c", sig.level = 6.1e-08)
+# OMG it works :)
+
+gwas_plots(type = "NoCent", identifier = "NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.s", sig.level = 6.1e-08)
+
+gwas_plots(type = "All", identifier = "allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.c", sig.level = 4.27e-08)
+
+gwas_plots(type = "All", identifier = "allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.s", sig.level = 4.27e-08)
+
+##### Rank Phenotypes #####
+gwas_plots(type = "NoCent", identifier = "NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank.c", sig.level = 6.1e-08)
+gwas_plots(type = "All", identifier = "allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Rank.c", sig.level = 4.27e-08)
+
+##### Asin Phenotypes #####
+gwas_plots(type = "NoCent", identifier = "NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin.c", sig.level = 6.1e-08)
+gwas_plots(type = "All", identifier = "allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Asin.c", sig.level = 4.27e-08)
+
+##### Elevation! #####
+gwas_plots(type = "NoCent", identifier = "NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev.c", sig.level = 6.1e-08)
+gwas_plots(type = "All", identifier = "allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5_Elev.c", sig.level = 4.27e-08)
+# plink filtered
+gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_Elev.c", sig.level = 1.74e-4)
+
+##### Plink Filtering #####
+gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering.c", sig.level = 3.4e-08)
+gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_Asin.c", sig.level = 2.7e-08)
+
+##### Plink Filtering, Binary phenotype #####
+gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_Binary.c", sig.level = 4.277e-05) # OK, I am doing something wrong b/c these have the same number of tests as the other plink filtering but somehow a different significance level. ah man :()
+
+```
+Notes on interpretation:
+- QQ plots are all pretty bad.
+- also all manhattan plots seem to show somewhat of a peak at the centromere of each chromosome which is confusing and does not make sense to me honestly, but I would like Emily's input. She will be gone from our meeting on Wednesday, so I think I should take tomorrow to put together some type of graphic and send a slack message. Then Jeff and I can talk Wednesday.
+
+# Step 6: Pull out list of top hits #
+
+What I want this code to do: 
+1) read in files
+2) sort by p value
+3) make a dataframe of the top 15 hits for the stamen loss ones, and top 100 hits for the environmental GWAS
+4) merge the dataframes together so it is all summarized together and can find hits in common
+
+start here on 1/23/2023 to figure out any hits that align now that I also did the subset way. I also need to figure out which column is my effect size... there is no beta and I'm a bit confused as to what logl_H1 and l_mle are. l_mle might be the effect size but I think it is the log maximum likelihood estimate. af is the allele frequency. Maybe ask Miles on Monday?
+
+```{r top_hits}
+# read in packages
+library(ggplot2)
+library(dplyr)
+library(qqman)
+
+# list of all the files I am interested in
+files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c")
+# could then theoretically lapply my function to this list of names
+# does not include the testing file b/c not needed here.
+
+# create blank dataframe?
+top_hits <- list()
+
+# list of number to extract
+# for lrt, kept top 15 for most but top 100 for the environmental GWAS
+
+# for wald, pull out the top 50 from all? there are more above a fdr 0.10 so I think I need to pull out more here
+extract <- list(50, 50, 50, 100, 50, 50, 100, 50, 50, 50)
+
+for (i in 1:length(files)){
+  # read in the file
+  filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", files[i], ".assoc.txt")
+  #filename = paste0("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", files[i], ".assoc.txt")
+  
+  tmp <- read.delim(file= filename, header = T, stringsAsFactors = F)
+  
+  # order by p value
+  tmp <- tmp[order(tmp$p_wald), ]
+  
+    # print out to new data frame
+  top_hits[[i]] <- tmp[1:extract[[i]], c("chr", "rs", "ps", "beta", "se", "p_wald")]
+  
+  # rename column names?
+  colnames(top_hits[[i]]) <- c("chr", "rs", "ps", paste0("beta_",files[i]), paste0("se_",files[i]), paste0("p_",files[i]))
+  
+  # clear out the dataframe, start again
+  rm(tmp)
+  
+}
+
+# merge the dataframes together
+
+top_hits_all <- Reduce(function(dtf1, dtf2) merge(dtf1, dtf2, by = c("chr", "rs", "ps"), all = TRUE),
+        top_hits)
+colnames(top_hits_all) <- c("chr", "rs", "ps", "beta_binary_nc", "se_binary_nc", "p_binary_nc", "beta_raw_nc", "se_raw_nc", "p_raw_nc", "beta_asin_nc", "se_asin_nc", "p_asin_nc", "beta_elev_nc", "se_elev_nc", "p_elev_nc", "beta_asin_all", "se_asin_all", "p_asin_all", "beta_raw_all", "se_raw_all", "p_raw_all", "beta_elev_all", "se_elev_all", "p_elev_all", "beta_binary_all", "se_binary_all", "p_binary_all", "beta_subset_all", "se_subset_all", "p_subset_all", "beta_subset_nc", "se_subset_nc", "p_subset_nc")
+
+# reorganize the order
+top_hits_all <- top_hits_all[ , c("chr", "ps", "rs", "beta_raw_all", "beta_raw_nc", "beta_subset_all", "beta_subset_nc", "beta_asin_all", "beta_asin_nc", "beta_binary_all", "beta_binary_nc", "beta_elev_all", "beta_elev_nc", "se_raw_all", "se_raw_nc", "se_subset_all", "se_subset_nc", "se_asin_all", "se_asin_nc", "se_binary_all", "se_binary_nc", "se_elev_all", "se_elev_nc", "p_raw_all", "p_raw_nc", "p_subset_all", "p_subset_nc", "p_asin_all", "p_asin_nc", "p_binary_all", "p_binary_nc", "p_elev_all", "p_elev_nc")]
+
+# write this out
+write.csv(top_hits_all, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_wald_Jan2023.csv", row.names = FALSE)
+
+
+## but now what I want are a list of top hits in the region where hits seem to overlap.... how can I get that? maybe start by using qqman to make plots where certain SNPs are highlighted? and identify SNPs in one of the GWAS runs that are in each region?
+
+NoCent_raw <- read.delim(file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/NoCent.PlinkFiltering_raw.c.assoc.txt", header = T, stringsAsFactors = F)
+NoCent_subset <- read.delim(file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/NoCent.PlinkFiltering_raw_subset.c.assoc.txt", header = T, stringsAsFactors = F)
+NoCent_asin <- read.delim(file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/NoCent.PlinkFiltering_Asin.c.assoc.txt", header = T, stringsAsFactors = F)
+
+# do this in a loop so I can see where the points fall on all possible plots
+
+# list of all the files I am interested in
+files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c")
+shared_snps <- c(
+  "Chr1:22432765", # keep for sure 
+  "Chr1:28919208", # top hit on chr 1 from binary... yikes
+  "Chr1:30252086", # too late in the chromosome? see where it falls on teh arcsin or subset manhattan plots. really low on subset. god spot on arcsin. separate peak from the previous one.
+  "Chr2:8677374", # keep
+  "Chr2:18089470", # keep
+  "Chr3:2253161", # keep
+  "Chr3:2942726", # see where it falls on arcsin - keep
+  "Chr3:16081808", # super low, not good; doesn't exist on subset? also pretty low on asin. is this a binary only peak?
+  "Chr3:22206190", # randomly choosing to keep this one
+  "Chr3:22289006", # not sure what to do
+  "Chr3:22357302", # not sure what to do
+  "Chr4:7648052", # see where it falls on subset - is not in tallest peak...
+  "Chr4:12395952", # keep
+  "Chr4:17427400", # keep
+  "Chr5:6537535", # in peak but low in raw, same with asin
+  "Chr5:1948687", # keep but could get a higher hit
+  "Chr5:13458838" # keep
+  )
+
+#removed cites
+#"Chr1:17293423",
+#"Chr2:9616546",
+#"Chr5:6624866",
+#"Chr5:19462189" #see where it falls on subset - it is the highest of that last peak but I didn't mark that as shared
+#"Chr3:3301689", # see where it falls on arcsin, low on raw and subset. earlier is better on asin
+#"Chr3:22206185", # can't really distinguish the rest. only see 3 green points on raw plot. just pick one? chose 6190
+#"Chr3:22206191",
+#"Chr3:22206199",
+
+highlight_snps <- function(identifier){
+  filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+  mplot_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/mplot_topSNPs/mplot_", identifier, "_highlight.png")
+  results <- read.delim(file= filename, header = T, stringsAsFactors = F)
+  ##### Manhattan plot with qqman #####
+
+  png(mplot_name)
+  manhattan(x = results, chr = "chr", bp  = "ps", p = "p_wald", snp = "rs", highlight = shared_snps)
+  dev.off()
+  
+  print(paste0("Done making plots for: ", identifier))
+}
+
+# test 1
+highlight_snps("NoCent.PlinkFiltering_Binary.c")
+
+# and loop it
+
+for (i in 1:length(files)){
+  highlight_snps(files[[i]])
+}
+
+
+```
+
+Notes from lrt analysis:
+overlap asin both and raw nc at 5:10731197
+overlap raw and asin all at 5:12231366
+asin and all overlap at 5:13458838
+asin and all overlap at 5:4899798 and 5:4899803
+so only direct overlap is on chromosome 5 but in two different locations and only between the raw and the binary, which gives me more confidence in chromosome 5 at least.
+ 
+But what about regions? 
+So, points where there is overlap between two different types within a 100,000 base window (100kb)
+close ish on chr 1 between raw and asin (1:22557999 and 1:22432769)
+close ish also for binary and elev at 2:278123 and 2:278553
+asin and raw overlap at 5:4899798 like I said above
+raw, asin, and ginary all get close at 5:13353978 and 5:13458838
+raw and binary close at 5:16585826 and 5:16672957
+raw close to the big elev peak at 5:19462189 and the peak 5:19547140 then the peak seems closer I guess to 5:19700000-19800000
+
+Notes from wald analysis:
+all overlap of top hits is between raw, subset, and asin. There is one location where they all overlap at chr5:13458838 which is after and near to a peak in the binary dataset
+- raw and subset overlap most on chromsome 1, asin and raw overlap most on chromosome 5
+but I do think it makes more sense to almost not look at the top hits and look for consistent patterns across all which means peaks that migt not be showing up here in this analysis, but that I think I want to like interactively click on the dot in the graph and have ggplot tell me what the name of the SNp is that is at the top of that peak... how can I do that???
+There will probably be more overlap in regions, but I can partly see that visually rather than going through it here...
+Most of the overlap is not in the centromere (only 1 is) which I think is a good sign.
+how do I want to look at effect sizes? like the effect of just the top hits or what?
+
+# Step 7: Effect Sizes #
+```{r}
+library(dplyr)
+
+files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c")
+
+p_effect_cor <- function(identifier){
+  ##### Set filenames and read in file #####
+  
+  filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+  
+  results <- read.delim(file= filename, header = T, stringsAsFactors = F)
+  
+  #use abs() because we want large effect vs small effect, the direction is not important.
+  return(cor(abs(results$beta), results$p_wald, method = "pearson"))
+  
+}
+
+#test it out, do I get a list or a list of lists?
+
+p_effect_cor("NoCent.PlinkFiltering_Binary.c")
+tmp <- p_effect_cor("NoCent.PlinkFiltering_Binary.c")
+#why does it print out the value instead of just saving it to the object?
+tmp <- sapply(files, p_effect_cor, simplify = TRUE, USE.NAMES = TRUE)
+# this output is actually what I want, it is a named vectors if I use simply = TRUE
+tmp
+
+#could plot it, but that will be a lot of points and will take a lot of computer power that I don't want to use right now.
+NoCent_raw <- read.delim(file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/NoCent.PlinkFiltering_raw.c.assoc.txt", header = T, stringsAsFactors = F)
+
+reg <- lm(abs(beta) ~ p_wald, data = NoCent_raw)
+summary(reg)
+# r2 is decently high
+# slope = -1.470e-01
+# intercept = 1.344e-01
+
+ggplot(data = NoCent_raw, aes(x = p_wald, y = abs(beta)))+
+  geom_point(alpha = 0.1)+
+  theme_classic()
+  # don't want the line geom_abline(intercept=max(abs(NoCent_raw$beta)), slope=-0.8411929, linetype="solid", color ="red")
+
+```

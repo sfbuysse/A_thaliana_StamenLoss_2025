@@ -1,0 +1,2341 @@
+---
+title: "08_PCA"
+author: "Sophia Buysse"
+date: "5/16/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+This uses the same input file as I had used for the GWAS because it is the MQF filtered file. This always uses the same input file as the GWAS, even though I don't think the naming convention is MQF anymore :)
+
+# start here on HPCC
+plink! Use plink to convert a vcf file into a bed binary plink file to be used for GWAS and making the PCA.
+```{bash}
+module load PLINK/1.9b_4.1-x86_64
+
+# with centromere
+plink -vcf /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz --make-bed --double-id --keep-allele-order --out /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+# genotyping rate is 0.944
+
+# without centromere
+plink -vcf /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.recode.vcf --make-bed --double-id --keep-allele-order --out /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+# genotyping rate is 0.947
+
+# try it all the allsites file to see if the issue is with going to variant sites only?
+plink -vcf /mnt/scratch/buysseso/GVCF/all.filtered.vcf.gz --make-bed --double-id --keep-allele-order --out /mnt/scratch/buysseso/GVCF/all.filtered
+# genotyping rate is 0.959
+
+```
+Output:
+
+[buysseso@dev-amd20 buysseso]$ plink -vcf /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz --make-bed --out /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+PLINK v1.90b6.6 64-bit (10 Oct 2018)           www.cog-genomics.org/plink/1.9/
+(C) 2005-2018 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.log.
+Options in effect:
+  --make-bed
+  --out /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+  --vcf /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz
+
+1031524 MB RAM detected; reserving 515762 MB for main workspace.
+--vcf: 1243k variants complete.
+/mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5-temporary.bed
++
+/mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5-temporary.bim
++
+/mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5-temporary.fam
+written.
+1243031 variants loaded from .bim file.
+61 people (0 males, 0 females, 61 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to
+/mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.nosex
+.
+Using 1 thread (no multithreaded calculations invoked).
+Before main variant filters, 61 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.944076.
+1243031 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+--make-bed to
+/mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.bed
++
+/mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.bim
++
+/mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.fam
+... done.
+
+[buysseso@dev-amd20 buysseso]$ plink -vcf /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.recode.vcf --make-bed --out /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+PLINK v1.90b6.6 64-bit (10 Oct 2018)           www.cog-genomics.org/plink/1.9/
+(C) 2005-2018 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.log.
+Options in effect:
+  --make-bed
+  --out /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+  --vcf /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.recode.vcf
+
+1031524 MB RAM detected; reserving 515762 MB for main workspace.
+--vcf: 882k variants complete.
+/mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5-temporary.bed
++
+/mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5-temporary.bim
++
+/mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5-temporary.fam
+written.
+882938 variants loaded from .bim file.
+61 people (0 males, 0 females, 61 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to
+/mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.nosex
+.
+Using 1 thread (no multithreaded calculations invoked).
+Before main variant filters, 61 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.947569.
+882938 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+--make-bed to
+/mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.bed
++
+/mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.bim
++
+/mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.fam
+... done.
+
+[buysseso@dev-amd20 buysseso]$ plink -vcf /mnt/scratch/buysseso/GVCF/all.filtered.vcf.gz --make-bed --double-id --keep-allele-order --out /mnt/scratch/buysseso/GVCF/all.filtered
+PLINK v1.90b6.6 64-bit (10 Oct 2018)           www.cog-genomics.org/plink/1.9/
+(C) 2005-2018 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to /mnt/scratch/buysseso/GVCF/all.filtered.log.
+Options in effect:
+  --double-id
+  --keep-allele-order
+  --make-bed
+  --out /mnt/scratch/buysseso/GVCF/all.filtered
+  --vcf /mnt/scratch/buysseso/GVCF/all.filtered.vcf.gz
+
+1031524 MB RAM detected; reserving 515762 MB for main workspace.
+--vcf: /mnt/scratch/buysseso/GVCF/all.filtered-temporary.bed +
+/mnt/scratch/buysseso/GVCF/all.filtered-temporary.bim +
+/mnt/scratch/buysseso/GVCF/all.filtered-temporary.fam written.
+99202614 variants loaded from .bim file.
+61 people (0 males, 0 females, 61 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to /mnt/scratch/buysseso/GVCF/all.filtered.nosex .
+Using 1 thread (no multithreaded calculations invoked).
+Before main variant filters, 61 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.959406.
+99202614 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+--make-bed to /mnt/scratch/buysseso/GVCF/all.filtered.bed +
+/mnt/scratch/buysseso/GVCF/all.filtered.bim +
+/mnt/scratch/buysseso/GVCF/all.filtered.fam ... done.
+
+
+cool! that was easy enough as the first step. I now have a centromere included and centromere excluded file to use going forward.
+
+# Do PCA
+
+Doing it with plink is surprisingly easy!
+
+## do without any linkage filtering
+```{bash}
+module load PLINK/1.9b_4.1-x86_64
+
+# SNPs
+plink -bfile /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 --pca --threads 4 --out /mnt/scratch/buysseso/PCA/plinkPCA_all
+
+# SNPs no centromere
+plink -bfile /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 --pca --threads 4 --out /mnt/scratch/buysseso/PCA/plinkPCA_NoCent
+
+
+#all.filtered file. This is the file that is the input for the Fst, so it is variant and invariant sites that have been less stringently filtered
+plink -bfile /mnt/scratch/buysseso/GVCF/all.filtered --threads 4 --pca --out /mnt/scratch/buysseso/PCA/plinkPCA_Var_invar
+
+# plink filtering (see filter variants code)
+# this is the good one.
+plink -bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest --threads 4 --pca --out /mnt/scratch/buysseso/PCA/plinkPCA_plinkFilterTest
+
+### plink filtering, remove BOS individuals
+
+# remove BOS individuals
+plink -bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest --threads 4 --remove /mnt/scratch/buysseso/PCA/Bos_indv.txt --make-bed --out /mnt/scratch/buysseso/GVCF/allsites_plink_noBOS
+# other arguments I might need:
+# --double-id 
+# --keep-allele-order
+# --allow-no-sex 
+# --set-missing-var-ids @:#
+
+# output: 57 individuals remaining
+# 1858706 variants remain -> same as with BOS so that seems to be a good sign I think?
+
+# Run PCA
+plink -bfile /mnt/scratch/buysseso/GVCF/allsites_plink_noBOS --threads 4 --pca --out /mnt/scratch/buysseso/PCA/plinkPCA_noBOS
+
+#plink filtering, no centromere
+plink -bfile /mnt/scratch/buysseso/GVCF/allChrs_SNPs_NoCent --threads 4 --pca --out /mnt/scratch/buysseso/PCA/plinkPCA_noCent
+```
+
+Outputs!
+For all SNPs:
+ plink -bfile /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 --pca --out /mnt/scratch/buysseso/PCA/plinkPCA_all
+PLINK v1.90b6.6 64-bit (10 Oct 2018)           www.cog-genomics.org/plink/1.9/
+(C) 2005-2018 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to /mnt/scratch/buysseso/PCA/plinkPCA_all.log.
+Options in effect:
+  --bfile /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+  --out /mnt/scratch/buysseso/PCA/plinkPCA_all
+  --pca
+
+1031524 MB RAM detected; reserving 515762 MB for main workspace.
+1243031 variants loaded from .bim file.
+61 people (0 males, 0 females, 61 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to /mnt/scratch/buysseso/plinkPCA_all.nosex .
+Using up to 127 threads (change this with --threads).
+Before main variant filters, 61 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is *0.944076*.
+1243031 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+Relationship matrix calculation complete.
+--pca: Results saved to /mnt/scratch/buysseso/PCA/plinkPCA_all.eigenval and
+/mnt/scratch/buysseso/PCA/plinkPCA_all.eigenvec .
+
+For No Cent:
+plink -bfile /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 --pca --out /mnt/scratch/buysseso/PCA/plinkPCA_NoCent
+PLINK v1.90b6.6 64-bit (10 Oct 2018)           www.cog-genomics.org/plink/1.9/
+(C) 2005-2018 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to /mnt/scratch/buysseso/PCA/plinkPCA_NoCent.log.
+Options in effect:
+  --bfile /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5
+  --out /mnt/scratch/buysseso/PCA/plinkPCA_NoCent
+  --pca
+
+1031524 MB RAM detected; reserving 515762 MB for main workspace.
+882938 variants loaded from .bim file.
+61 people (0 males, 0 females, 61 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to /mnt/scratch/buysseso/plinkPCA_NoCent.nosex .
+Using up to 127 threads (change this with --threads).
+Before main variant filters, 61 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.947569.
+882938 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+Relationship matrix calculation complete.
+--pca: Results saved to /mnt/scratch/buysseso/PCA/plinkPCA_NoCent.eigenval and
+/mnt/scratch/buysseso/OCA/plinkPCA_NoCent.eigenvec .
+
+For the all with variant and invariant sites:
+[buysseso@dev-amd20 buysseso]$ plink -bfile /mnt/scratch/buysseso/GVCF/all.filtered --pca --out /mnt/scratch/buysseso/PCA/plinkPCA_Var_invar
+PLINK v1.90b6.6 64-bit (10 Oct 2018)           www.cog-genomics.org/plink/1.9/
+(C) 2005-2018 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to /mnt/scratch/buysseso/PCA/plinkPCA_Var_invar.log.
+Options in effect:
+  --bfile /mnt/scratch/buysseso/GVCF/all.filtered
+  --out /mnt/scratch/buysseso/PCA/plinkPCA_Var_invar
+  --pca
+
+1031524 MB RAM detected; reserving 515762 MB for main workspace.
+99202614 variants loaded from .bim file.
+61 people (0 males, 0 females, 61 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to /mnt/scratch/buysseso/PCA/plinkPCA_Var_invar.nosex
+.
+Using up to 127 threads (change this with --threads).
+Before main variant filters, 61 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.959406.
+99202614 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+Relationship matrix calculation complete.
+--pca: Results saved to /mnt/scratch/buysseso/PCA/plinkPCA_Var_invar.eigenval
+and /mnt/scratch/buysseso/PCA/plinkPCA_Var_invar.eigenvec .
+
+[buysseso@dev-amd20 GVCF]$ plink -bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest --threads 4 --pca --out /mnt/scratch/buysseso/PCA/plinkPCA_plinkFilterTest
+PLINK v1.90b6.6 64-bit (10 Oct 2018)           www.cog-genomics.org/plink/1.9/
+(C) 2005-2018 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to /mnt/scratch/buysseso/PCA/plinkPCA_plinkFilterTest.log.
+Options in effect:
+  --bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest
+  --out /mnt/scratch/buysseso/PCA/plinkPCA_plinkFilterTest
+  --pca
+  --threads 4
+
+1031524 MB RAM detected; reserving 515762 MB for main workspace.
+1858706 variants loaded from .bim file.
+61 people (0 males, 0 females, 61 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to
+/mnt/scratch/buysseso/PCA/plinkPCA_plinkFilterTest.nosex .
+Using up to 4 threads (change this with --threads).
+Warning: This run includes BLAS/LAPACK linear algebra operations which
+currently disregard the --threads limit.  If this is problematic, you may want
+to recompile against single-threaded BLAS/LAPACK.
+Before main variant filters, 61 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.932702.
+1858706 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+Relationship matrix calculation complete.
+--pca: Results saved to and eigenvectors]
+/mnt/scratch/buysseso/PCA/plinkPCA_plinkFilterTest.eigenval and
+/mnt/scratch/buysseso/PCA/plinkPCA_plinkFilterTest.eigenvec .
+
+noBOS pCA output:
+1031524 MB RAM detected; reserving 515762 MB for main workspace.
+1858706 variants loaded from .bim file.
+57 people (0 males, 0 females, 57 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to /mnt/scratch/buysseso/PCA/plinkPCA_noBOS.nosex .
+Using up to 4 threads (change this with --threads).
+Warning: This run includes BLAS/LAPACK linear algebra operations which
+currently disregard the --threads limit.  If this is problematic, you may want
+to recompile against single-threaded BLAS/LAPACK.
+Before main variant filters, 57 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.930465.
+1858706 variants and 57 people pass filters and QC.
+Note: No phenotypes present.
+Relationship matrix calculation complete.
+--pca: Results saved to /mnt/scratch/buysseso/PCA/plinkPCA_noBOS.eigenval and
+/mnt/scratch/buysseso/PCA/plinkPCA_noBOS.eigenvec .
+
+Plink filtering, no cent
+1031524 MB RAM detected; reserving 515762 MB for main workspace.
+1507328 variants loaded from .bim file.
+61 people (0 males, 0 females, 61 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to /mnt/scratch/buysseso/PCA/plinkPCA_noCent.nosex .
+Using up to 4 threads (change this with --threads).
+Warning: This run includes BLAS/LAPACK linear algebra operations which
+currently disregard the --threads limit.  If this is problematic, you may want
+to recompile against single-threaded BLAS/LAPACK.
+Before main variant filters, 61 founders and 0 nonfounders present.
+Calculating allele frequencies... done.
+Total genotyping rate is 0.936191.
+1507328 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+Relationship matrix calculation complete.
+--pca: Results saved to /mnt/scratch/buysseso/PCA/plinkPCA_noCent.eigenval and
+/mnt/scratch/buysseso/PCA/plinkPCA_noCent.eigenvec .
+
+
+## do with linkage filtering
+Testing this just on the no centromere dataset first.
+Found a reference that I should filter out SNPs in high linkage disequilibrium, which means SNPs with an r2 higher than 80% were filtered out.
+https://www.nature.com/articles/ng.1042#Sec4
+
+No adding the include centromere dataset here to see if it matches. If it does, I'm not going to save the figures.
+
+### no centromere ###
+First default filtering was --indep-pairwise 50 10 0.1 which removed 727103 of 882938 variants (pretty strict filter)
+Total genotyping rate is 0.947569.
+882938 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+Pruned 208266 variants from chromosome 1, leaving 44491.
+Pruned 120233 variants from chromosome 2, leaving 24885.
+Pruned 145234 variants from chromosome 3, leaving 33151.
+Pruned 105344 variants from chromosome 4, leaving 22203.
+Pruned 148026 variants from chromosome 5, leaving 31105.
+Pruning complete.  727103 of 882938 variants removed. ((so most were removed))
+Marker lists written to
+/mnt/scratch/buysseso/PCA/LDpruned_50_10_0.1_NoCent.all.prune.in and
+/mnt/scratch/buysseso/PCA/LDpruned_50_10_0.1_NoCent.all.prune.out .
+
+Output for --indep-pairwise 50['kb'] 10 0.8
+
+Total genotyping rate is 0.947569.
+882938 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+Pruned 172567 variants from chromosome 1, leaving 80190.
+Pruned 97004 variants from chromosome 2, leaving 48114.
+Pruned 116311 variants from chromosome 3, leaving 62074.
+Pruned 88848 variants from chromosome 4, leaving 38699.
+Pruned 122658 variants from chromosome 5, leaving 56473.
+Pruning complete.  597388 of 882938 variants removed.
+Marker lists written to
+/mnt/scratch/buysseso/PCA/LDpruned_50_10_0.8_NoCent.all.prune.in and
+/mnt/scratch/buysseso/PCA/LDpruned_50_10_0.8_NoCent.all.prune.out .
+
+Output for --indep-pairwise 50['kb'] 5 0.8
+
+Pruned 173820 variants from chromosome 1, leaving 78937.
+Pruned 97643 variants from chromosome 2, leaving 47475.
+Pruned 117262 variants from chromosome 3, leaving 61123.
+Pruned 89452 variants from chromosome 4, leaving 38095.
+Pruned 123449 variants from chromosome 5, leaving 55682.
+Pruning complete.  601626 of 882938 variants removed.
+*this means there are 281312 variants remaining which is pretty low.*
+Marker lists written to
+/mnt/scratch/buysseso/PCA/LDpruned_50_5_0.8_NoCent.all.prune.in and
+/mnt/scratch/buysseso/PCA/LDpruned_50_5_0.8_NoCent.all.prune.out .
+
+### with centromere ###
+Total genotyping rate is 0.936889.
+--indep-pairwise 50['kb'] 5 0.8
+1243031 variants and 61 people pass filters and QC.
+Note: No phenotypes present.
+Pruned 190900 variants from chromosome 1, leaving 104287.
+Pruned 137718 variants from chromosome 2, leaving 88217.
+Pruned 151649 variants from chromosome 3, leaving 98466.
+Pruned 136713 variants from chromosome 4, leaving 87415.
+Pruned 152334 variants from chromosome 5, leaving 95332.
+Pruning complete.  769314 of 1243031 variants removed.
+Marker lists written to
+/mnt/scratch/buysseso/PCA/LDpruned_50_5_0.8.all.prune.in and
+/mnt/scratch/buysseso/PCA/LDpruned_50_5_0.8.all.prune.out .
+*a lot pruned out here. only kept 473717*
+
+
+I have not found a reference for a good window size to use...Maybe I should do 50kb windows? or is that just too big? I think bigger is better becuase then I am doing more comparisons. They do need to be in relatively high LD to be removed. Smaller middle number (how far to move before making the next window) also means more comparisons b/c more windows within the genome.
+
+```{bash}
+module load PLINK/1.9b_4.1-x86_64
+
+# no centromere
+
+plink -bfile /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 --set-missing-var-ids @:# --indep-pairwise 50['kb'] 5 0.8 --out /mnt/scratch/buysseso/PCA/LDpruned_50_5_0.8_NoCent.all 
+# this means I have 50 kb windows, and I shift by 5 variants between windows, and prune by r2 greater than 0.8 so I prune if the variants have quite a high correlation.
+
+#NOTE! file name below needs to be adjusted with each new pruning code.
+plink -bfile /mnt/scratch/buysseso/GVCF/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 --set-missing-var-ids @:# --extract /mnt/scratch/buysseso/PCA/LDpruned_50_5_0.8_NoCent.all.prune.in --pca --out /mnt/scratch/buysseso/PCA/plinkPCA_NoCent_pruned
+
+# with centromere
+
+plink -bfile /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 --set-missing-var-ids @:# --indep-pairwise 50['kb'] 5 0.8 --out /mnt/scratch/buysseso/PCA/LDpruned_50_5_0.8.all 
+
+#NOTE! file name below needs to be adjusted with each new pruning code.
+plink -bfile /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 --set-missing-var-ids @:# --extract /mnt/scratch/buysseso/PCA/LDpruned_50_5_0.8.all.prune.in --pca --out /mnt/scratch/buysseso/PCA/plinkPCA_pruned
+
+```
+
+
+### with plink filtering ###
+
+```{bash}
+module load PLINK/1.9b_4.1-x86_64
+
+plink -bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest --set-missing-var-ids @:# --indep-pairwise 50['kb'] 5 0.8 --out /mnt/scratch/buysseso/PCA/LDpruned_50_5_0.8.all_plink
+
+## this code is done in the GWAS R script just to get the new sample name ones to plink format with phenotypes (not important here but maybe will help me figure out the issue)
+#plink -bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest --make-bed --allow-no-sex --threads 4 -pheno /mnt/scratch/buysseso/GWAS/RawLineMeans_08092022.txt --set-missing-var-ids @:# --out /mnt/scratch/buysseso/GWAS/allSNPs.PlinkFiltering
+
+## plink -bfile /mnt/scratch/buysseso/GWAS/allSNPs.PlinkFiltering --set-missing-var-ids @:# --indep-pairwise 50['kb'] 5 0.8 --out /mnt/scratch/buysseso/PCA/LDpruned_50_5_0.8.PlinkFiltering
+# same number of snps left as above so this code line is just redundant
+
+
+# make an intermediate bed file
+plink -bfile /mnt/scratch/buysseso/GWAS/allSNPs.PlinkFiltering --set-missing-var-ids @:# --threads 4 --extract /mnt/scratch/buysseso/PCA/LDpruned_50_5_0.8.PlinkFiltering.prune.in --make-bed --out /mnt/scratch/buysseso/PCA/plinkPCA_pruned
+
+# do pca
+
+plink -bfile /mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5 --set-missing-var-ids @:# --extract /mnt/scratch/buysseso/PCA/LDpruned_50_5_0.8.all_plink.prune.in --pca --out /mnt/scratch/buysseso/PCA/plinkPCA_pruned
+
+```
+
+Pruned 332087 variants from chromosome 1, leaving 143534.
+Pruned 202764 variants from chromosome 2, leaving 98547.
+Pruned 237867 variants from chromosome 3, leaving 119151.
+Pruned 198215 variants from chromosome 4, leaving 96354.
+Pruned 304660 variants from chromosome 5, leaving 125527.
+Pruning complete.  1275593 of 1858706 variants removed.
+
+Only 583113 variants remaining after extracting, so we remove most of the information.
+
+
+# Now visualize the results with R
+### Prep Datasets ###
+
+```{bash, eval = FALSE}
+# load modules
+
+# note, this is an old version of R
+module purge
+module load GCC/9.3.0  OpenMPI/4.0.3 R/4.0.3
+module load GDAL/3.0.4-Python-3.8.2
+R
+
+# or 
+OMP_NUM_THREADS=4 
+Rscript filename.R
+
+```
+
+Do everything for the plink filtered with and without linkage pruning.
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# read in data
+# plink filter, all
+eigenValues_test <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_plinkFilterTest.eigenval", sep = " ", header = F)
+eigenVectors_test <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_plinkFilterTest.eigenvec", sep = " ", header = F)
+# each row is a genotype, each column is a PC.
+colnames(eigenVectors_test) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_test)-2)))
+
+# plink filter, LD pruned
+eigenValues_pruned <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_pruned.eigenval", sep = " ", header = F)
+eigenVectors_pruned <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_pruned.eigenvec", sep = " ", header = F)
+colnames(eigenVectors_pruned) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_pruned)-2)))
+
+# plink filter, no BOS
+eigenValues_noBOS <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_noBOS.eigenval", sep = " ", header = F)
+eigenVectors_noBOS <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_noBOS.eigenvec", sep = " ", header = F)
+# each row is a genotype, each column is a PC.
+colnames(eigenVectors_noBOS) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_noBOS)-2)))
+
+# plink filter, no centromere
+eigenValues_noCent <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_noCent.eigenval", sep = " ", header = F)
+eigenVectors_noCent <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_noCent.eigenvec", sep = " ", header = F)
+# each row is a genotype, each column is a PC.
+colnames(eigenVectors_noCent) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_noCent)-2)))
+
+# calculate the PVE. Remember that I used 20 PCs, so this PVE is out of 20 PCs
+pve_test <- round((eigenValues_test / (sum(eigenValues_test))*100), 2)
+pve_test$PC <- c(1:20)
+
+pve_pruned <- round((eigenValues_pruned / (sum(eigenValues_pruned))*100), 2)
+pve_pruned$PC <- c(1:20)
+# pretty similar to the LD pruned without the centromere, a little bit higher I'd say but by like 0.3% so not much
+
+pve_noBOS <- round((eigenValues_noBOS / (sum(eigenValues_noBOS))*100), 2)
+pve_noBOS$PC <- c(1:20)
+# definite drop after first four, 1 is 13, 2 is 10, 3 is 8.3, 4 is 7.` and the rest scale from 6 down to 2.25
+
+pve_noCent <- round((eigenValues_noCent / (sum(eigenValues_noCent))*100), 2)
+pve_noCent$PC <- c(1:20)
+# matches the NO BOS results almost exactly? strange...
+
+# add pop column
+eigenVectors_test$Pop <- toupper(substr(eigenVectors_test$Line, 1, 3))
+eigenVectors_pruned$Pop <- toupper(substr(eigenVectors_pruned$Line, 1, 3))
+eigenVectors_noBOS$Pop <- toupper(substr(eigenVectors_noBOS$Line, 1, 3))
+eigenVectors_noCent$Pop <- toupper(substr(eigenVectors_noCent$Line, 1, 3))
+
+# change ARB -> ARU and SPE -> SAL
+eigenVectors_test[eigenVectors_test$Pop == "ARB", "Pop"] <- "ARU"
+eigenVectors_test[eigenVectors_test$Pop == "SPE", "Pop"] <- "SAL"
+
+eigenVectors_pruned[eigenVectors_pruned$Pop == "ARB", "Pop"] <- "ARU"
+eigenVectors_pruned[eigenVectors_pruned$Pop == "SPE", "Pop"] <- "SAL"
+
+eigenVectors_noBOS[eigenVectors_noBOS$Pop == "ARB", "Pop"] <- "ARU"
+eigenVectors_noBOS[eigenVectors_noBOS$Pop == "SPE", "Pop"] <- "SAL"
+
+eigenVectors_noCent[eigenVectors_noCent$Pop == "ARB", "Pop"] <- "ARU"
+eigenVectors_noCent[eigenVectors_noCent$Pop == "SPE", "Pop"] <- "SAL"
+
+# load the meta data
+metadata <- read.csv("/mnt/gs21/scratch/buysseso/PCA/SpanishMasterDataset_PopMetaData.csv", header = TRUE)
+
+# clean up a little
+metadata <- metadata[1:16,c("Population", "PopCode", "Elev_m", "Lat_DecDeg", "Lon_DecDeg")]
+
+# merge 
+eigenVectors_test$elev <- metadata$Elev_m[match(eigenVectors_test$Pop, metadata$PopCode)]
+# then match with row names to add metadata column
+# do this for lat and long now too
+eigenVectors_test$lat <- metadata$Lat_DecDeg[match(eigenVectors_test$Pop, metadata$PopCode)]
+eigenVectors_test$lon <- metadata$Lon_DecDeg[match(eigenVectors_test$Pop, metadata$PopCode)]
+
+eigenVectors_pruned$elev <- metadata$Elev_m[match(eigenVectors_pruned$Pop, metadata$PopCode)]
+# then match with row names to add metadata column
+# do this for lat and long now too
+eigenVectors_pruned$lat <- metadata$Lat_DecDeg[match(eigenVectors_pruned$Pop, metadata$PopCode)]
+eigenVectors_pruned$lon <- metadata$Lon_DecDeg[match(eigenVectors_pruned$Pop, metadata$PopCode)]
+
+eigenVectors_noBOS$elev <- metadata$Elev_m[match(eigenVectors_noBOS$Pop, metadata$PopCode)]
+# then match with row names to add metadata column
+# do this for lat and long now too
+eigenVectors_noBOS$lat <- metadata$Lat_DecDeg[match(eigenVectors_noBOS$Pop, metadata$PopCode)]
+eigenVectors_noBOS$lon <- metadata$Lon_DecDeg[match(eigenVectors_noBOS$Pop, metadata$PopCode)]
+
+eigenVectors_noCent$elev <- metadata$Elev_m[match(eigenVectors_noCent$Pop, metadata$PopCode)]
+# then match with row names to add metadata column
+# do this for lat and long now too
+eigenVectors_noCent$lat <- metadata$Lat_DecDeg[match(eigenVectors_noCent$Pop, metadata$PopCode)]
+eigenVectors_noCent$lon <- metadata$Lon_DecDeg[match(eigenVectors_noCent$Pop, metadata$PopCode)]
+
+# order by elevation
+
+eigenVectors_test <- eigenVectors_test[order(eigenVectors_test$elev),]
+eigenVectors_test$label <- paste0(eigenVectors_test$Pop, " - ", eigenVectors_test$elev, "m")
+#eigenVectors_test$Pop <- as.factor(eigenVectors_test$Pop)
+eigenVectors_test$Pop <- factor(eigenVectors_test$Pop, levels = unique(eigenVectors_test$Pop[order(eigenVectors_test$elev)]))
+str(eigenVectors_test)
+
+eigenVectors_pruned <- eigenVectors_pruned[order(eigenVectors_pruned$elev),]
+eigenVectors_pruned$label <- paste0(eigenVectors_pruned$Pop, " - ", eigenVectors_pruned$elev, "m")
+#eigenVectors_pruned$Pop <- as.factor(eigenVectors_pruned$Pop)
+eigenVectors_pruned$Pop <- factor(eigenVectors_pruned$Pop, levels = unique(eigenVectors_pruned$Pop[order(eigenVectors_pruned$elev)]))
+
+eigenVectors_noBOS <- eigenVectors_noBOS[order(eigenVectors_noBOS$elev),]
+eigenVectors_noBOS$label <- paste0(eigenVectors_noBOS$Pop, " - ", eigenVectors_noBOS$elev, "m")
+eigenVectors_noBOS$Pop <- factor(eigenVectors_noBOS$Pop, levels = unique(eigenVectors_noBOS$Pop[order(eigenVectors_noBOS$elev)]))
+
+eigenVectors_noCent <- eigenVectors_noCent[order(eigenVectors_noCent$elev),]
+eigenVectors_noCent$label <- paste0(eigenVectors_noCent$Pop, " - ", eigenVectors_noCent$elev, "m")
+eigenVectors_noCent$Pop <- factor(eigenVectors_noCent$Pop, levels = unique(eigenVectors_noCent$Pop[order(eigenVectors_noCent$elev)]))
+```
+### Make Plots ###
+```{r}
+##### plink filtering test #####
+# barplot of PVE 
+ggplot(pve_test)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
+# this looks more similar to the all.filtered output with higher values than the vcftools filtered file.
+
+ggplot(data = eigenVectors_test) +
+  geom_point(mapping = aes(x = PC1, y = PC2, color = Pop, shape = Pop ), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: Plink Filtering",
+      x = paste0("Principal component 1 (",pve_test[1,1]," %)"),
+      y = paste0("Principal component 2 (",pve_test[2,1]," %)")) +
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_test$label),
+                     values = rep(c(0, 1, 2, 5), times = 4))+
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_test$label),
+                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+ggsave(filename = "plink_PC1PC2_PlinkFiltering.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+ggplot(data = eigenVectors_test) +
+  geom_point(mapping = aes(x = PC3, y =PC4, col = Pop, shape = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: Plink Filtering",
+      x = paste0("Principal component 3 (",pve_test[3,1]," %)"),
+      y = paste0("Principal component 4 (",pve_test[4,1]," %)")) +
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_test$label),
+                     values = rep(c(0, 1, 2, 5), times = 4))+
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_test$label),
+                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+ggsave(filename = "plink_PC3PC4_PlinkFiltering.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+##### all_pruned, filtered by plink #####
+# barplot of PVE 
+ggplot(pve_pruned)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
+# all values lower than before LD pruning. first three slightly separate from the rest ( by 0.5%)
+
+ggplot(data = eigenVectors_pruned) +
+  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, color = Pop, ), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: after LD pruning",
+      x = paste0("Principal component 1 (",pve_pruned[1,1]," %)"),
+      y = paste0("Principal component 2 (",pve_pruned[2,1]," %)")) +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_pruned$label),
+                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_pruned$label),
+                     values = rep(c(0, 1, 2, 5), times = 4))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+# --indep-pairwise 50 5 0.8 
+# this looks a bit different and actually maybe more like after the vcftools filtering?? hmm.
+ggsave(filename = "plink_PC1PC2_pruned_0.8.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+ggplot(data = eigenVectors_pruned) +
+  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, color = Pop, ), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: after LD pruning",
+      x = paste0("Principal component 3 (",pve_pruned[3,1]," %)"),
+      y = paste0("Principal component 4 (",pve_pruned[4,1]," %)")) +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_pruned$label),
+                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_pruned$label),
+                     values = rep(c(0, 1, 2, 5), times = 4))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+
+ggsave(filename = "plink_PC3PC4_pruned_0.8.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+##### plink, no BOS #####
+# barplot of PVE 
+ggplot(pve_noBOS)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
+# looks decent, don't really know what to note.
+
+ggplot(data = eigenVectors_noBOS) +
+  geom_point(mapping = aes(x = PC1, y = PC2, color = Pop, shape = Pop ), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No BOS",
+      x = paste0("Principal component 1 (",pve_noBOS[1,1]," %)"),
+      y = paste0("Principal component 2 (",pve_noBOS[2,1]," %)")) +
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_noBOS$label),
+                     values = c(0, 1, 2, 5, 0, 1, 2, 5, 1, 2, 5, 0, 1, 2, 5))+
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_noBOS$label),
+                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,3,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+# hmm this does look different, still seems to be a elevational trend honestly, something weird happening in the ARU population that has it kinda spread out and is clustering with PAL, but it is not close to PAL, PAn and VIE (high elev pops) differentiate out. 
+# so there is some interesting stuff happening here.
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_NoBOS.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+ggplot(data = eigenVectors_noBOS) +
+  geom_point(mapping = aes(x = PC3, y =PC4, col = Pop, shape = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No BOS",
+      x = paste0("Principal component 3 (",pve_noBOS[3,1]," %)"),
+      y = paste0("Principal component 4 (",pve_noBOS[4,1]," %)")) +
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_noBOS$label),
+                     values = c(0, 1, 2, 5, 0, 1, 2, 5, 1, 2, 5, 0, 1, 2, 5))+
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_noBOS$label),
+                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,3,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_noBOS.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+# a bit more scatter, expecially where the most genotypes are. still a ARU right by the PAL genotypes. more scatter in the red, a PIN with the HOR (they are geographically right next to each other so geneflow might be possible)
+
+
+##### plink filtering, no centromere #####
+# barplot of PVE 
+ggplot(pve_noCent)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
+# nothing really notable.
+
+ggplot(data = eigenVectors_noCent) +
+  geom_point(mapping = aes(x = PC1, y = PC2, color = Pop, shape = Pop ), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: Plink Filtering, no centromere",
+      x = paste0("Principal component 1 (",pve_noCent[1,1]," %)"),
+      y = paste0("Principal component 2 (",pve_noCent[2,1]," %)")) +
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_noCent$label),
+                     values = rep(c(0, 1, 2, 5), times = 4))+
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_noCent$label),
+                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+# rotated but looks like the with centromere results
+
+ggplot(data = eigenVectors_noCent) +
+  geom_point(mapping = aes(x = PC3, y =PC4, col = Pop, shape = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: Plink Filtering, no centromere",
+      x = paste0("Principal component 3 (",pve_noCent[3,1]," %)"),
+      y = paste0("Principal component 4 (",pve_noCent[4,1]," %)")) +
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_noCent$label),
+                     values = rep(c(0, 1, 2, 5), times = 4))+
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_noCent$label),
+                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+```
+
+manually moved graphs to local computer either with filezilla or just within mobaxterm.
+
+### Regressions with Geo Vars ###
+Check for correlations between PCs and geographic variables. Assumes you start this code with dplyr and the merged eigenVectors and metadata file that was used to make graphs.
+
+```{r}
+# I think I should totally be able to do this in loops...
+
+# let's make a subset dataframe of the variables we are interested in
+cor_test <- eigenVectors_test[,c("PC1", "PC2", "PC3", "PC4", "elev", "lat", "lon")]
+round(cor(cor_test), 2)
+# makes a correlation matrix, but there are no p values because there is no significance test. maybe this is ok?
+# need another package to do the p values in teh matrix (Hmisc package, rcorr function)
+
+# none fo the first 4 PCs are correlated with each other.
+# PC1 is negatively correlated with elevation. Is it significant? Slightly positively correlated with longitude.
+# PC2 is negatively correlated with latitude and positively with longitude
+# PC3's largest correlation is -0.20 with latitude. PC4 is -0.17 with latitude
+# elevation and longitude are negatively correlated. That might be important to know.
+
+cor.test(eigenVectors_test$elev, eigenVectors_test$lon)
+# p val is significant <2.26e-16
+cor.test(eigenVectors_test$elev, eigenVectors_test$lat)
+# p val is significant: 1.222e-06
+cor.test(eigenVectors_test$lat, eigenVectors_test$lon)
+# p value is significant: 6.103e-05
+
+
+cor.test(eigenVectors_test$elev, eigenVectors_test$PC1)
+#p = 7.414e-11 r = -0.7179372
+cor.test(eigenVectors_test$elev, eigenVectors_test$PC2)
+# p - 2.25e-5 r = -0.514
+cor.test(eigenVectors_test$elev, eigenVectors_test$PC3)
+# not significant
+cor.test(eigenVectors_test$elev, eigenVectors_test$PC4)
+# not significant
+
+cor.test(eigenVectors_test$lat, eigenVectors_test$PC1)
+#p=0.172 r=-0.177
+cor.test(eigenVectors_test$lat, eigenVectors_test$PC2)
+#p=5.566e-10 r = -0.694
+cor.test(eigenVectors_test$lat, eigenVectors_test$PC3)
+# p=0.11 r = -0.20
+cor.test(eigenVectors_test$lat, eigenVectors_test$PC4)
+#p=0.20 r=-0.169
+
+
+cor.test(eigenVectors_test$lon, eigenVectors_test$PC1)
+#p=0.00046 r = 0.4345
+cor.test(eigenVectors_test$lon, eigenVectors_test$PC2)
+#p=7.453e-10 r =0.69
+
+# what I really want is a multiple regression, all of these should be regressions
+PC1 <- lm(PC1 ~ elev + lat + lon, data = eigenVectors_test)
+summary(PC1)
+### Call:
+### lm(formula = PC1 ~ elev + lat + lon, data = eigenVectors_test)
+### 
+### Residuals:
+###      Min       1Q   Median       3Q      Max
+### -0.18310 -0.04523 -0.01644  0.04964  0.17808
+### 
+### Coefficients:
+###               Estimate Std. Error t value Pr(>|t|)
+### (Intercept) -3.675e+00  1.079e+00  -3.406 0.001213 **
+### elev        -3.258e-04  3.519e-05  -9.257 5.88e-13 ***
+### lat          9.625e-02  2.581e-02   3.729 0.000445 ***
+### lon         -6.533e-02  1.761e-02  -3.710 0.000471 ***
+### ---
+### Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+### 
+### Residual standard error: 0.0753 on 57 degrees of freedom
+### Multiple R-squared:  0.6768,    Adjusted R-squared:  0.6598
+### F-statistic: 39.79 on 3 and 57 DF,  p-value: 5.294e-14
+
+# should I be standardizing?
+standardized_PC1 <- lm(PC1 ~ scale(elev) + scale(lat) + scale (lon), data = eigenVectors_test)
+summary(standardized_PC1)
+# here the estimates changed (b/c the scale of everything changed) but the p values and t values did not change so scaling does not seem necessary.
+
+### Call:
+### lm(formula = PC1 ~ scale(elev) + scale(lat) + scale(lon), data = eigenVectors_test)
+### 
+### Residuals:
+###      Min       1Q   Median       3Q      Max
+### -0.18310 -0.04523 -0.01644  0.04964  0.17808
+### 
+### Coefficients:
+###               Estimate Std. Error t value Pr(>|t|)
+### (Intercept) -0.0006125  0.0096410  -0.064 0.949567
+### scale(elev) -0.1717745  0.0185556  -9.257 5.88e-13 ***
+### scale(lat)   0.0443394  0.0118916   3.729 0.000445 ***
+### scale(lon)  -0.0645900  0.0174082  -3.710 0.000471 ***
+### ---
+### Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+### 
+### Residual standard error: 0.0753 on 57 degrees of freedom
+### Multiple R-squared:  0.6768,    Adjusted R-squared:  0.6598
+### F-statistic: 39.79 on 3 and 57 DF,  p-value: 5.294e-14
+
+# do I get the same results if I do it a bit differently:
+
+###note! order of code matters here b/c I am repeating some things with just different variables in the models.
+
+
+# effect of elevation on PC1 after accounting for other two variables
+tmp1 <- lm(PC1 ~ lat + lon, data = eigenVectors_test)
+# here only longitude is significant predictor, not latitude
+eigenVectors_test$tmp_resid <- residuals(tmp1)
+tmp3 <- lm(tmp_resid ~ elev, data = eigenVectors_test)
+# elevation is still a significant predictor here. samll R2 though (0.00117)
+plot(eigenVectors_test$elev, eigenVectors_test$tmp_resid)
+
+# PC1 + longitude
+tmp1 <- lm(PC1 ~ lat + elev, data = eigenVectors_test)
+# both significant. r2 = 0.6
+eigenVectors_test$tmp_resid <- residuals(tmp1)
+tmp3 <- lm(tmp_resid ~ lon, data = eigenVectors_test)
+# moderately significant but super small R2 (0.06)
+plot(eigenVectors_test$lon, eigenVectors_test$tmp_resid)
+
+# PC1 + latitude
+tmp1 <- lm(PC1 ~ lon + elev, data = eigenVectors_test)
+# both significant. r2 = 0.6
+eigenVectors_test$tmp_resid <- residuals(tmp1)
+tmp3 <- lm(tmp_resid ~ lat, data = eigenVectors_test)
+# significant but small R2 (0.131)
+plot(eigenVectors_test$lat, eigenVectors_test$tmp_resid)
+
+# and look at the residuals too
+plot(residuals(PC1)~eigenVectors_test$elev)
+plot(residuals(PC1)~eigenVectors_test$lat)
+plot(residuals(PC1)~eigenVectors_test$lon)
+# none of this looks off to me? it all looks fine?
+
+PC2 <- lm(PC2 ~ elev + lat + lon, data = eigenVectors_test)
+summary(PC2)
+### Call:
+### lm(formula = PC2 ~ elev + lat + lon, data = eigenVectors_test)
+### 
+### Residuals:
+###      Min       1Q   Median       3Q      Max
+### -0.17899 -0.02523  0.00888  0.03103  0.13847
+### 
+### Coefficients:
+###               Estimate Std. Error t value Pr(>|t|)
+### (Intercept)  6.552e+00  1.018e+00   6.435 2.76e-08 ***
+### elev         1.227e-04  3.321e-05   3.695 0.000495 ***
+### lat         -1.624e-01  2.436e-02  -6.668 1.14e-08 ***
+### lon          1.073e-01  1.662e-02   6.459 2.52e-08 ***
+### ---
+### Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+### 
+### Residual standard error: 0.07106 on 57 degrees of freedom
+### Multiple R-squared:  0.7121,    Adjusted R-squared:  0.697
+### F-statistic:    47 on 3 and 57 DF,  p-value: 2.003e-15
+
+# PC2 + elev
+tmp1 <- lm(PC2 ~ lat + lon, data = eigenVectors_test)
+# both significant, r2=0.64
+eigenVectors_test$tmp_resid <- residuals(tmp1)
+tmp3 <- lm(tmp_resid ~ elev, data = eigenVectors_test)
+summary(tmp3)
+# slightly significant (p=0.07), r2 = 0.05 so much smaller
+plot(eigenVectors_test$elev, eigenVectors_test$tmp_resid)
+
+# PC2 + longitude
+tmp1 <- lm(PC2 ~ lat + elev, data = eigenVectors_test)
+#only lat is significant. r2 = 0.5
+eigenVectors_test$tmp_resid <- residuals(tmp1)
+tmp3 <- lm(tmp_resid ~ lon, data = eigenVectors_test)
+summary(tmp3)
+#  significant but  small R2 (0.131)
+plot(eigenVectors_test$lon, eigenVectors_test$tmp_resid)
+
+# PC2 + latitude
+tmp1 <- lm(PC2 ~ lon + elev, data = eigenVectors_test)
+# only lon significant. R2 0.48
+eigenVectors_test$tmp_resid <- residuals(tmp1)
+tmp3 <- lm(tmp_resid ~ lat, data = eigenVectors_test)
+summary(tmp3)
+# significant but smaller R2 (0.29)
+plot(eigenVectors_test$lat, eigenVectors_test$tmp_resid)
+
+
+PC3 <- lm(PC3 ~ elev + lat + lon, data = eigenVectors_test)
+summary(PC3)
+
+### Call:
+### lm(formula = PC3 ~ elev + lat + lon, data = eigenVectors_test)
+### 
+### Residuals:
+###       Min        1Q    Median        3Q       Max
+### -0.300307 -0.036473  0.001911  0.054037  0.278430
+### 
+### Coefficients:
+###               Estimate Std. Error t value Pr(>|t|)
+### (Intercept)  2.248e+00  1.855e+00   1.212    0.231
+### elev         1.647e-05  6.052e-05   0.272    0.787
+### lat         -5.424e-02  4.439e-02  -1.222    0.227
+### lon          1.280e-02  3.028e-02   0.423    0.674
+### 
+### Residual standard error: 0.1295 on 57 degrees of freedom
+### Multiple R-squared:  0.04426,   Adjusted R-squared:  -0.006038
+### F-statistic:  0.88 on 3 and 57 DF,  p-value: 0.457
+
+PC4 <- lm(PC4 ~ elev + lat + lon, data = eigenVectors_test)
+summary(PC4)
+
+### Call:
+### lm(formula = PC4 ~ elev + lat + lon, data = eigenVectors_test)
+### 
+### Residuals:
+###      Min       1Q   Median       3Q      Max
+### -0.35399 -0.05384  0.01152  0.07077  0.26194
+### 
+### Coefficients:
+###               Estimate Std. Error t value Pr(>|t|)
+### (Intercept)  1.974e+00  1.854e+00   1.065    0.291
+### elev         5.485e-05  6.046e-05   0.907    0.368
+### lat         -4.927e-02  4.435e-02  -1.111    0.271
+### lon          3.157e-02  3.025e-02   1.044    0.301
+### 
+### Residual standard error: 0.1294 on 57 degrees of freedom
+### Multiple R-squared:  0.04604,   Adjusted R-squared:  -0.004168
+### F-statistic: 0.917 on 3 and 57 DF,  p-value: 0.4385
+```
+
+Takeaway from the correlations is that PC1 and 2 are both correlated with elevation and longitude. Only PC2 is correlated with latitude.
+
+Pc3 and PC4 are not correlated with any geographic variables.
+
+I don't really know what this means in terms of genetic relatedness. I had been arguing IBD at one point, but this isn't really distance between pops. Maybe somewhat of IBE? I should just say something and get feedback from Emily and Jeff on the interpretation.
+
+Takeaways from the multiple regressions: 
+- PC1:  each of the geographic variables is still a significant predictor of the PC1 values. The R squared is 0.67 which seems pretty good I think. \
+- PC2: basically the same as PC1, the R2 is even a little bit higher at 0.71 \
+- PC3: no significant predictors, and the R2 value is TINY at 0.04 \
+- PC4: basically the same as PC3. \
+
+
+
+### Compare LD filtering to no LD filtering ###
+I am doing this to see what changed between doing LD filtering and not doing LD filtering.The general conclusion though is that we can skip LD filtering most likely and just not worry about the weird patterns I see after that. We are exploring it to make sure that LD filtered PCA isn't capturing something and the not filtered is capturing noise or something else that we don't want.
+##### make relatedness matrices #####
+```{bash}
+# without LD filtering
+~/Apps/gemma-0.98.4-linux-static -bfile allSNPs.PlinkFiltering -gk 2 -notsnp -miss 1.0 -o RelMat/All/allSNPs.PlinkFiltering
+
+# with LD filtering
+~/Apps/gemma-0.98.4-linux-static -bfile /mnt/scratch/buysseso/PCA/plinkPCA_pruned -gk 2 -notsnp -miss 1.0 -o RelMat/All/allsites_filtered_pruned_plinkTest
+
+# moved to local machine with Filezilla to analyze next with R
+```
+##### compare them #####
+```{r}
+library(pheatmap)
+library(RColorBrewer)
+
+relmat_all <- as.matrix(read.delim(file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/allSNPs.PlinkFiltering.sXX.txt", header = F, stringsAsFactors = F))
+
+relmat_pruned <- as.matrix(read.delim(file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/allsites_filtered_pruned_plinkTest.sXX.txt", header = F, stringsAsFactors = F))
+
+heatmap(relmat_all, Rowv = NA, Colv = NA, symm = TRUE)
+pheatmap(relmat_all, cluster_rows = FALSE, cluster_cols = FALSE, color = colorRampPalette(brewer.pal(n = 9, name =
+  "YlOrRd"))(100), border_color = NA,  fontsize_row = 15, fontsize_col = 15, labels_row = c(1:61), filename = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/test_kinship_heatmap.png", height = 15, width = 15)
+
+heatmap(relmat_pruned, Rowv = NA, Colv = NA, symm = TRUE)
+pheatmap(relmat_pruned, cluster_rows = FALSE, cluster_cols = FALSE, color = colorRampPalette(brewer.pal(n = 9, name =
+  "YlOrRd"))(100), border_color = NA,  fontsize_row = 15, fontsize_col = 15, labels_row = c(1:61), filename = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/test_kinship_pruned_heatmap.png", height = 15, width = 15)
+# I don't know how to compare these because can I be positive the order is the same? hmm I think I can if i turn off the dendrogram
+# I want to make a nicer graph, but from these initial ones there doesn't seem to be much of a difference. curious.
+# How can I add labels? Can I assume the order in any way? it is a relatedness matrix made in gemma so i don't feel OK about assuming the order is the same as the plink fam file
+
+list_all <- c(relmat_all)
+list_pruned <- c(relmat_pruned)
+# then should I just like print these out to compare them?
+
+# well why don't I actually standardize them first, and then compare?
+
+s_list_all <- scale(list_all)
+s_list_pruned <- scale(list_pruned)
+
+comp <- data.frame(s_list_all, s_list_pruned)
+# ordering does change depending on which column I sort by.
+
+```
+### Old code ###
+Residual Code for doing everything with no centromere and all with vcf filtering. Not updated to the most recent code.
+```{r}
+library(ggplot2)
+library(dplyr)
+
+eigenValues_ALL <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_Var_invar.eigenval", sep = " ", header = F)
+eigenVectors_ALL <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_Var_invar.eigenvec", sep = " ", header = F)
+# each row is a genotype, each column is a PC.
+colnames(eigenVectors_ALL) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_ALL)-2)))
+
+
+eigenValues_all <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_all.eigenval", sep = " ", header = F)
+eigenVectors_all <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_all.eigenvec", sep = " ", header = F)
+# each row is a genotype, each column is a PC.
+colnames(eigenVectors_all) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_all)-2)))
+
+eigenValues_NC <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_NoCent.eigenval", sep = " ", header = F)
+eigenVectors_NC <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_NoCent.eigenvec", sep = " ", header = F)
+colnames(eigenVectors_NC) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_NC)-2)))
+
+eigenValues_NC_pruned <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_NoCent_pruned.eigenval", sep = " ", header = F)
+eigenVectors_NC_pruned <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_NoCent_pruned.eigenvec", sep = " ", header = F)
+colnames(eigenVectors_NC_pruned) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_NC_pruned)-2)))
+
+# calculate the PVE. Remember that I used 20 PCs, so this PVE is out of 20 PCs
+pve_all <- round((eigenValues_all / (sum(eigenValues_all))*100), 2)
+pve_all$PC <- c(1:20)
+# in my first dataset, these calues were much higher.
+
+pve_ALL <- round((eigenValues_ALL / (sum(eigenValues_ALL))*100), 2)
+pve_ALL$PC <- c(1:20)
+
+pve_NC <- round((eigenValues_NC / (sum(eigenValues_NC))*100), 2)
+pve_NC$PC <- c(1:20)
+# PVE for all and NC are similar, which is a good sign in that it doesn't realy matter if I exclude the centromere or not.
+pve_NC_pruned <- round((eigenValues_NC_pruned / (sum(eigenValues_NC_pruned))*100), 2)
+pve_NC_pruned$PC <- c(1:20)
+# still pretty similar. 
+
+# and now plot
+
+# first we gotta prep, like usual
+# add a population column
+
+eigenVectors_ALL$Pop <- toupper(substr(eigenVectors_ALL$Line, 1, 3))
+eigenVectors_all$Pop <- toupper(substr(eigenVectors_all$Line, 1, 3))
+
+eigenVectors_NC$Pop <- toupper(substr(eigenVectors_NC$Line, 1, 3))
+eigenVectors_NC_pruned$Pop <- toupper(substr(eigenVectors_NC_pruned$Line, 1, 3))
+
+# load the meta data
+metadata <- read.csv("/mnt/gs21/scratch/buysseso/PCA/SpanishMasterDataset_PopMetaData.csv", header = TRUE)
+
+# clean up a little
+metadata <- metadata[1:16,c("Population", "PopCode", "Elev_m", "Lat_DecDeg", "Lon_DecDeg")]
+
+##### all vcf filtering#####
+# barplot of PVE 
+ggplot(pve_all)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
+
+ggplot(data = eigenVectors_all) +
+  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, color = Pop, ), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: all SNPs",
+      x = paste0("Principal component 1 (",pve_all[1,1]," %)"),
+      y = paste0("Principal component 2 (",pve_all[2,1]," %)")) +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_all$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_all$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+ggsave(filename = "plink_PC1PC2_all.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+ggplot(data = eigenVectors_all) +
+  geom_point(mapping = aes(x = PC3, y =PC4, col = Pop, shape = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: all SNPs",
+      x = paste0("Principal component 3 (",pve_all[3,1]," %)"),
+      y = paste0("Principal component 4 (",pve_all[4,1]," %)")) +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_all$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_all$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+# PC 3 also separates COC from everything else. PC4 then has separation between RAB on the high end and POB on the low end
+ggsave(filename = "plink_PC3PC4_all.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+##### ALL: Variant and non variant sites #####
+# barplot of PVE 
+ggplot(pve_ALL)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
+# higher than the SNP only datasets.
+
+ggplot(data = eigenVectors_ALL) +
+  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, color = Pop, ), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: all sites",
+      x = paste0("Principal component 1 (",pve_ALL[1,1]," %)"),
+      y = paste0("Principal component 2 (",pve_ALL[2,1]," %)")) +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_ALL$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_ALL$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+ggsave(filename = "plink_PC1PC2_ALL.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+# hey this looks like before. I can't tell if that is an elevation cline, but it at least has some separation and just BOS out on it's own.
+
+ggplot(data = eigenVectors_ALL) +
+  geom_point(mapping = aes(x = PC3, y =PC4, col = Pop, shape = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: all sites",
+      x = paste0("Principal component 3 (",pve_ALL[3,1]," %)"),
+      y = paste0("Principal component 4 (",pve_ALL[4,1]," %)")) +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_ALL$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_ALL$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+# more equal separation.
+ggsave(filename = "plink_PC3PC4_ALL.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+##### NC #####
+
+# barplot of PVE 
+ggplot(pve_NC)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
+
+ggplot(data = eigenVectors_NC) +
+  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, color = Pop, ), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: No Cent",
+      x = paste0("Principal component 1 (",pve_NC[1,1]," %)"),
+      y = paste0("Principal component 2 (",pve_NC[2,1]," %)")) +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_NC$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_NC$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+# this actually looks a bit different than when the centromeres were included. Now COCand BOS are still the only outliers but they are both outliers for both PC1 and PC2. Huh. I still can't really see what is going on that would cause this.
+ggsave(filename = "plink_PC1PC2_NC.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+ggplot(data = eigenVectors_NC) +
+  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, color = Pop, ), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: No Cent",
+      x = paste0("Principal component 3 (",pve_NC[3,1]," %)"),
+      y = paste0("Principal component 4 (",pve_NC[4,1]," %)")) +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_NC$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_NC$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+# this also looks different. Here we separate out COC still on PC3, but now the separation of RAB on PC4 is much smaller than the separation of POB on PC4
+ggsave(filename = "plink_PC3PC4_NC.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+##### NC_pruned #####
+
+# barplot of PVE 
+ggplot(pve_NC_pruned)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
+# all values lower than before LD pruning.
+
+
+ggplot(data = eigenVectors_NC_pruned) +
+  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, color = Pop, ), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: No Cent after LD pruning",
+      x = paste0("Principal component 1 (",pve_NC_pruned[1,1]," %)"),
+      y = paste0("Principal component 2 (",pve_NC_pruned[2,1]," %)")) +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_NC_pruned$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_NC_pruned$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+# hey this looks different! and likely more what I was expected. SO I think I just needed to do some LD pruning. I might still want to adjust my pruning values b/c I'm just using a default I've seen other people use but I don't know great values for Arabidopsis.
+
+# when using --indep-pairwise 50 10 0.1 I get more population separation and about 100,000 SNPs used in the calculation
+
+# when using --indep-pairwise 50 10 0.8 I see more similar to the no pruning results where just a few populations are separated out on each pc
+
+# --indep-pairwise 50 5 0.8 seems to have inverted PC2, but in both I see BOS, COC, and RAB separating out from a clump of the rest of the populations.
+ggsave(filename = "plink_PC1PC2_NC_pruned_0.8.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+ggplot(data = eigenVectors_NC_pruned) +
+  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, color = Pop, ), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: No Cent after LD pruning",
+      x = paste0("Principal component 3 (",pve_NC_pruned[3,1]," %)"),
+      y = paste0("Principal component 4 (",pve_NC_pruned[4,1]," %)")) +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_NC_pruned$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_NC_pruned$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+# this also has a decent scatter when using --indep-pairwise 50 10 0.1. for --indep-pairwise 50 10 0.8 I still mostly see COC, RAB, and BOS separating out but in different directions this time. For 50 5 0.8 I see a little more separation of the main cluster, maybe, but mostly it is like 50 10 0.8 but with an inverted PC4.
+
+ggsave(filename = "plink_PC3PC4_NC_pruned_0.8.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+```
+
+Figures moved to local computer with filezilla after being made.
+
+# Calculate PCA from relatedness matrix
+```{bash}
+# load modules
+module purge
+module load GCC/9.3.0  OpenMPI/4.0.3 R/4.0.3
+module load GDAL/3.0.4-Python-3.8.2
+R
+```
+
+And now run some R code.
+
+```{r}
+# get wd and load packages
+getwd()
+library(ggplot2)
+library(pheatmap)
+library(RColorBrewer)
+########## Load in relatedness matrix from gemma ##########
+# using the standardized because that is what I used last time I did this.
+rel_mat <- read.delim('/mnt/scratch/buysseso/GWAS/output/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.s.maf0miss1.sXX.txt', header = F)
+
+# row and column names
+fam <- read.delim("/mnt/scratch/buysseso/GWAS/NoCent.all.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.fam", sep = " ", head = F)
+########## Set up matrix ##########
+## set col and row names
+# first manipulate the vector
+names <- toupper(fam$V1)
+colnames(rel_mat) <- names
+rownames(rel_mat) <- names
+rel_mat2 <- rel_mat[order(rownames(rel_mat)),order(colnames(rel_mat))]
+
+# create matrix
+mat <- as.matrix(rel_mat2)
+# calculate eigenvalues and eigenvectors
+## do eigen decomposition according to that tutorial.
+eig <- eigen(mat, symmetric=T, only.values = F)
+
+e <- eigen(cov(mat))
+head(e$vectors, n = c(6,6))
+head(e$values, c = c(6,6))
+tot.var = sum(e$values)
+pve <- e$values/tot.var
+sum(pve)
+
+## these are the pcs
+data.pc <- as.matrix(mat) %*% e$vectors
+
+########## calculate info for pca ##########
+pca_ss <- prcomp(mat, center = F, scale. = F)
+# taking out the scaling and centering arguments b/c that was done in gemma for the genotype matrix.
+save(pca_ss, file = "PCA_ss.ROBJ")
+
+summary(pca_ss)
+
+str(pca_ss)
+
+# plot of variance explained by each pc
+screeplot(pca_ss, npcs = 61, type = "lines", main = "Screeplot of all (61) PCs")
+# 1 and 2 definitely explain the most. looks different than the barplot made from teh plink results. maybe the difference is because plink only uses the first 20 PCs?
+
+##### typical PC plot #####
+substr(rownames(pca_ss[["x"]]),1,3)[5:8] <- "ARU"
+substr(rownames(pca_ss[["x"]]),1,3)[51:54] <- "SAL"
+for.cols_s <- as.factor(substr(rownames(pca_ss[["x"]]),1,3))
+forplot <- as.data.frame(pca_ss$x)
+forplot$Pop <- as.factor(substr(rownames(forplot), 1, 3))
+
+# pca made with ggplot
+ggplot(forplot)+
+  #geom_point(aes(x=PC1, y=PC2), size=3)+
+  geom_text(aes(x=PC1, y=PC2, label=Pop, col=Pop))+
+  labs(x="PC1", y="PC2", title="PC1 and PC2 fom relatedness matrix")+
+  scale_color_manual(values=rainbow(16))+
+  theme_classic()
+
+ggplot(forplot) +
+  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, color = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: No Cent from Rel Mat",
+      x = paste0("Principal component 1 (",round(pve[1]*100,2)," %)"),
+      y = paste0("Principal component 2 (",round(pve[2]*100,2)," %)")) +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_NC$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_NC$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+ggsave(filename = "PCA_RelMat_1_2.png", path = "/mnt/scratch/buysseso/PCA")
+
+# more PCs
+
+ggplot(forplot) +
+  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, color = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: No Cent from Rel Mat",
+      x = paste0("Principal component 3 (",round(pve[3]*100,2)," %)"),
+      y = paste0("Principal component 4 (",round(pve[4]*100,2)," %)")) +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_NC$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_NC$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+ggsave(filename = "PCA_RelMat_3_4.png", path = "/mnt/scratch/buysseso/PCA")
+
+```
+
+So by  now I've done the PCA in multiple ways, so I want to compare the results. Compare only for no centromere because that is all that I've done for the 3 ways: plink, plink with LD pruning, standardized relatedness matrix.
+
+```{r comp}
+library(ggplot2)
+# objects that I need from earlier in the script.
+# relatedness matrix -> PCA_ss or forplot
+forplot$Line <- rownames(forplot)
+# plink with LD filtering -> eigenVectors_NC
+# plink without LD filtering -> eigenVectors_NC_pruned
+
+# need to change the plink results to have ARU and SAL instead of ARB and SPE
+substr(eigenVectors_NC$Line,1,3)[c(3,6,7,8)] <- "ARU"
+substr(eigenVectors_NC$Line,1,3)[51:54] <- "SAL"
+substr(eigenVectors_NC$Line,1,3) <- toupper(substr(eigenVectors_NC$Line,1,3))
+eigenVectors_NC$Pop <- substr(eigenVectors_NC$Line,1,3)
+
+substr(eigenVectors_NC_pruned$Line,1,3)[c(3,6,7,8)] <- "ARU"
+substr(eigenVectors_NC_pruned$Line,1,3)[51:54] <- "SAL"
+substr(eigenVectors_NC_pruned$Line,1,3) <- toupper(substr(eigenVectors_NC_pruned$Line,1,3))
+eigenVectors_NC_pruned$Pop <- substr(eigenVectors_NC_pruned$Line,1,3)
+
+# what I want from the relatedness matrix results is the first four PCs, Pop, and Line
+dat <- as.data.frame(forplot[,c("Line", "Pop", "PC1", "PC2", "PC3", "PC4")])
+colnames(dat) <- c("Line", "Pop", "PC1_RM", "PC2_RM", "PC3_RM", "PC4_RM")
+
+# similarly for eigenVectors NC and NC pruned
+dat2 <- as.data.frame(eigenVectors_NC[,c("Line", "Pop", "PC1", "PC2", "PC3", "PC4")])
+colnames(dat2) <- c("Line", "Pop", "PC1_NC", "PC2_NC", "PC3_NC", "PC4_NC")
+
+dat3 <- as.data.frame(eigenVectors_NC_pruned[,c("Line", "Pop", "PC1", "PC2", "PC3", "PC4")])
+colnames(dat3) <- c("Line", "Pop", "PC1_NC_P", "PC2_NC_P", "PC3_NC_P", "PC4_NC_P")
+
+# now merge together
+comp <- merge(dat, dat2, by = c("Line", "Pop"), all = TRUE)
+comp <- merge(comp, dat3, by = c("Line", "Pop"), all = TRUE)
+
+##### plot! #####
+
+
+## PC1
+# first compare RM to NC
+p1a <- ggplot(data = comp)+
+  geom_point(aes(x = scale(PC1_RM), y = scale(PC1_NC), shape = Pop, color = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  labs(title = "Comparison of Relatedness Matrix to Plink: PC1",
+      x = "Standardized PC values: Relatedness Matrix",
+      y = "Standardized PC values: Plink") +
+  scale_color_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  geom_abline(slope = -1)+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+# I think this correlation honestly looked better before standardizing them
+
+# then do NC to NC_pruned
+
+p1b <- ggplot(data = comp)+
+  geom_point(aes(x = scale(PC1_NC_P), y = scale(PC1_NC), shape = Pop, color = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  labs(title = "Comparison of LD Pruning: PC1",
+      x = "Standardized PC values: LD Pruned Plink",
+      y = "Standardized PC values: Plink") +
+  scale_color_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  geom_abline(slope = -1)+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+
+## PC2
+# Rm to NC
+p2a <- ggplot(data = comp)+
+  geom_point(aes(x = scale(PC2_RM), y = scale(PC2_NC), shape = Pop, color = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  labs(title = "Comparison of Relatedness Matrix to Plink: PC2",
+      x = "Standardized Relatedness Matrix",
+      y = "Standardized Plink") +
+  scale_color_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  geom_abline(slope = 1)+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+# correlation looks better after standardizing them
+
+#NC to NC_pruned
+p2b <- ggplot(data = comp)+
+  geom_point(aes(x = scale(PC2_NC_P), y = scale(PC2_NC), shape = Pop, color = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  labs(title = "Comparison of LD Pruning: PC2",
+      x = "Standardized PC values: LD Pruned Plink",
+      y = "Standardized PC values: Plink") +
+  scale_color_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  geom_abline(slope = -1)+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+
+## pc3
+# Rm to NC
+p3a <- ggplot(data = comp)+
+  geom_point(aes(x = scale(PC3_RM), y = scale(PC3_NC), shape = Pop, color = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  labs(title = "Comparison of Relatedness Matrix to Plink: PC3",
+      x = "Standardized Relatedness Matrix",
+      y = "Standardized Plink") +
+  scale_color_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  geom_abline(slope = 1)+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+
+# NC to NC_pruned
+p3b <- ggplot(data = comp)+
+  geom_point(aes(x = scale(PC3_NC_P), y = scale(PC3_NC), shape = Pop, color = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  labs(title = "Comparison of LD Pruning: PC3",
+      x = "Standardized PC values: LD Pruned Plink",
+      y = "Standardized PC values: Plink") +
+  scale_color_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  geom_abline(slope = -1)+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+
+## pc4
+# Rm to NC
+p4a <- ggplot(data = comp)+
+  geom_point(aes(x = scale(PC4_RM), y = scale(PC4_NC), shape = Pop, color = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  labs(title = "Comparison of Relatedness Matrix to Plink: PC4",
+      x = "Standardized Relatedness Matrix",
+      y = "Standardized Plink") +
+  scale_color_manual(name = "Population",
+                     labels = unique(eigenVectors_NC$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_NC$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  geom_abline(slope = 1)+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+
+# NC to NC_pruned
+p4b <- ggplot(data = comp)+
+  geom_point(aes(x = scale(PC4_NC_P), y = scale(PC4_NC), shape = Pop, color = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+  labs(title = "Comparison of LD Pruning: PC4",
+      x = "Standardized PC values: LD Pruned Plink",
+      y = "Standardized PC values: Plink") +
+  scale_color_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(comp$Pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  geom_abline(slope = -1)+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+
+## plot together
+library(ggpubr)
+
+method.comp.pca <- ggarrange(p1a, p2a, p3a, p4a, p1b, p2b, p3b, p4b,
+          labels = c("A", "B", "C", "D", "E", "F", "G", "H"),
+          ncol = 4, nrow = 2,
+          common.legend = TRUE,
+          legend = "right")
+
+```
+
+Saved the final output with a snip rather than saving and moving with filezilla. Is in the Weekly meeting 8/10 powerpoint
+
+
+# Calculate Heterozygosity 
+I want to do this I think by individual and look for any outliers. Do it first by individual and can look at polymorphism within populations later on.
+
+I am going to calculate this with plink to be consistent with the PCA and the GWAS, but it can also be calculated with vcftools
+```{bash}
+module load PLINK/1.9b_4.1-x86_64
+plink -bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest --het --out /mnt/scratch/buysseso/PCA/indv_plink_het
+```
+
+This output is a .het file. I think the easiest thing to do is then to read the .het file into R as a delimiter file and calculate heterozygosty by subtraction and then I can map the inbreeding F statistic and expected and observed heterozygosity per individual.
+
+```{bash}
+# load modules
+module purge
+module load GCC/9.3.0  OpenMPI/4.0.3 R/4.0.3
+module load GDAL/3.0.4-Python-3.8.2
+
+# then
+R
+```
+
+```{r}
+library(ggplot2)
+
+# annoyingly, this file had a different number of spaces between columns, so I manually made it into a tab separated file.
+dat <- read.delim("/mnt/scratch/buysseso/PCA/indv_plink_het.het", header = TRUE, sep = "\t")
+dat<- dat[1:61,]
+
+# observed heterozygotes = num sites (n.nm) - observed homozygosity (O.HOM.)
+colnames(dat)
+dat$O.HET <- dat$N.NM. - dat$O.HOM.
+dat$freq_het <- dat$O.HET/dat$N.NM.
+
+plot(dat$freq_het)
+# one outlier in heterozygosity, and a few low outliers but really just the high outlier I think
+
+dat$pop <- toupper(substr(dat$FID, 1, 3))
+
+# histogram
+ggplot(data = dat)+
+  geom_histogram(aes(O.HET), bins = 15)+
+  theme_classic()
+
+# plot not working
+dat$x_val <- c(1:62)
+
+# change population names to match  metadata
+dat[dat$pop == "ARB", "pop"] <- "ARU"
+dat[dat$pop == "SPE", "pop"] <- "SAL"
+
+# load the meta data
+metadata <- read.csv("/mnt/gs21/scratch/buysseso/PCA/SpanishMasterDataset_PopMetaData.csv", header = TRUE)
+
+# clean up a little
+metadata <- metadata[1:16,c("Population", "PopCode", "Elev_m", "Lat_DecDeg", "Lon_DecDeg")]
+
+# merge 
+dat$elev <- metadata$Elev_m[match(dat$pop, metadata$PopCode)]
+# then match with row names to add metadata column
+# do this for lat and long now too
+dat$lat <- metadata$Lat_DecDeg[match(dat$pop, metadata$PopCode)]
+dat$lon <- metadata$Lon_DecDeg[match(dat$pop, metadata$PopCode)]
+
+# order by elevation
+dat <- dat[order(dat$elev),]
+dat$label <- paste0(dat$pop, " - ", dat$elev, "m")
+dat$pop <- factor(dat$pop, levels = unique(dat$pop[order(dat$elev)]))
+
+ggplot(data = dat)+
+  geom_point(aes(x = x_val, y = freq_het, col = pop, shape = pop), size = 3, stroke = 1.25, show.legend = TRUE)+
+  #geom_text(aes(x = x_val, y = freq_het, label = FID), nudge_x = 0, nudge_y = 0.005, col = "black")+
+  labs(x = " ", y = "Observed Heterozygosity (frequency)")+
+  scale_shape_manual(name = "Population", labels = unique(dat$label), values = rep(c(0, 1, 2, 5), times = 4))+
+  scale_color_manual(name = "Population", labels = unique(dat$label), values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+#ggsave(filename = "plink_het_PlinkFiltering_labels.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+ggsave(filename = "plink_het_PlinkFiltering.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+
+# save dat with the updates as an R object!
+save(dat, file = "/mnt/scratch/buysseso/PCA/heterozygosity_df.ROBJ")
+```
+
+# Archive below this point
+Below is the archived code I used to run in the terminal in order for my script to run, because one of the packages (pcadapt I think) relies on python. For now I am just going to open an R session in the terminal.
+
+```{bash, eval = FALSE}
+# load modules
+module purge
+module load GCC/9.3.0  OpenMPI/4.0.3 R/4.0.3
+module load GDAL/3.0.4-Python-3.8.2
+R
+
+# or 
+OMP_NUM_THREADS=4 
+Rscript filename.R
+
+```
+
+This worked on 5/16 but is not working on 5/18 and I don't know why. So I moved things to my local computer.
+
+```{r}
+library(pcadapt)
+library(ggplot2)
+#all <- read.pcadapt(input = "/mnt/scratch/buysseso/GVCF/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.bed", type = "bed")
+all <- read.pcadapt(input = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.bed", type = "bed")
+str(all)
+summary(all)
+# dimensions match the expected given the .bed output from plink
+
+# testing on 5/18/2022
+tmp <- pcadapt(input = all, K = 4, pca.only = FALSE, method = "componentwise", min.maf = 0.05)
+# when trying to do this on the HPCC, I get this message:
+#Error: Can't compute SVD.
+#Are there SNPs or individuals with missing values only?
+#You should use PLINK for proper data quality control.
+
+# works when I run it on my local machine which is honestly super confusing.
+
+# all the PCs
+all_sub_60 <- pcadapt(input = all, K = 60, pca.only = FALSE, method = "componentwise", min.maf = 0.0001)
+str(all_sub_60)
+# min.maf has to be between 0 and 0.45
+# maybe make it super small to essentially not be there???
+# 386730 in pass when mi.maf = 0.01 -> way more kept
+# 46040 in pass when min.maf = 0.05 -> pves probably get higher b/c there are way fewer SNPs kept
+# 453855 pass when min.maf = 0.0001
+# but this is all out of 1243031... so where do the rest go? maybe I should do this by hand with the kinship matrix b/c this is super confusing...
+
+# make a subset with the first 20 PCs
+all_sub_20 <- pcadapt(input = all, K = 20, pca.only = FALSE, method = "componentwise", min.maf = NULL)
+# note that filtering will all be a little off because filtering done on the vcf and this is like repeat filtering so I made it less strict I think.
+str(all_sub_20)
+# 996811 passed the filter
+
+all_sub_20_2 <- pcadapt(input = all, K = 20, pca.only = FALSE, method = "componentwise", min.maf = 0.05)
+str(all_sub_20_2)
+# 47594 passed, so many fewer. I think I want more in my dataset rather than fewer? 
+
+all_sub_7 <- pcadapt(input = all, K = 7, pca.only = FALSE, method = "componentwise", min.maf = 0.05)
+# if we go the min.maf = 0.05 route, 7 is a good choice for K
+# my hesitation is that the input file was already filtered by min.maf so this second filtering on the same parameter doesn't make sense to me.
+```
+
+Go with the first subset for now but I don't remember what the pass list is
+
+```{r}
+plot(all_sub_60, option = "screeplot")
+# hm okay. From this it looks like 6 could be a good choice or it is flat until like 37
+# when min.maf = 0.05
+# super flat after 40
+# gently down slope from 16 on but only oe big ish jump down after 8
+# maybe go with 7?
+plot(all_sub_20, option = "screeplot")
+# choose K for further analysis. The K choice will change further analyses, It looks like now 7 could be a good choice or 16.
+plot(all_sub_20_2, option = "screeplot")
+# scree plot looks super different based on the min.maf parameter... I don't think that is good... but maybe because the number in the passed subset is so different?
+
+# ok. screeplots look more ideal (steap drop followed by curve followed by straight line) when min.maf = 0.05 so go with that.
+plot(all_sub_7, option = "screeplot")
+
+# to help choose, let's actually look at lots of Pc comparisons of pcs and see when the pops stop clustering together.
+# I know the first 4 still cluster together.
+pop.list <- c("ALE", "ALE", "ARU", "ALE", "ALE", "ARU", "ARU", "ARU", "BAR", "BAR", "BAR", "BIS"," BIS", "BIS", "BIS", "BOS", "BAR", "BOS", "BOS", "BOS", "COC", "COC", "COC", "HOR", "HOR", "HOR", "HOR", "MUR", "MUR", "MUR", "MUR", "PAL", "PAL", "PAL", "PAN", "PAN", "PIN", "PAL","PAN",  "PIN", "PIN", "PIN", "POB", "POB", "POB", "POB", "RAB", "RAB", "RAB", "RAB", "SAL", "SAL", "SAL", "SAL", "VDM", "VIE", "VIE", "VDM", "VDM", "VIE", "VIE")
+
+plot(all_sub_60, option = "scores", i = 1, j = 2, pop = pop.list)
+# well this looks odd. one population is outliers on both PCs and the rest are super clustered together.
+# the outliers look different colors this time!
+plot(all_sub_60, option = "scores", i = 3, j = 4, pop = pop.list)
+# hmm this also looks weird. Maybe stop here because I want to make sure I'm not messing anything up...
+# PC1 outliers
+pop.list[c(18,20,16)]
+# PC2 outliers
+pop.list[c(23, 21, 22)]
+```
+
+
+```{r}
+plot(all_sub_60, option = "scores", i = 5, j = 6, pop = pop.list)
+# seems okay? not perfect but still general clusters.
+plot(all_sub_60, option = "scores", i = 7, j = 8, pop = pop.list)
+# looks closer to shotgun
+###plot(MQF_sub_20, option = "scores", i = 10, j = 9, pop = pop.list.sub)
+###plot(MQF_sub_20, option = "scores", i = 11, j = 12, pop = pop.list.sub)
+#### separates out just a fe individuals
+###plot(MQF_sub_20, option = "scores", i = 13, j = 14, pop = pop.list.sub)
+###plot(MQF_sub_20, option = "scores", i = 15, j = 16, pop = pop.list.sub)
+#### looks pretty shotgun to me.
+###plot(MQF_sub_20, option = "scores", i = 17, j = 18, pop = pop.list.sub)
+#### looks like just a rotated of the 15.16
+
+# identify outliers
+# test statistic = squared loadings
+plot(all_sub_60, option = "stat.distribution", K = 1)
+# haha can't display b/c values are too high
+
+hist(all_sub_60$pvalues[,1], xlab = "p-values", main = "Hist of pvals for PC1", breaks = 50, col = "blue")
+# this just looks like a box so something is definitely wrong.
+# all p values are either na, nan, or 0 so yeah something is definitely wrong.
+
+# let's peak at the manhattan plots before going much further to see what is up.
+# doing this outside the pcadapt program because of the plotting over each other issue. 
+# this is testing if any of the snps are associated with the PCs
+
+#for.manhat <- data.frame("x" = 1:1925926, "y_6" = MQF_sub_6$pvalues[,1])
+## now need -log10 of the pvalues
+#for.manhat$log_y_6 <- -log10(for.manhat$y_6)
+
+
+#ggplot(data = for.manhat)+
+#  geom_point( aes(x = x, y = log_y_6))+
+#  labs(y = "-log10(pval) for PC1", x = "SNP")+
+#  theme_classic()
+## warning about remobing 99502 rows - these are the NAs or the ones that didn't pass the filtering.
+## no giant outliers like the Le Corre paper. really nothing that looks like a peak, more like multiple tall buildings and one dip down
+
+##bonferroni corrections. use the p.adjust function from base
+## focus on just the first pc for now.
+#padj <- p.adjust(MQF_sub_6$pvalues[,1], method = "bonferroni") # change the p values
+#alpha <- 0.1
+#outliers <- which(padj < alpha) # new p values which are below the previously determined threshhold
+#length(outliers) # number of outliers
+## 39504 - this like cut the count of outliers in half! which is good. this is also the high alpha.
+
+## lower alpha
+#alpha <- 0.05
+#outliers <- which(padj < alpha) # new p values which are below the previously determined threshhold
+#length(outliers)
+## 38008
+
+# association between snps and outliers (bonferroni corrected because that was done last)
+# some of these are most associated with PC2
+# PC1
+snp_pc1 <- get.pc(MQF_sub_6,outliers)
+unique(snp_pc1$PC) # all 6 PCs are present here, 
+
+## color the outliers for PC1, show emily and jeff the K = 7 PC1 results and noBOS K = 6, and go from there.
+# I need the coloring vector to be a factor
+# can I merge it as a column with for.manhat? and then make a vector of 0s and 1s?
+# bonferroni corrected alpha = 0.05, colored if the p value is less than that.
+col.out <- data.frame("snp" = outliers, "col" = rep(1, times = length(outliers)))
+for.mahat2 <- merge(for.manhat, col.out, by.x = "x", by.y = "snp", all.x = T)
+# okay, now I want to replace the NAs in col with 1s
+
+for.mahat2$col[is.na(for.mahat2$col)] <- 0
+for.mahat2$col <- as.factor(for.mahat2$col)
+str(for.mahat2)
+
+
+ggplot(data = for.mahat2)+
+  geom_point( aes(x = x, y = log_y_6, col = col))+
+  scale_color_manual( values = c("black", "red"))+
+  labs(y = "-log10(pval) for PC1", x = "SNP", main = "Bos Removed")+
+  theme_classic()
+# still tons of outliers. hmm. maybe this is more evidence for the many loci of small effect??
+ggsave(filename = , height = 7, width = 7)
+
+```
+
+
+## Single snp Pc value vs allele frequency graph
+What do I want to read in to start this script: 
+I want componentwise results for just one snp?
+
+```{bash prep3, eval = FALSE}
+# load modules
+module purge
+module load GCC/8.3.0 OpenMPI/3.1.4 R/4.0.2; module load GDAL/3.0.2-Python-3.7.4
+R
+```
+
+```{r}
+library(pcadapt)
+library(ggplot2)
+MQF <- read.pcadapt(input = "~/stamen_loss/ForGemma/allSNPs.IndvWithPheno.MQF.bed", type = "bed")
+
+# broad check to choose which K to use moving forward. previously I chose 7 but I don't have to again. min.maf = 0 because filtering done in vcf tools before this step.
+
+MQF_cw_7 <- pcadapt(input = MQF, K = 7, pca.only = FALSE, method = "componentwise", min.maf = 0)
+str(MQF_cw_7)
+##List of 11
+## $ scores         : num [1:61, 1:7] 0.1142 0.0603 -0.0781 0.1136 0.1138 ...
+## $ singular.values: num [1:7] 0.439 0.379 0.372 0.334 0.306 ...
+## $ loadings       : num [1:1925926, 1:7] 0.000404 -0.000753 0.001398 -0.000262 0.000266 ...
+## $ zscores        : num [1:1925926, 1:7] 1.526 -3.239 15.473 -0.934 0.882 ...
+## $ af             : num [1:1925926] 0.775 0.917 0.95 0.836 0.918 ...
+## $ maf            : num [1:1925926] 0.225 0.0833 0.05 0.1639 0.082 ...
+## $ chi2.stat      : num [1:1925926, 1:7] 0.223 1.731 58.281 0.251 0.213 ...
+## $ stat           : num [1:1925926, 1:7] 2.329 10.489 239.41 0.873 0.778 ...
+## $ gif            : num [1:7] 10.43 6.06 4.11 3.47 3.65 ...
+## $ pvalues        : num [1:1925926, 1:7] 6.37e-01 1.88e-01 2.27e-14 6.16e-01 6.44e-01 ...
+## $ pass           : int [1:1925760] 1 2 3 4 5 6 7 8 9 10 ...
+## - attr(*, "K")= num 7
+## - attr(*, "method")= chr "componentwise"
+## - attr(*, "min.maf")= num 0
+## - attr(*, "class")= chr "pcadapt"
+
+# so af is allele frequency. it is calculated for each snp. so if i pick like snp 100, I want to pull out the allele frequency of that snp for each individual don't I? but I don't think I can do that.
+# what my notes say is PC1 value (score or loading?) on x axis and the allele frequency on the y axis. The scores are by individual and I don't have allele frequencies by individual (though I think that is what Emily was trying to explain honestly because we were taking about 0s and 1s instead of 0s, 0.5s and 1s)
+# what I can do is make a graph of the loadings for pc1 and the alleles frequencies. the only thing that would change between different graphs here is the loading value because that is snp specific
+# as a reminder, af is: af is a vector of size L containing allele frequencies of derived alleles where genotypes of 0 are supposed to code for homozygous for the reference allele
+forPlot <- data.frame("x" = MQF_cw_7$loadings[,1], "y" = MQF_cw_7$af)
+head(forPlot)
+plot(y~x, data = forPlot)
+# this is all snps at once and not what I wanted! I do want to plot the scores I think because my notes say each point is an individual and then the slope is beta. But that is where I am running into an issue and may be because I am not using the mahalanobis method? which is where Emily was originally looking for the methods.
+# but this issue is that I have allele frequencies for all individuals together, not per individual. If I do the other method, what do I get?
+MQF_7 <- pcadapt(input = MQF, K = 7, pca.only = FALSE, method = "mahalanobis", min.maf = 0)
+str(MQF_7)
+# $ af             : num [1:1925926] 
+#still only have one allele frequency per snp and not allele frequencies per individual. Do I need to calculate this on my own?
+# tempted to ask Emily and Jeff before I start doing that because seems like a lot of work?
+```
+
+End of this part.
+
+Copy of something else I did that seems better?
+```{r}
+# try component wise becuase that is long term what I care about
+MQF_mah2 <- pcadapt(input = MQF, K = 60, pca.only = FALSE, method = "componentwise", min.maf = 0)
+# worked?
+# looks promising. saved and went to evgen
+save(MQF_mah2, file = "~/Documents/MQF1_cw_60pc.Robj")
+#So the MQF_mah2 is not actually the mah method which is poor naming on my part, BUT it includes the singular values which is what I can use to calculate the pve as well as scores which should be the pc scores and loadings which can test for linkage disequilibrium. SO, so far this seems promising. I’m going to try and make a PC graph on the HPCC to compare and then just output the scores.
+
+
+# it should be the order of the fam file which is definitely not alphabetical
+
+pop.list2 <- c("ALE", "ALE", "ARB", "ALE", "ALE", "ARB", "ARB", "ARB", "BAR", "BAR", "BAR", "BIS"," BIS", "BIS", "BIS","BOS","BAR","BOS", "BOS", "BOS", "COC", "COC", "COC", "HOR", "HOR", "HOR", "HOR", "MUR", "MUR", "MUR", "MUR", "PAL", "PAL", "PAN", "PAN", "PIN","PAL", "PAL", "PAN", "PIN", "PIN", "PIN", "POB", "POB", "POB", "POB", "RAB", "RAB", "RAB", "RAB", "SPE", "SPE", "SPE", "SPE", "VDM", "VIE", "VIE","VDM", "VDM",  "VIE", "VIE")
+plot(MQF_mah2, option = "scores", pop = pop.list2)
+
+
+MQF_info2 <- data.frame(PC1 = MQF_mah2$scores[,1], PC2 = MQF_mah2$scores[,2], PC3 = MQF_mah2$scores[,3], PC4 = MQF_mah2$scores[,4], pop = pop.list2)
+save(MQF_info2, file = "~/Documents/MQF1_info2.Robj")
+
+# and to finish out this pcadapt mess. I guess I'll actually figure out what is going on later, but here are the scores for easier access and pve calculation!
+sing.vals <- data.frame("val" = MQF_mah2$singular.values)
+save(sing.vals, file = "~/Documents/MQF1_sing.vals2")
+
+
+# first need to calculate the percent variance explained by each PC as calculated by PCadapt.
+load("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/MQF1_sing.vals2.Robj")
+# singular.values is a vector containing the K ordered squared root of the proportion of variance explained by each PC.
+# K = num PCs
+pve.2 <- sing.vals ^ 2
+sum(pve.2)
+# the sum is 4?? that is really confusing to me.
+# maybe I have to go estimate it right off the screeplot?
+# that mirrors the pve.2 values
+
+pcadapt.pve <- round((pve.2/sum(pve.2))*100, 2)
+# about matches the genetic matrix pca values
+
+
+## the squared values in pve.2 do about match those shown on the skree plot, so I'm going to ask Emily and Jeff.
+
+pcadapt.pve[1,]
+
+
+```
+
+```{r pcadapt.geo}
+## libraries for this section
+library(ggplot2)
+library(RColorBrewer)
+
+## load in that data, again.
+load("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/MQF1_info2.ROBJ")
+# need to remove a space from MQF_info2 in the BIS line.
+# it is row 13
+MQF_info2$pop[13] <- "BIS"
+# need to update ARB and SPE to ARU and SAL
+MQF_info2$pop[c(3,6:8)] <- 'ARU'
+MQF_info2$pop[51:54] <- 'SAL'
+unique(MQF_info2$pop)
+# also add an id column. this is assuming same order as .fam file, which is how populations were determined in the first place.
+MQF_info2$id <- c("ALE10", "ALE16", "ARB3", "ALE-12", "ALE-4", "ARB-10", "ARB-6", "ARB-8", "BAR11", "BAR4", "BAR9", "BIS11","BIS16", "BIS20", "BIS8","BOS5","BAR-3","BOS-10", "BOS-6", "BOS-9", "COC14", "COC17", "COC-19", "HOR-16", "HOR-4", "HOR-6", "HOR-7", "MUR15", "MUR16", "MUR17", "MUR-20", "PAL16", "PAL6", "PAN1", "PAN5", "PIN9","PAL-12", "PAL-7", "PAN-9", "PIN-3", "PIN-6", "PIN-7", "POB-10", "POB-16", "POB-19", "POB-7", "RAB4", "RAB-17", "RAB-20", "RAB-9", "SPE5", "SPE-2", "SPE-6", "SPE-7", "VDM9", "VIE16", "VIE3","VDM-17", "VDM-20",  "VIE-4", "VIE-6")
+
+## load in metadata
+
+metadata <- read.csv("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/pop_metadata.csv")
+#### blank column to hold the x values I want to put the labels at
+metadata$xlab <- NA
+#loop to populate the new column
+for (i in 1:length(metadata$PopCode)){
+  if (metadata$PopCode[i] == "PIN"){
+    metadata$xlab[i] = metadata$Lon_DecDeg[i] + 0.17
+  }else{
+    metadata$xlab[i] = metadata$Lon_DecDeg[i] - 0.17
+  }
+}
+
+MQF_info2$elev <- metadata$Elev_m[match(MQF_info2$pop, metadata$PopCode)]
+# then match with row names to add metadata column
+# do this for lat and long now too
+MQF_info2$lat <- metadata$Lat_DecDeg[match(MQF_info2$pop, metadata$PopCode)]
+MQF_info2$lon <- metadata$Lon_DecDeg[match(MQF_info2$pop, metadata$PopCode)]
+
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=PC1, y=PC2, label=pop, col=elev))+
+  labs(x=paste0("PC1 (",pcadapt.pve[1,],"%)"), y=paste0("PC2 (",pcadapt.pve[2,],"%)"), title="PC1 and PC2")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+ggsave(file="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/pcadapt_PC1_PC2_labelled_elevation.png")
+
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=PC3, y=PC4, label=pop, col=elev))+
+  labs(x=paste0("PC3 (",pcadapt.pve[3,],"%)"), y=paste0("PC4 (",pcadapt.pve[4,],"%)"), title="PC3 and PC4")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+#ggsave(file="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/pcadapt_PC3_PC4_labelled_elevation.png")
+
+
+## No super clear association with elevation on it's own from that plot, but in hopes of uncovering my trend again let's look just at pc1
+PC1.elev <- lm(PC1~elev, data = MQF_info2)
+summary(PC1.elev)
+# significant p value, R^2 = 0.54 which is not great. so that connection is gone and leaves wiggle room for an addition explanation
+
+
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=elev, y=PC1, label=pop, col=elev))+
+  geom_abline(aes(intercept = PC1.elev$coefficients[1], slope =  PC1.elev$coefficients[2]))+
+  labs(y="PC1", x="Elevation (m)", title = "PC1 by elevation")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+ggsave(filename = "pcadapt_PC1_elev.png", path = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures")
+
+PC2.elev <- lm(PC2~elev, data = MQF_info2)
+summary(PC2.elev)
+# significant at 0.001
+# R^2 = 0.26 so worse than the first pc unfortunately
+
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=elev, y=PC2, label=pop, col=elev))+
+  geom_abline(aes(intercept = PC2.elev$coefficients[1], slope =  PC2.elev$coefficients[2]))+
+  labs(y="PC2", x="Elevation (m)", title = "PC2 by elevation")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+
+# let's try PC3 b/c I know those were switched potentially
+PC3.elev <- lm(PC3~elev, data = MQF_info2)
+summary(PC3.elev)
+# not significant
+# R^2 = 0.007 so like actually nothing.adjusted is barely negative.
+
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=elev, y=PC3, label=pop, col=elev))+
+  geom_abline(aes(intercept = PC3.elev$coefficients[1], slope =  PC3.elev$coefficients[2]))+
+  labs(y="PC3", x="Elevation (m)", title = "PC3 by elevation")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+
+# and just to round it out PC4
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=elev, y=PC4, label=pop, col=elev))+
+  #geom_abline(aes(intercept = PC3.elev$coefficients[1], slope =  PC3.elev$coefficients[2]))+
+  labs(y="PC4", x="Elevation (m)", title = "PC4 by elevation")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+PC4.elev <- lm(PC4~elev, data = MQF_info2)
+summary(PC4.elev)
+
+# attempt at graphing with color = elevation, shape = latitude, size = longitude
+ggplot(MQF_info2)+
+  geom_point(data = MQF_info2, aes(x=PC1, y=PC2, size = round(lon), shape = as.factor(round(lat)), col = elev))+
+  #geom_text(data=pca.dat, aes(x=PC1, y=PC2, label=for.cols, col=elev))+
+  labs(x=paste0("PC1 (",pcadapt.pve[1,],"%)"), y=paste0("PC2 (",pcadapt.pve[2,],"%)"), title="PC1 and PC2 with Elev, Lat, Lon")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+
+ggsave(filename = "pcadapt_PCA_withgeo.1.png", path = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures")
+
+
+## PC1 with lat and long
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=lat, y=PC1, label=pop, col=elev))+
+  labs(y="PC1", x="Latitude (DecDeg)", title ="PC1 by latitude")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+# no clear pattern
+
+## and PC1 with lon
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=lon, y=PC1, label=pop, col=elev))+
+  labs(y="PC1", x="Longitude (DecDeg)", title = "PC1 by longitude")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+# also no clear pattern
+
+# PC2 with lat and long
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=lat, y=PC2, label=pop, col=elev))+
+  labs(y="PC2", x="Latitude (DecDeg)", title ="PC2 by latitude")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+# no clear pattern
+# maybe a very slight pattern but nothing much. driven by some latitude outliers
+
+## and PC2 with lon
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=lon, y=PC2, label=pop, col=elev))+
+  labs(y="PC2", x="Longitude (DecDeg)", title = "PC2 by longitude")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+# nada
+
+# PC3 with lat and long
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=lat, y=PC3, label=pop, col=elev))+
+  labs(y="PC3", x="Latitude (DecDeg)", title ="PC3 by latitude")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+# nothing
+
+## and PC3 with lon
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=lon, y=PC3, label=pop, col=elev))+
+  labs(y="PC3", x="Longitude (DecDeg)", title = "PC3 by longitude")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+# nada
+
+
+# and finally PC4 with lat and long
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=lat, y=PC4, label=pop, col=elev))+
+  labs(y="PC4", x="Latitude (DecDeg)", title ="PC4 by latitude")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+# nothing
+
+## and PC4 with lon
+ggplot(MQF_info2)+
+  geom_text(data=MQF_info2, aes(x=lon, y=PC4, label=pop, col=elev))+
+  labs(y="PC4", x="Longitude (DecDeg)", title = "PC4 by longitude")+
+  scale_color_gradient(low = "red",  high = "darkblue")+
+  theme_classic()
+# nada
+
+
+# for manuscript, need actual values!
+# lat
+PC1.lat <- lm(PC1~lat, data = MQF_info2)
+summary(PC1.lat) #r2 = 0.044, p = 0.10
+PC2.lat <- lm(PC2~lat, data = MQF_info2)
+summary(PC2.lat) ## woah!! r2 = 0.5195, p < 0.001
+PC3.lat <- lm(PC3~lat, data = MQF_info2)
+summary(PC3.lat) ## r2 = 0.025, p = 0.225
+PC4.lat <- lm(PC4~lat, data = MQF_info2)
+summary(PC4.lat) ## r2 = 0.024, p = 0.23
+# long
+PC1.lon <- lm(PC1~lon, data = MQF_info2)
+summary(PC1.lon) ## r2 = 0.20, p < 0.001
+PC2.lon <- lm(PC2~lon, data = MQF_info2)
+summary(PC2.lon) ## r2 = 0.471, p < 0.001
+PC3.lon <- lm(PC3~lon, data = MQF_info2)
+summary(PC3.lon) ## r2 = 0.009, p = 0.466
+PC4.lon <- lm(PC4~lon, data = MQF_info2)
+summary(PC4.lon) ## r2 = 0.022, pval = 0.25
+```
+
+So pca and geographic analysis came up short. Disappointing that the elevation gradient that I saw in my incorrect analysis is not still present. Will have to think through what this means. I think what it means is that genetic differentiation is not necessarily governed by elevation or geography. which I think makes me a bit more interested in seeing what they IBD or IBE results would be for these populations. 
+
+## Good graphs ##
+
+```{r}
+# okay, I want to rotate through 4 shapes, set up the factors to determine colors
+# I think the read issue is that I can't color with the elevation gradient and do this extra determination. 
+# so because I can see that elevation isn't super necessary from the messy graph, let's drop it.
+for_color <- data.frame("pop" = unique(MQF_info2$pop), col = rep(1:4,rep(4, times = 4)), shape = rep(1:4, 4))
+dat <- merge(MQF_info2, for_color, by.x = "pop", by.y = "pop")
+
+set.seed(921)
+# because jitter is random
+ggplot(dat)+
+  geom_jitter(data=dat, aes(x=PC1, y=PC2, shape = as.factor(pop), col= as.factor(pop), size = elev), stroke = 1.25, width = .01)+
+  labs(x=paste0("PC1 (",pcadapt.pve[1,],"%)"), y=paste0("PC2 (",pcadapt.pve[2,],"%)"), title = "PC1 and PC2")+
+  scale_color_manual(name = "Population",
+                     labels = unique(dat$pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(dat$pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+#ggsave(filename = "pcadapt_PC1PC2_elev.png", path = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures", height = 7, width = 7)
+
+
+# how do I made the right legend now?
+# maybe I can wort by elevation and use red as low elevation and blue as high elevation? similar to my other map?
+
+# haha! the legend is too big with the size scaling included.
+# taking lunch break and then will get back to tackling this.
+
+## PC3 and PC4 in same format
+ggplot(dat)+
+  geom_jitter(data=dat, aes(x=PC3, y=PC4, shape = as.factor(pop), col= as.factor(pop), size = elev), stroke = 1.25, width = 0.01)+
+  labs(x=paste0("PC3 (",pcadapt.pve[3,],"%)"), y=paste0("PC4 (",pcadapt.pve[4,],"%)"), title = "PC3 and PC4")+
+  scale_color_manual(name = "Population",
+                     labels = unique(dat$pop),
+                     values = rep(c("red", "orange", "green", "blue"), times = 4))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(dat$pop),
+                     values = rep(c(0, 1, 2, 5), times = c(4,4,4,4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.0001, "cm"))
+#ggsave(filename = "pcadapt_PC3PC4_elev.png", path = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures", height = 7, width = 7)
+
+## and now without elevation
+## put elevation in the legend title for each color
+## and order it differently
+dat2 <- dat[order(dat$elev),]
+dat2$label <- paste0(dat2$pop, " - ", dat2$elev, "m")
+dat2$pop <- as.factor(dat2$pop)
+dat2$pop <- factor(dat2$pop, levels = unique(dat2$pop[order(dat2$elev)]))
+ggplot(dat2)+
+  geom_jitter(data=dat2, aes(x=PC1, y=PC2, shape = as.factor(pop), col= as.factor(pop)), size = 4, stroke = 1.25, width = 0.0175)+
+  labs(x=paste0("PC1 (",pcadapt.pve[1,],"%)"), y=paste0("PC2 (",pcadapt.pve[2,],"%)"), title = "PC1 and PC2")+
+  scale_color_manual(name = "Population",
+                     labels = unique(dat2$label),
+                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(dat2$label),
+                     values = rep(c(0, 1, 2, 5), times = 4))+
+  theme_classic()+
+theme(
+    legend.title = element_text(color = "black", size = 14),
+    legend.text = element_text(color = "black", size = 12),
+    legend.spacing.y = unit(0.01, "cm"),
+    axis.title = element_text(color = "black", size = 14),
+    axis.text = element_text(color = "black", size = 12))
+ggsave(filename = "pcadapt_PC1PC2_sym.png", path = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures", height = 7, width = 9)
+
+## PC3 and PC4 in same format
+
+ggplot(dat2)+
+  geom_jitter(data=dat2, aes(x=PC3, y=PC4, shape = as.factor(pop), col= as.factor(pop)),size = 4, stroke = 1.25, width = 0.0175)+
+  labs(x=paste0("PC3 (",pcadapt.pve[3,],"%)"), y=paste0("PC4 (",pcadapt.pve[4,],"%)"), title = "PC3 and PC4")+
+  scale_color_manual(name = "Population",
+                     labels = unique(dat2$label),
+                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(dat2$label),
+                     values = rep(c(0, 1, 2, 5), times = 4))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.01, "cm"))
+ggsave(filename = "pcadapt_PC3PC4_sym.png", path = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures", height = 7, width = 9)
+
+# jitter is super small, could increase that if I feel like it.
+
+```
+
+\
+```{r}
+# testing plots
+# sticking with the jitter for now and setting seed so it is reproducible.
+ggplot(dat2)+
+  geom_point(data=dat2, aes(x=PC1, y=PC2, shape = as.factor(pop), col= as.factor(pop)), size = 4, stroke = 1.25, alpha = 0.7)+
+  labs(x=paste0("PC1 (",pcadapt.pve[1,],"%)"), y=paste0("PC2 (",pcadapt.pve[2,],"%)"), title = "PC1 and PC2")+
+  scale_color_manual(name = "Population",
+                     labels = unique(dat2$label),
+                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(dat2$label),
+                     values = rep(c(0, 1, 2, 5), times = 4))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.01, "cm"))
+
+# vs the jitter
+ggplot(dat2)+
+  geom_jitter(data=dat2, aes(x=PC1, y=PC2, shape = as.factor(pop), col= as.factor(pop)), size = 4, stroke = 1.25, width = 0.0175)+
+  labs(x=paste0("PC1 (",pcadapt.pve[1,],"%)"), y=paste0("PC2 (",pcadapt.pve[2,],"%)"), title = "PC1 and PC2")+
+  scale_color_manual(name = "Population",
+                     labels = unique(dat2$label),
+                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(dat2$label),
+                     values = rep(c(0, 1, 2, 5), times = 4))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 10),
+    legend.spacing.y = unit(0.01, "cm"))
+
+```
+\
+End of document.

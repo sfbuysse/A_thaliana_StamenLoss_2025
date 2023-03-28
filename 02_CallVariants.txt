@@ -1,0 +1,388 @@
+########## Call Variants ##########
+## code to prep bam file for variant calling, do bootstrapped BQSR, then do haplotype calling and genotyping with GATK
+## modules loaded within each step. If running some steps as a single job, load modules only once.
+## SeqID.txt contains the unique identifier for each file, one to a line
+
+##### Step 1: add read groups #####
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+
+cd /folder/location/BWA_bam
+while IFS= read -r line; do gatk --java-options "-Xmx4g" AddOrReplaceReadGroups \
+       -I sorted_"$line"_bwa.bam \
+       -O "$line"_rg.bam \
+       -ID="$line" \
+       -LB="$line" \
+       -PL=ILLUMINA \
+       -PU=1 \
+       -SM="$line"; done < /file/to/read/lines/from/SeqID.txt
+	   
+##### Step 2: Make dictionary for reference (do once) #####
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+gatk --java-options "-Xmx4g" CreateSequenceDictionary \
+	-R Athal.fasta \
+	-O Athal.dict
+
+##### Step 3: Mark Duplicates #####
+cd /folder/location/BWA_bam
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+
+while IFS= read -r line; do gatk --java-options "-Xmx4g" MarkDuplicatesSpark \
+             -I "$line"_rg.bam  \
+             -O "$line"_rg_rmdup.bam \
+             -M "$line"_dup_metrics.txt\
+				-conf 'spark.executor.cores=4'; done < /file/to/read/lines/from/SeqID.txt
+
+##### Step 4: Check Fast QC report again ####
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load FastQC
+module load MultiQC/1.7-Python-3.6.6
+while IFS= read -r line; do fastqc "${line}"_rg_rmdup.bam & done < /file/to/read/lines/from/SeqID.txt
+#generate a single report form all the reports in the current directory
+multiqc . 
+
+##### Step 5: Base Quality Score Recalibration #####
+# do this with the bootstrap methods, so need to get a file of high confidence snps from my data 
+# to use as the known_variants file
+
+#First do an initial round of variant calling on your original, unrecalibrated data.
+#Then take the variants that you have the highest confidence in and use that set as the database of known variants by feeding it as a VCF file to the BaseRecalibrator.
+#Finally, do a real round of variant calling with the recalibrated data. These steps could be repeated several times until convergence.
+
+### Step 5a: Call haplotypes ###
+# chromosome names in fasta and bam don't match. fix that first
+module load BWA
+grep '>' Athal.fasta
+awk '{print $1}' Athal.fasta > Athal.short.fasta
+grep '>' Athal.short.fasta
+bwa index Athal.short.fasta Athal.short
+
+# call haplotypes by sample and chromosome
+# want GVCF with variant and invariant sites retained
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+cd /folder/location
+
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk --java-options "-Xmx8G" HaplotypeCaller \
+-R Athal.fasta \
+-I BWA_bam/"${LINE}"_rg_rmdup.bam \
+-L Chr1 \
+-O GVCF/Chr1/"${LINE}".g.vcf \
+-ERC GVCF; done < /file/to/read/lines/from/SeqID.txt
+# ran the above code separately for each chromosome as separate jobs.
+
+### Step 5b: Combine GVCFs ###
+# note: there is likely a better way to do this step.
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+cd /folder/location/GVCF
+
+for x in 1 2 3 4 5; do gatk CombineGVCFs -R Athal.fasta
+--variant Chr"$x"/ALE10_*.g.vcf   \
+--variant Chr"$x"/Ale-12_*.g.vcf \
+--variant Chr"$x"/ALE16_*.g.vcf \
+--variant Chr"$x"/Ale-4_*.g.vcf \
+--variant Chr"$x"/Arb-10_*.g.vcf \
+--variant Chr"$x"/ARB3_*.g.vcf \
+--variant Chr"$x"/Arb-6_*.g.vcf \
+--variant Chr"$x"/Arb-8_*.g.vcf \
+--variant Chr"$x"/BAR11_*.g.vcf \
+--variant Chr"$x"/Bar-3_*.g.vcf \
+--variant Chr"$x"/BAR4_*.g.vcf \
+--variant Chr"$x"/BAR9_*.g.vcf \
+--variant Chr"$x"/BIS11_*.g.vcf \
+--variant Chr"$x"/BIS16_*.g.vcf \
+--variant Chr"$x"/BIS20_*.g.vcf \
+--variant Chr"$x"/BIS8_*.g.vcf \
+--variant Chr"$x"/Bos-10_*.g.vcf \
+--variant Chr"$x"/BOS5_*.g.vcf \
+--variant Chr"$x"/Bos-6_*.g.vcf \
+--variant Chr"$x"/Bos-9_*.g.vcf \
+--variant Chr"$x"/COC14_*.g.vcf \
+--variant Chr"$x"/COC17_*.g.vcf \
+--variant Chr"$x"/Coc-19_*.g.vcf \
+--variant Chr"$x"/COC7_*.g.vcf \
+--variant Chr"$x"/Hor-16_*.g.vcf \
+--variant Chr"$x"/Hor-4_*.g.vcf \
+--variant Chr"$x"/Hor-6_*.g.vcf \
+--variant Chr"$x"/Hor-7_*.g.vcf \
+--variant Chr"$x"/MUR15_*.g.vcf \
+--variant Chr"$x"/MUR16_*.g.vcf \
+--variant Chr"$x"/MUR17_*.g.vcf \
+--variant Chr"$x"/Mur-20_*.g.vcf \
+--variant Chr"$x"/Pal-12_*.g.vcf \
+--variant Chr"$x"/PAL16_*.g.vcf \
+--variant Chr"$x"/PAL6_*.g.vcf \
+--variant Chr"$x"/Pal-7_*.g.vcf \
+--variant Chr"$x"/PAN1_*.g.vcf \
+--variant Chr"$x"/PAN5_*.g.vcf \
+--variant Chr"$x"/Pan-9_*.g.vcf \
+--variant Chr"$x"/Pin-3_*.g.vcf \
+--variant Chr"$x"/Pin-6_*.g.vcf \
+--variant Chr"$x"/Pin-7_*.g.vcf \
+--variant Chr"$x"/PIN9_*.g.vcf \
+--variant Chr"$x"/Pob-10_*.g.vcf \
+--variant Chr"$x"/Pob-16_*.g.vcf \
+--variant Chr"$x"/Pob-19_*.g.vcf \
+--variant Chr"$x"/Pob-7_*.g.vcf \
+--variant Chr"$x"/Rab-17_*.g.vcf \
+--variant Chr"$x"/Rab-20_*.g.vcf \
+--variant Chr"$x"/RAB4_*.g.vcf \
+--variant Chr"$x"/Rab-9_*.g.vcf \
+--variant Chr"$x"/Spe-2_*.g.vcf \
+--variant Chr"$x"/SPE5_*.g.vcf \
+--variant Chr"$x"/Spe-6_*.g.vcf \
+--variant Chr"$x"/Spe-7_*.g.vcf \
+--variant Chr"$x"/Vdm-17_*.g.vcf \
+--variant Chr"$x"/Vdm-20_*.g.vcf \
+--variant Chr"$x"/VDM9_*.g.vcf \
+--variant Chr"$x"/VIE16_*.g.vcf \
+--variant Chr"$x"/VIE3_*.g.vcf \
+--variant Chr"$x"/Vie-4_*.g.vcf \
+--variant Chr"$x"/Vie-6_*.g.vcf \
+-O Chr"$x"/all.Chr"$x".g.vcf; done
+
+gatk CombineGVCFs -R Athal.fasta \
+--variant Chr1/all.Chr1.g.vcf \
+--variant Chr2/all.Chr2.g.vcf \
+--variant Chr3/all.Chr3.g.vcf \
+--variant Chr4/all.Chr4.g.vcf \
+--variant Chr5/all.Chr5.g.vcf \
+-O AllSamplesAllChrs.g.vcf
+
+### Step 5c: Genotype GVCFs ###
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+cd /folder/location/GVCF
+
+gatk --java-options "-Xmx4g" GenotypeGVCFs \
+-R Athal.fasta \
+-V AllSamplesAllChrs.g.vcf \
+-all-sites TRUE \
+-O allsites.raw.g.vcf.gz
+
+### Step 5d: Filter for Known Variants file ###
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+cd /folder/location/GVCF
+
+# keep only snps
+gatk SelectVariants \
+-R Athal.fasta \
+-V allsites.raw.g.vcf.gz \
+-select-type SNP \
+-O all_raw_snps.vcf
+
+# mark with hard filtering. These are the recommendations from GATK for parameters
+gatk VariantFiltration \
+        -R Athal.fasta \
+        -V all_raw_snps.vcf \
+        -O all_filtered_snps.vcf \
+        --filter-name "QD_filter" -filter "QD < 2.0" \
+        --filter-name "FS_filter" -filter "FS > 60.0" \
+        --filter-name "MQ_filter" -filter "MQ < 40.0" \ # Ref paper did MQ < 20. this is the root mean square of the mapping quality of reads across all samples (MQ). maybe split the difference and go 30?
+        --filter-name "ReadPosRankSum_filter" -filter "ReadPosRankSum < -8.0" \
+		--filter-name "MQRankSum_filter" -filter "MQRankSum < -12.5"
+
+# get file of only high quality snps
+gatk SelectVariants \
+        --exclude-filtered \
+        -V all_filtered_snps.vcf \
+        -O all_bqsr_snps.vcf
+# note: all-bqsr_snps.vcf contails about 7/8 of all snps in my unfiltered file
+
+### Step 5e: First Round of BQSR ###
+module purge
+module load  GCC/6.4.0-2.28  OpenMPI/2.1.2
+module load R
+module load GATK/4.1.4.1-Python-3.6.4
+
+cd /folder/location/BQSR
+# base recalibrator
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk BaseRecalibrator \
+        -R Athal.fasta \
+        -I ../BWA_bam/"${LINE}"_rg_rmdup.bam \
+        --known-sites ../GVCF/all_bqsr_snps.vcf \
+        -O "${LINE}"_recal_1_data.table; done < file/location/SeqID_61.txt
+# Apply BQSR
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk ApplyBQSR \
+        -R Athal.fasta \
+        -I ../BWA_bam/"${LINE}"_rg_rmdup.bam \
+        -bqsr "${LINE}"_recal_1_data.table \
+        -O "${LINE}"_recal_1_reads.bam; done < file/location/SeqID_61.txt
+# visualize results
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk BaseRecalibrator \
+        -R Athal.fasta \
+        -I "${LINE}"_recal_1_reads.bam \
+        --known-sites ../GVCF/all_bqsr_snps.vcf \
+        -O "${LINE}"_post_recal_1_data.table; done < file/location/SeqID_61.txt
+
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk AnalyzeCovariates \
+-before "${LINE}"_recal_1_data.table \
+-after "${LINE}"_post_recal_1_data.table \
+-plots "${LINE}"_recalibration2_plots.pdf; done < file/location/SeqID_61.txt	
+
+##### Step 5f: FastQC on recalibrated Bam files #####
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load FastQC
+module load MultiQC/1.7-Python-3.6.6
+while IFS= read -r line; do fastqc "${line}"_recal_1_reads.bam & done < file/location/SeqID_61.txt
+multiqc . 
+
+##### Step 5g: A second round of BQSR #####
+module purge
+module load  GCC/6.4.0-2.28  OpenMPI/2.1.2
+module load R
+module load GATK/4.1.4.1-Python-3.6.4
+
+cd /file/location/BQSR
+# Base Recalibrator
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk BaseRecalibrator \
+        -R Athal.fasta \
+        -I "${LINE}"_recal_1_reads.bam \
+        --known-sites ../GVCF/all_bqsr_snps.vcf \
+        -O "${LINE}"_recal_2_data.table; done < file/location/SeqID_61.txt
+# Apply BQSR
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk ApplyBQSR \
+        -R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
+        -I /mnt/scratch/buysseso/BQSR/"${LINE}"_recal_1_reads.bam \
+        -bqsr "${LINE}"_recal_2_data.table \
+        -O "${LINE}"_recal_2_reads.bam; done < file/location/SeqID_61.txt
+# Visualize results
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk BaseRecalibrator \
+        -R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
+        -I "${LINE}"_recal_2_reads.bam \
+        --known-sites ../GVCF/all_bqsr_snps.vcf \
+        -O "${LINE}"_post_recal_2_data.table; done < file/location/SeqID_61.txt
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk AnalyzeCovariates \
+-before "${LINE}"_recal_2_data.table \
+-after "${LINE}"_post_recal_2_data.table \
+-plots "${LINE}"_recalibration3_plots.pdf; done < file/location/SeqID_61.txt
+
+##### Step 5h: FastQC on recalibrated files #####
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load FastQC
+module load MultiQC/1.7-Python-3.6.6
+while IFS= read -r line; do fastqc "${line}"_recal_2_reads.bam & done < file/location/SeqID_61.txt
+multiqc . 
+
+##### Step 6: Call Haplotypes Post BQSR #####
+# do this by sample and by chromosome again
+# get the GVCF right away (variants and nonvariant sites retained)
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+cd /folder/location
+
+while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk --java-options "-Xmx8G" HaplotypeCaller \
+-R Athal.fasta \
+-I BQSR/"${LINE}"_recal_2_reads.bam \
+-L Chr1 \
+-O GVCF/Chr1/"${LINE}"_PostBQSR.g.vcf \
+-ERC GVCF; done < /file/to/read/lines/from/SeqID.txt
+
+# again, do submit a separate job for each chromosome
+
+##### Step 7 Combine GVCFs #####
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+cd /folder/location/GVCF
+
+for x in 1 2 3 4 5; do gatk CombineGVCFs -R Athal.fasta
+--variant Chr"$x"/ALE10_*_PostBQSR_.g.vcf   \
+--variant Chr"$x"/Ale-12_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/ALE16_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Ale-4_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Arb-10_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/ARB3_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Arb-6_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Arb-8_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/BAR11_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Bar-3_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/BAR4_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/BAR9_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/BIS11_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/BIS16_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/BIS20_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/BIS8_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Bos-10_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/BOS5_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Bos-6_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Bos-9_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/COC14_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/COC17_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Coc-19_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/COC7_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Hor-16_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Hor-4_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Hor-6_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Hor-7_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/MUR15_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/MUR16_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/MUR17_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Mur-20_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/PAL12_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/PAL16_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/PAL6_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Pal-7_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/PAN1_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/PAN5_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Pan-9_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Pin-3_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Pin-6_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Pin-7_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/PIN9_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Pob-10_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Pob-16_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Pob-19_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Pob-7_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Rab-17_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Rab-20_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/RAB4_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Rab-9_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Spe-2_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/SPE5_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Spe-6_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Spe-7_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Vdm-17_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Vdm-20_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/VDM9_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/VIE16_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/VIE3_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Vie-4_*_PostBQSR_.g.vcf \
+--variant Chr"$x"/Vie-6_*_PostBQSR_.g.vcf \
+-O Chr"$x"/all.Chr"$x"_PostBQSR.g.vcf; done
+
+gatk CombineGVCFs -R Athal.fasta \
+--variant Chr1/all.Chr1_PostBQSR.g.vcf \
+--variant Chr2/all.Chr2_PostBQSR.g.vcf \
+--variant Chr3/all.Chr3_PostBQSR.g.vcf \
+--variant Chr4/all.Chr4_PostBQSR.g.vcf \
+--variant Chr5/all.Chr5_PostBQSR.g.vcf \
+-O AllSamplesAllChrs_PostBQSR.g.vcf
+
+##### Step 8: Genotype GVCFs #####
+module purge
+module load GCC/7.3.0-2.30 OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+cd /folder/location/GVCF
+
+gatk --java-options "-Xmx4g" GenotypeGVCFs \
+-R Athal.fasta \
+-V AllSamplesAllChrs_PostBQSR.g.vcf \
+-all-sites TRUE \
+-O allsites_PostBQSR.raw.g.vcf.gz
+
+## end of CallVariants. Next step is to FilterVariants ##

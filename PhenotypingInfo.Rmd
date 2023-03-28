@@ -1,0 +1,194 @@
+---
+title: "SamplingSummary"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Install packages
+
+```{r}
+library(dplyr)
+
+```
+# Summarize info from all Plants Phenotyped
+
+Read in the data and reformat
+```{r}
+ByFlwr <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/SpanishMasterDataset_ByFlwr.csv")
+# Reminder! Tube is equivalent to the time point, so 1 is the first 10 ish flowers, 2 is from around the 20th flower produced, and 3 is around the 30th flower produced and that is why there are multiples form tube b/c multiple flowers collected at each time point
+
+ByFlwr$Population <- as.factor(substr(ByFlwr$Population, start = 1, stop = 3))
+ByFlwr$Matriline <- as.factor(ByFlwr$Matriline)
+ByFlwr$Plant <- as.factor(ByFlwr$Plant)
+
+ByFlwr$LineID <- as.factor(paste0(ByFlwr$Population, "-", ByFlwr$Matriline))
+ByFlwr$PlantID <- as.factor(paste0(ByFlwr$LineID, "-", ByFlwr$Plant))
+uids <- unique(ByFlwr$PlantID)
+length(uids)
+# 230 plants were phenotyped
+
+# Make a unique ID for each flower in the dataset
+flwr<-c()
+for(i in 1:length(uids)){
+  len<-length(ByFlwr$PlantID[ByFlwr$PlantID==uids[i]])
+  flwr<-append(flwr,seq(1,len,1))
+}
+ByFlwr$flower<-flwr
+ByFlwr$FlowerID <- paste0(ByFlwr$PlantID, "-", ByFlwr$flower)
+
+dat_all <- ByFlwr[,c("Population", "LineID", "PlantID", "FlowerID", "NumShortStamens", "Notes")]
+```
+
+Find out some interesting things
+```{r}
+# How many planting blocks?
+length(unique(ByFlwr$PlantingBlock))
+
+# How many unique lines?
+length(unique(dat_all$LineID))
+
+# How many lines per population?
+PerPop <- dat_all %>% group_by(Population) %>%
+  summarize(NumLines = length(unique(LineID)), NumPlants = length(unique(PlantID)), NumFlwr = length(unique(FlowerID)))
+# there are 5 to 9 lines per pop
+
+# want flowers per pop info b/c that is what is used for population means
+min(PerPop$NumFlwr)
+# 42
+max(PerPop$NumFlwr)
+#168
+mean(PerPop$NumFlwr)
+# 88.9
+median(PerPop$NumFlwr)
+#99.5
+
+# How many Plants and Flowers per line?
+PerLine <- dat_all %>% group_by(LineID) %>%
+  summarize(NumPlants = length(unique(PlantID)), NumFlwr = length(unique(FlowerID)))
+min(PerLine$NumPlants)
+# 1
+max(PerLine$NumPlants)
+# 4
+mean(PerLine$NumPlants)
+# 2.05
+median(PerLine$NumPlants)
+# 2
+
+min(PerLine$NumFlwr)
+# 1 -- this is worrying to me... only 1 flower for 1 plant for this line?
+# this is true for POB-10 and POB-19. both of them are also sequenced
+max(PerLine$NumFlwr)
+# 36 -- this represents 9 flowers per plant for 4 plants per line
+mean(PerLine$NumFlwr)
+# 12.7
+median(PerLine$NumFlwr)
+# 10
+
+# what about flower per plant information?
+PerPlant <- dat_all %>% group_by(PlantID) %>%
+  summarize(NumFlwr = length(unique(FlowerID)))
+min(PerPlant$NumFlwr)
+# 1
+max(PerPlant$NumFlwr)
+# 9
+mean(PerPlant$NumFlwr)
+# 6.2
+median(PerPlant$NumFlwr)
+# 6
+
+```
+
+# Summarize info from Sequenced Plants
+
+```{r}
+Seq <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/SpanishMasterDataset_Sequenced.csv")
+# Reminder! Tube is equivalent to the time point, so 1 is the first 10 ish flowers, 2 is from around the 20th flower produced, and 3 is around the 30th flower produced and that is why there are multiples form tube b/c multiple flowers collected at each time point
+
+# here Rep is equivalent to what Plant was in the all dataset
+
+Seq$Population <- as.factor(substr(Seq$Population, start = 1, stop = 3))
+Seq$Line <- as.factor(Seq$Line)
+Seq$Plant <- as.factor(toupper(Seq$Rep))
+
+Seq$LineID <- as.factor(paste0(Seq$Population, "-", Seq$Line))
+# should be equivalent to SeqSampleID
+Seq$PlantID <- as.factor(paste0(Seq$LineID, "-", Seq$Plant))
+uids <- unique(Seq$PlantID)
+length(uids)
+# 141 plants were phenotyped
+
+# Make a unique ID for each flower in the dataset
+flwr<-c()
+for(i in 1:length(uids)){
+  len<-length(Seq$PlantID[Seq$PlantID==uids[i]])
+  flwr<-append(flwr,seq(1,len,1))
+}
+Seq$flower<-flwr
+Seq$FlowerID <- paste0(Seq$PlantID, "-", Seq$flower)
+
+dat_seq <- Seq[,c("Population", "LineID", "PlantID", "FlowerID", "Short_Stamens")]
+```
+
+Now that interesting stuff
+```{r}
+# How many unique lines?
+length(unique(dat_all$LineID))
+
+# How many lines per population?
+PerPop <- dat_seq %>% group_by(Population) %>%
+  summarize(NumLines = length(unique(LineID)), NumPlants = length(unique(PlantID)), NumFlwr = length(unique(FlowerID)))
+# there are 3 or 4 lines per pop
+
+# want flowers per pop info b/c that is what is used for population means
+min(PerPop$NumFlwr)
+# 18
+max(PerPop$NumFlwr)
+# 118
+mean(PerPop$NumFlwr)
+# 60.7
+median(PerPop$NumFlwr)
+# 63
+
+# How many Plants and Flowers per line?
+PerLine <- dat_seq %>% group_by(LineID) %>%
+  summarize(NumPlants = length(unique(PlantID)), NumFlwr = length(unique(FlowerID)))
+min(PerLine$NumPlants)
+# 1
+max(PerLine$NumPlants)
+# 4
+mean(PerLine$NumPlants)
+# 2.31
+median(PerLine$NumPlants)
+# 2
+
+min(PerLine$NumFlwr)
+# 1 -- this is worrying to me... only 1 flower for 1 plant for this line?
+# this is true for POB-10 and POB-19. both of them are also sequenced
+max(PerLine$NumFlwr)
+# 36 -- this represents 9 flowers per plant for 4 plants per line
+mean(PerLine$NumFlwr)
+# 15.9
+median(PerLine$NumFlwr)
+# 10
+
+# what about flower per plant information?
+PerPlant <- dat_seq %>% group_by(PlantID) %>%
+  summarize(NumFlwr = length(unique(FlowerID)))
+min(PerPlant$NumFlwr)
+# 1
+max(PerPlant$NumFlwr)
+# 9
+mean(PerPlant$NumFlwr)
+# 6.9
+median(PerPlant$NumFlwr)
+# 6
+
+```
+
+# Questions
+Should I drop the two lines that only have one flower phenotyped? They are both sequenced.
+
+

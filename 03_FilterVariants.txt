@@ -1,0 +1,210 @@
+########## Filter Variants ##########
+# this code filters variants for calculating population genetics statistics and for summarizing population structure and GWAS
+# modules loaded within each step.
+
+
+## NOTE: the all_code file has more info, but I am summarizing down here to only include the code for the pixy files and for the plink filtered files.
+
+##### Step 1: Filtered All Sites #####
+## The first filtered file we make will be for the population genetics statistics, so we will filter it less stringently
+## from following the pixy protocol https://pixy.readthedocs.io/en/latest/guide/pixy_guide.html
+
+cd /file_location/
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load tabix
+module load VCFtools/0.1.15-Perl-5.28.0
+
+# invariant sites file
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
+--max-maf 0 \
+--min-meanDP 3 \
+--minQ 20 \
+--remove-indels \
+--max-missing 0.75 \
+--max-alleles 2 \
+--remove-indv COC7_TCCTGAGC-TATCCTCT \
+--recode --stdout | ~/Apps/bgzip -c > invariant.vcf.gz
+
+# only variant sites file
+# keep these as only biallelic
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
+--mac 1 \
+--min-meanDP 3 \
+--minQ 20 \
+--remove-indels \
+--max-missing 0.75 \
+--min-alleles 2 \
+--max-alleles 2 \
+--remove-indv COC7_TCCTGAGC-TATCCTCT \
+--recode --stdout | ~/Apps/bgzip -c > biallelic.variant.vcf.gz
+
+# index both vcfs using tabix
+tabix invariant.vcf.gz
+tabix biallelic.variant.vcf.gz
+
+# combine the two VCFs using bcftools concat
+# having a module issue so need to purge and reload with a different version
+module purge
+module load GCC/6.4.0-2.28  OpenMPI/2.1.2 bcftools/1.9.64
+module load tabix
+~/Apps/bcftools concat \
+--allow-overlaps \
+invariant.vcf.gz biallelic.variant.vcf.gz \
+-O z -o all.filtered.vcf.gz
+
+tabix all.filtered.vcf.gz
+
+##### Step 1B: Rename files #####
+# sample names are long. Rename the output files to have more concise names
+## things happened a bit out of order here.
+
+## allsites was filtered and then renamed. 
+##### Step 2: Rename the samples #####
+#The sample names right now are long and not in a great order. rename the three output vcf files to have more concise names.
+# did for the allsites file I just created (all.filtered.vcf.gz) and the input file (allsites_PostBQSR.raw)
+
+
+module purge
+module load GCC/6.4.0-2.28  OpenMPI/2.1.2 bcftools/1.9.64
+module load tabix
+cd /file/location
+
+# find what the same order and names currently are
+zcat allsites_PostBQSR.raw.g.vcf.gz |bcftools query -l 
+
+bcftools query -l /mnt/scratch/buysseso/GVCF/all.filtered.vcf.gz > /mnt/scratch/buysseso/GVCF/all.filtered_vcf_sampleOrder.txt
+
+# both of them are in the same order, so I only need one file of the new order and names. 
+cp /mnt/scratch/buysseso/GVCF/all.filtered_vcf_sampleOrder.txt /mnt/scratch/buysseso/GVCF/VCF_simplified_sampleOrder.txt
+nano VCF_simplified_sampleOrder.txt
+# edit to remove everything after the underscore
+
+# and now actually change them
+zcat /mnt/scratch/buysseso/GVCF/allsites_PostBQSR.raw.g.vcf.gz |bcftools reheader --samples /mnt/scratch/buysseso/GVCF/VCF_simplified_sampleOrder_62.txt -o allsites_PostBQSR.raw.NewSampleName.g.vcf 
+bcftools query -l allsites_PostBQSR.raw.NewSampleName.g.vcf 
+
+zcat /mnt/scratch/buysseso/GVCF/all.filtered.vcf.gz |bcftools reheader --samples /mnt/scratch/buysseso/GVCF/VCF_simplified_sampleOrder.txt -o all.filtered.NewSampleName.vcf 
+bcftools query -l all.filtered.NewSampleName.vcf
+
+# do we want to remove any individuals?
+vcftools --vcf allSNPs.NewSampleName.vcf --missing-indv --out test.MissingIndv
+# I manually did this for each output file and decided not to remove any individuals.
+
+##### Step 2: Filtered Variant Sites #####
+## we then need a more strictly filtered file of ONLY the variant sites to use for the Fst, GWAS and PCA
+# this was done with plink as I was having issues with converting from a vcf to a binary plink file when I filtered with vcftools.
+
+# load modules and go to location
+module purge
+module load PLINK/1.9b_4.1-x86_64
+cd /file/location
+
+plink --vcf allsites_PostBQSR.raw.NewSampleName.g.vcf --remove COC7.txt --make-bed --double-id \
+--threads 4 --keep-allele-order --biallelic-only --vcf-min-qual 25 --vcf-require-gt \
+--snps-only --geno 0.25 --maf 0.05 --allow-no-sex --set-missing-var-ids @:# --out SNPs_cent_filtered
+
+# note there is no depth filter. min-meanDP 5 is recommended if the filtering had been done with vcftools
+
+# COC7.txt looks like this: 
+COC7 COC7
+
+##### Step 3: Repeat but exclude the centromere region first #####
+### exclude centromere region
+
+module purge
+module load PLINK/1.9b_4.1-x86_64
+
+cd /mnt/file/location/GVCF
+
+# make file with sites to be excluded from each chromosome
+
+# Chr 1
+plink -bfile allsites_filtered_plinkTest --chr Chr1 \
+--threads 4 \
+--from-bp 13700000 \
+--to-bp 15900000 \
+--write-snplist --out Chr1_CentSites_plink  this file contains the sites that are within the centromere, so these are the sites that should be excluded.
+# 39,408 sites
+
+# Chr 2
+plink -bfile allsites_filtered_plinkTest --chr Chr2 \
+--threads 4 \
+--from-bp 2450000 \
+--to-bp 5500000 \
+--write-snplist --out Chr2_CentSites_plink
+# 83,377 sites
+
+# Chr 3
+plink -bfile allsites_filtered_plinkTest --chr Chr3 \
+--threads 4 \
+--from-bp 11300000 \
+--to-bp 14300000 \
+--write-snplist --out Chr3_CentSites_plink
+# 78,000 sites
+
+# Chr 4
+plink -bfile allsites_filtered_plinkTest --chr Chr4 \
+--threads 4 \
+--from-bp 1800000 \
+--to-bp 5150000 \
+--make-bed --out Chr4_noCent_plink
+# 79,958 sites
+
+# Chr 5
+plink -bfile allsites_filtered_plinkTest --chr Chr5 \
+--threads 4 \
+--from-bp 11000000 \
+--to-bp 13350000 \
+--write-snplist --out Chr5_CentSites_plink
+# 70,635 sites
+
+# now actually do the excluding
+
+# the -exclude flat accepts a text file with a list of variant IDs (one per line) and removes all listed variants.
+plink -bfile allsites_filtered_plinkTest --chr Chr1 \
+--threads 4 \
+--exclude Chr1_CentSites_plink.snplist \
+--make-bed --out Chr1_SNPs_NoCent
+#436213 variants remaining
+
+plink -bfile allsites_filtered_plinkTest --chr Chr2 \
+--threads 4 \
+--exclude Chr2_CentSites_plink.snplist \
+--make-bed --out Chr2_SNPs_NoCent
+#217934 variants remaining
+
+plink -bfile allsites_filtered_plinkTest --chr Chr3 \
+--threads 4 \
+--exclude Chr3_CentSites_plink.snplist \
+--make-bed --out Chr3_SNPs_NoCent
+#279018 variants remaining
+
+plink -bfile allsites_filtered_plinkTest --chr Chr4 \
+--threads 4 \
+--exclude Chr4_CentSites_plink.snplist \
+--make-bed --out Chr4_SNPs_NoCent
+#214611 variants remaining
+
+plink -bfile allsites_filtered_plinkTest --chr Chr5 \
+--threads 4 \
+--exclude Chr5_CentSites_plink.snplist \
+--make-bed --out Chr5_SNPs_NoCent
+# 359552 variants remaining
+
+# total kept 1,507,328
+
+# merge files together into one
+plink --merge-list PlinkChrFiles.txt --make-bed -out allChrs_SNPs_NoCent
+# 1,507,328 variants pass.
+# matches expectation. I should have 436213 + 217934 + 279018 + 214611 + 359553 = 1,507,328
+
+## At the end of this code file, I have now created 3 dataset files:
+1. all.filtered.vcf.gz -> vcf file format. Includes variant and nonvariants sites. Include centromeres. To be used to calculate pi.
+2. allsites_filtered_PlinkTest -> plink format files. Contains SNPs only, includes centromeres, filtered by plink
+3. allChrs_SNPs_NoCent -> plink format files. Contains SNPs only, excluding the centromere region, filtered before excluding regions.
+
+
+
+
+##### End of File #####
