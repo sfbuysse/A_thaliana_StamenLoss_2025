@@ -1,9 +1,10 @@
 ########## Filter Variants ##########
 # this code filters variants for calculating population genetics statistics and for summarizing population structure and GWAS
 # modules loaded within each step.
-
+# just if I need it: module load GATK/4.1.4.1-Python-3.6.6
 
 ## NOTE: the all_code file has more info, but I am summarizing down here to only include the code for the pixy files and for the plink filtered files.
+## will also need to use bgzip from samtools. I had my own version rather than loading a module
 
 ##### Step 1: Filtered All Sites #####
 ## The first filtered file we make will be for the population genetics statistics, so we will filter it less stringently
@@ -16,6 +17,7 @@ module load tabix
 module load VCFtools/0.1.15-Perl-5.28.0
 
 # invariant sites file
+
 vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
 --max-maf 0 \
 --min-meanDP 3 \
@@ -26,7 +28,9 @@ vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
 --remove-indv COC7_TCCTGAGC-TATCCTCT \
 --recode --stdout | ~/Apps/bgzip -c > invariant.vcf.gz
 
+
 # only variant sites file
+
 # keep these as only biallelic
 vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
 --mac 1 \
@@ -52,6 +56,7 @@ module load tabix
 --allow-overlaps \
 invariant.vcf.gz biallelic.variant.vcf.gz \
 -O z -o all.filtered.vcf.gz
+
 
 tabix all.filtered.vcf.gz
 
@@ -203,8 +208,5 @@ plink --merge-list PlinkChrFiles.txt --make-bed -out allChrs_SNPs_NoCent
 1. all.filtered.vcf.gz -> vcf file format. Includes variant and nonvariants sites. Include centromeres. To be used to calculate pi.
 2. allsites_filtered_PlinkTest -> plink format files. Contains SNPs only, includes centromeres, filtered by plink
 3. allChrs_SNPs_NoCent -> plink format files. Contains SNPs only, excluding the centromere region, filtered before excluding regions.
-
-
-
 
 ##### End of File #####

@@ -269,7 +269,7 @@ while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk AnalyzeCovariates \
 -after "${LINE}"_post_recal_2_data.table \
 -plots "${LINE}"_recalibration3_plots.pdf; done < file/location/SeqID_61.txt
 
-##### Step 5h: FastQC on recalibrated files #####
+##### Step 5h: FastQC on output files #####
 module purge
 module load GCC/7.3.0-2.30  OpenMPI/3.1.1
 module load FastQC

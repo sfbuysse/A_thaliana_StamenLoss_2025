@@ -37,6 +37,7 @@ module load Conda/3
 conda activate pixy
 pixy --stats pi \
 --n_cores 6 \
+
 --vcf /mnt/scratch/buysseso/GVCF/all.filtered.vcf.gz \
 --chromosomes 'Chr1,Chr2,Chr3,Chr4,Chr5' \
 --window_size 50000 \
@@ -45,6 +46,7 @@ pixy --stats pi \
 --output_prefix all_filtered.50k.out
 
 scontrol show job $SLURM_JOB_ID
+
 # Submitted batch job 50971883 on 4/8/2022 at 9:43am
 # done after 1:18 run time. so this time estimate must have been from including fst as well. I'm dropping it lower in the code.
 

@@ -527,3 +527,37 @@ plink --merge-list PlinkChrFiles.txt --make-bed -out allChrs_SNPs_NoCent
 1. all.filtered.vcf.gz -> vcf file format. Includes variant and nonvariants sites. Include centromeres. To be used to calculate pi.
 2. allsites_filtered_PlinkTest -> plink format files. Contains SNPs only, includes centromeres, filtered by plink
 3. allChrs_SNPs_NoCent -> plink format files. Contains SNPs only, excluding the centromere region, filtered before excluding regions.
+
+
+### archive of some old code
+# I just submitted this as a job in the terminal and not submitted to the job scheduler. I am not sure how long I would expect it to take
+# but I  might just submit it as a job if this takes more than 10 minutes which I think is likely.
+
+# the other thing I can do is to submit the filtered variant sites job below because that is different filtering so I can do that at the same time.
+
+$ grep -v "^#" all.filtered.vcf|wc -l
+#####################################
+
+##### Step 2: Filtered Variant Sites #####
+## we then need a more strictly filtered file of ONLY the variant sites to use for the GWAS
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
+--max-maf 0.05 \
+--min-meanDP 5 \
+--minQ 25 \
+--remove-indels \
+--max-missing 0.75 \
+--min-alleles 2 \
+--max-alleles 2 \
+--remove-indv COC7_TCCTGAGC-TATCCTCT \
+--recode --stdout | ~/Apps/bgzip -c > allSNPs.noIndelsMafp05MaxMissp75BiallelicQ25Dp5.vcf.gz
+
+# submitted as filter_forGWAS.sb
+## After filtering, kept 61 out of 62 Individuals
+## Outputting VCF file...
+## 1243031 out of a possible 116855685
+##### this is ~100000 fewer than the last time I filtered to get this file pre BQSR and with Q30
+## Run Time = 723.00 seconds
+
+
+## I should take some time soon to get rid of things in the josephslab directory and make backups from scratch space.
+# I think I can clear up Athal_2/BWA_bam and Athal_2/GVCF
