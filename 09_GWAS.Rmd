@@ -1375,6 +1375,7 @@ top_hits_all <- top_hits_all[ , c("chr", "ps", "rs", "beta_raw_all", "beta_raw_n
 # write this out
 write.csv(top_hits_all, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_wald_Jan2023.csv", row.names = FALSE)
 
+##### testing 1 #####
 
 ## but now what I want are a list of top hits in the region where hits seem to overlap.... how can I get that? maybe start by using qqman to make plots where certain SNPs are highlighted? and identify SNPs in one of the GWAS runs that are in each region?
 
@@ -1437,6 +1438,48 @@ highlight_snps("NoCent.PlinkFiltering_Binary.c")
 for (i in 1:length(files)){
   highlight_snps(files[[i]])
 }
+
+##### testing 2 #####
+# okay, what I really wanted to do first is to do some sort of window analysis where I only get a list of SNPs that fall into the same windows (can do 100bp to start) but they also need to be relatively high hits I think
+
+# my quetion is what would this look like? 
+
+# one option is to pick the 100 or so top hits from each analysis (so the top hits excel file that I have already made) and use that as my starting point so I know they are relatively high hits
+
+top_hits <- read.csv("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_wald_Jan2023.csv")
+
+# waht my dataframe should look like is column 1 of snp locations
+# column 2 is what test is came from
+# column 3is a min
+# column 4 is a max
+
+# let's start with just chromosome one and just keep the p values to make that more clear
+
+hits_chr1 <- top_hits[(top_hits$chr == 1), c(1:3, 24:33)]
+
+hits_chr1$min <- hits_chr1$ps - 500
+hits_chr1$max <- hits_chr1$ps + 500
+
+# I might not even need the mins and maxes? I think I'll end up doing a loop for each row to check if each other row is within the window I determine
+
+# ok this seems like a bad way to do it but nested loops?
+for (i in c(1:length(hits_chr1))){
+  tmp_list <- c(hits_chr1$min[i]:hits_chr1$max[i])
+  for (j in c(1:length(hits_chr1))){
+    if (hits_chr1$ps[j] %in% tmp_list) {
+    print(hits_chr1[j, ])}
+    # this way does print back the row that includes the snp I made the tmp_list with
+    # eventually I will not want that cause the output will be too much I think
+  }
+}
+
+# for this loop, each output is a 1x15 dataframe so that means there is no overlap in hits if I only look at 100 bp 
+
+# what about 500 just for fun quick? still the same result
+
+# what I might wnat to do is figure out the LD decay in my sample and use that?
+
+# but these loops work and I think they do want I want, but maybe I should makea same datafame to make sure before I just go with it as working.
 
 
 ```

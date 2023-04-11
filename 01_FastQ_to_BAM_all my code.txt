@@ -118,8 +118,8 @@ while IFS= read -r line; do trim_galore \
 #SBATCH -o BWA2.out
 
 ##Job Resources
-#SBATCH --nodes=4
-#SBATCH --ntasks=4
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=6gb
 #SBATCH -t 50:59:00
