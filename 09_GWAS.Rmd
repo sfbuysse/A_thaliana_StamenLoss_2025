@@ -1746,51 +1746,61 @@ top_hits_fdr_all <- read.csv("C:/Users/Sophie/Michigan State University/Conner, 
 # problem with this code is that it gets rid of any row that has a value for elev even if it overlaps with a different one, so maybe just get rid of that column? but I really need to reduce rows to get an easier to read output... hm how to do this
 # maybe I need to do it in two steps. first step would be to get rid of the columns, second step would be to get rid of rows that are all NAs
 top_hits_fdr_noelev <- top_hits_fdr_all[, grep("elev", colnames(top_hits_fdr_all), value = TRUE, invert = TRUE)]
-# want to count the number of rows that are not NAs, if everything else is an NA, this should equal 3 for the first 3 intro rows
-# so this is only keeping rows where it equals three, which is the exact opposite of what I want to do
-# so instead is count NAs, and  keep rows with fewer than 24 NAs
-top_hits_fdr_noelev <- top_hits_fdr_noelev[rowSums(is.na(top_hits_fdr_noelev)) < 24 , ] 
 
+# maybe to solve the problem of making sure the overlap is between two GWAS types, I should also only look at either all or NoCent at once
+# using the 'inverse of all' code so the first three columns are also kept
+top_hits_fdr_noelev_nocent <- top_hits_fdr_all[, grep("all", colnames(top_hits_fdr_noelev), value = TRUE, invert = TRUE)]
+
+# so count NAs, and  keep rows with fewer than 12 NAs (3 columns should have values for all rows)
+top_hits_fdr_noelev_nocent <- top_hits_fdr_noelev_nocent[rowSums(is.na(top_hits_fdr_noelev_nocent)) < 12 , ] 
 # sample size went way down!
 
 #### chr 1 ####
 
 # only keep the p value columns
-hits_fdr_chr1 <- top_hits_fdr_noelev[(top_hits_fdr_noelev$chr == 1), c("chr", "rs", "ps", grep("p_", colnames(top_hits_fdr_noelev), value = TRUE))]
+hits_fdr_chr1 <- top_hits_fdr_noelev_nocent[(top_hits_fdr_noelev_nocent$chr == 1), c("chr", "rs", "ps", grep("p_", colnames(top_hits_fdr_noelev_nocent), value = TRUE))]
 
 #make a 1000bp window centered on the SNP
 hits_fdr_chr1$min <- hits_fdr_chr1$ps - 500
 hits_fdr_chr1$max <- hits_fdr_chr1$ps + 500
 
+# place for output
+chr1_overlap <- list()
+
 # nested loops
 for (i in c(1:length(hits_fdr_chr1$ps))){
   tmp_list <- c(hits_fdr_chr1$min[i]:hits_fdr_chr1$max[i])
-  tmp_df <- NA
+  tmp_df <- data.frame()
   for (j in c(1:length(hits_fdr_chr1$ps))){
     if (hits_fdr_chr1$ps[j] %in% tmp_list) {
     tmp_df <- rbind(tmp_df, hits_fdr_chr1[j, ])}
   }
-  # the loop below this doesn't count if a single snp is in two GWAS, so maybe I do need to change this code.
   if (length(tmp_df[,1]) > 2) {
-    print(hits_fdr_chr1$rs[i])
-    print(tmp_df)}
-  print("End")
+    chr1_overlap <- append(chr1_overlap, list(tmp_df))}
+  #print("End")
 }
-# now that my sample size is larger, this output is kinda ridiculous to go through by hand. So I want to add something that will make sure it is at least two different types of gwas I think
+# now that my sample size is larger, this output is kinda ridiculous to go through by hand. So I want to add something that will make sure it is at least two different types of gwas I think (insted of a bunch of hits in binary that are overlapping which I do see now)
+# the bigger concern might actually be trying to not have the duplicate outputs
 
 # output makes more sense when ran in the console
 
-# the output is in the right direction, but I had to go through by hand to figure out how many were actually overlapping, and there are duplicates reported (same dataframe for each SNP that overlaps)
-# have now fixed the loop so only the rows with at least two overlapping snps are printed, but there is till some manual work to make sure they are different types of GWAS (raw, subset, asin, binary, elevation) and not just with cent and without cent
+# successfully make an output that is a list of dataframes! This still has 160 entries, so how to go through that with code?
+length(unique(chr1_overlap)) # only 74 are unique, that seems promising; it is just the first 74 though and that seems odd
+chr1_overlap[[75]] # I did manually find this in the unique output. manually checked: 75, 100, 104, 118, 145, 87 and found duplicates for all of them!
 
-# I still get the duplicates but that isn't too much of a hassle I guess
+# do I still need to go through the unique value by hand then to figure out if multiple GWAS are overlapping? I feel like I should be able to write code to see if 3 of thefour gwas columns are NA and get rid of those, but keep if only 2 or fewer of the columns are NAs
 
-# what I ideally want, is to actually only print the dataframe if it is more than two rows?
+# manually scrolling through, all of the overlap just with nocent is only within a single gwas type... what changed?
 
+# maybe try it on all instead of NC?
+
+```
+
+I stopped working in the chunk above this note on 4/26/2023
+
+```{r}
+## not updated to use top SNPs based on p value.
 # what I might wnat to do is figure out the LD decay in my sample and use that to determine window size?
-
-### try running it on everyting now
-# still do this in a chromosome framework so I can just use the ps and know thy are different chromosomes
 
 ##### chr 2 #####
 hits_chr2 <- top_hits[(top_hits$chr == 2), c(1:3, 24:33)]
