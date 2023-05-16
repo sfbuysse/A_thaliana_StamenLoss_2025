@@ -1333,8 +1333,10 @@ files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "No
 # could then theoretically lapply my function to this list of names
 # does not include the testing file b/c not needed here.
 
+```
 
-
+### old code: pulling out top 50 or 100 from each
+```{r, eval = FALSE}
 ##### pull out top 50 from each GWAS #####
 # create blank dataframe?
 top_hits <- list()
@@ -1378,26 +1380,33 @@ top_hits_all <- top_hits_all[ , c("chr", "ps", "rs", "beta_raw_all", "beta_raw_n
 # write this out
 write.csv(top_hits_all, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_wald_Jan2023.csv", row.names = FALSE)
 
+
+```
+
+## New code: pull out all hits above fdr
+This code does not need to be run every time. The code chunk ends by writing out a csv.
+
+```{r}
 ##### pull out all hits above fdr #####
 
 # step one: decide fdr level to use
 ## make a dataframe that only has the fdr adjusted p values. do this in a loop for space reasons I think? wait can I do that?
-fdr_pvals <- vector("list", length(files))
-for (name in c(1:length(files))){
-  identifier <- files[name]
-  filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
-  results <- read.delim(file= filename, header = T, stringsAsFactors = F)
-  fdr_tmp <- p.adjust(p= results$p_wald, method = "fdr")
-  fdr_pvals[[name]] <- fdr_tmp
-} 
-names(fdr_pvals) <- files
+#fdr_pvals <- vector("list", length(files))
+#for (name in c(1:length(files))){
+#  identifier <- files[name]
+#  filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+#  results <- read.delim(file= filename, header = T, stringsAsFactors = F)
+#  fdr_tmp <- p.adjust(p= results$p_wald, method = "fdr")
+#  fdr_pvals[[name]] <- fdr_tmp
+#} 
+#names(fdr_pvals) <- files
+#
+## save this as the end of the day on 4/12 pick it up again later with trying to find what threshhold to actually set
+#save(fdr_pvals, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/GWAS_fdradjusted_pvals.ROBJ")
 
-# save this as the end of the day on 4/12 pick it up again later with trying to find what threshhold to actually set
-save(fdr_pvals, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/GWAS_fdradjusted_pvals.ROBJ")
 
+# load in the file!
 load(file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/GWAS_fdradjusted_pvals.ROBJ")
-
-
 
 # because this is the fdr adjusted value, I do still need to do the -log of them if I want low p values at the top, but I also think if I want a 0.10 cutoff, I can just print all values below that 
 
@@ -1432,7 +1441,7 @@ sum(fdr_pvals[[10]] < 0.15)
 # I could do like a top 50 OR everything above a certain p value?
 
 # well let's just do it at above the certain p value first
-# there will be a lot more from binary than anything else, but hopefully this won't be a huge issue because I"m looking for overlap? 
+# there will be a lot more from binary than anything else, but hopefully this won't be a huge issue because I'm looking for overlap? 
 # or it will tell me that binary overlaps with everything
 
 
@@ -1478,6 +1487,12 @@ colnames(top_hits_fdr_all) <- c("chr", "rs", "ps", "beta_binary_nc", "se_binary_
 
 # write this out
 write.csv(top_hits_fdr_all, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv", row.names = FALSE)
+
+```
+
+### Old code: manually tring to identify where the top hits are and highlight them in a GWAS
+
+```{r, eval = FALSE}
 
 ##### testing 1 #####
 # not using this anymore
@@ -1543,7 +1558,11 @@ highlight_snps("NoCent.PlinkFiltering_Binary.c")
 for (i in 1:length(files)){
   highlight_snps(files[[i]])
 }
+```
 
+## New code: window analysis
+
+```{r}
 ##### testing 2 #####
 # okay, what I really wanted to do first is to do some sort of window analysis where I only get a list of SNPs that fall into the same windows (can do 100bp to start) but they also need to be relatively high hits I think
 
@@ -1551,11 +1570,11 @@ for (i in 1:length(files)){
 
 # one option is to pick the 100 or so top hits from each analysis (so the top hits excel file that I have already made) and use that as my starting point so I know they are relatively high hits
 
-top_hits <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_wald_Jan2023.csv")
+top_hits <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv")
 
 # what my dataframe should look like is column 1 of snp locations
 # column 2 is what test is came from
-# column 3is a min
+# column 3 is a min
 # column 4 is a max
 
 # let's start with just chromosome one and just keep the p values to make that more clear
@@ -1581,7 +1600,7 @@ for (i in c(1:length(hits_chr1$ps))){
   if (length(tmp_df[,1]) > 2) {
     print(hits_chr1$rs[i])
     print(tmp_df)}
-  print("End")
+  #print("End")
 }
 
 # output makes more sense when ran in the console
@@ -1591,9 +1610,11 @@ for (i in c(1:length(hits_chr1$ps))){
 
 # I still get the duplicates but that isn't too much of a hassle I guess
 
-# what I ideally want, is to actually only print the dataframe if it is more than two rows?
+# what I ideally want, is to actually only print the dataframe if it is more than two rows? fixed. 
 
 # what I might wnat to do is figure out the LD decay in my sample and use that to determine window size?
+
+# I don't want this output to be the console. is this back to be trying to figure out how to get a list of lists instead? I thought I did that. shoot this isn't the onedrive most updated document.
 
 ### try running it on everyting now
 # still do this in a chromosome framework so I can just use the ps and know thy are different chromosomes
