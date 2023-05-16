@@ -1335,7 +1335,7 @@ files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "No
 
 ```
 
-### old code: pulling out top 50 or 100 from each
+#### Old code: pulling out top 50 or 100 from each
 ```{r, eval = FALSE}
 ##### pull out top 50 from each GWAS #####
 # create blank dataframe?
@@ -1383,7 +1383,7 @@ write.csv(top_hits_all, "C:/Users/Sophie/Michigan State University/Conner, Jeffr
 
 ```
 
-## New code: pull out all hits above fdr
+## New Code: pull out all hits above fdr
 This code does not need to be run every time. The code chunk ends by writing out a csv.
 
 ```{r}
@@ -1490,7 +1490,7 @@ write.csv(top_hits_fdr_all, "C:/Users/Sophie/Michigan State University/Conner, J
 
 ```
 
-### Old code: manually tring to identify where the top hits are and highlight them in a GWAS
+#### Old code: manually tring to identify where the top hits are and highlight them in a GWAS
 
 ```{r, eval = FALSE}
 
@@ -1560,7 +1560,9 @@ for (i in 1:length(files)){
 }
 ```
 
-## New code: window analysis
+#### Old code: first window analysis
+
+On 5/16/2023 I started to update this section not realizing it wasn't my most updated section, so initially it ran in the Jan file but now it does read the April file. Still not the most updated thought because everything is written to the console.
 
 ```{r}
 ##### testing 2 #####
@@ -1756,8 +1758,12 @@ highlight_snps("NoCent.PlinkFiltering_Binary.c")
 for (i in 1:length(files)){
   highlight_snps(files[[i]])
 }
+```
 
+## New Code: Window Analysis
+this code (finally) reads in the April file and writes the output to a list of lists rather than just to the console.
 
+```{r}
 ##### do it time 3 #####
 # read in top hits file
 top_hits_fdr_all <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv")
@@ -1766,27 +1772,31 @@ top_hits_fdr_all <- read.csv("C:/Users/Sophie/Michigan State University/Conner, 
 
 # problem with this code is that it gets rid of any row that has a value for elev even if it overlaps with a different one, so maybe just get rid of that column? but I really need to reduce rows to get an easier to read output... hm how to do this
 # maybe I need to do it in two steps. first step would be to get rid of the columns, second step would be to get rid of rows that are all NAs
-top_hits_fdr_noelev <- top_hits_fdr_all[, grep("elev", colnames(top_hits_fdr_all), value = TRUE, invert = TRUE)]
+th_fdr_noelev <- top_hits_fdr_all[, grep("elev", colnames(top_hits_fdr_all), value = TRUE, invert = TRUE)]
 
 # maybe to solve the problem of making sure the overlap is between two GWAS types, I should also only look at either all or NoCent at once
 # using the 'inverse of all' code so the first three columns are also kept
-top_hits_fdr_noelev_nocent <- top_hits_fdr_all[, grep("all", colnames(top_hits_fdr_noelev), value = TRUE, invert = TRUE)]
+th_noelev_nocent <- top_hits_fdr_all[, grep("all", colnames(th_fdr_noelev), value = TRUE, invert = TRUE)]
+# using the 'inverse of nocent' code so the first three columns are also kept
+th_noelev_all <- top_hits_fdr_all[, grep("nc", colnames(th_fdr_noelev), value = TRUE, invert = TRUE)]
 
 # so count NAs, and  keep rows with fewer than 12 NAs (3 columns should have values for all rows)
-top_hits_fdr_noelev_nocent <- top_hits_fdr_noelev_nocent[rowSums(is.na(top_hits_fdr_noelev_nocent)) < 12 , ] 
+th_noelev_nocent <- th_noelev_nocent[rowSums(is.na(th_noelev_nocent)) < 12 , ] 
 # sample size went way down!
+th_noelev_all <- th_noelev_all[rowSums(is.na(th_noelev_all)) < 12 , ] 
+# sample size went way down! but is larger than no cent.
 
 #### chr 1 ####
-
+##### no cent #####
 # only keep the p value columns
-hits_fdr_chr1 <- top_hits_fdr_noelev_nocent[(top_hits_fdr_noelev_nocent$chr == 1), c("chr", "rs", "ps", grep("p_", colnames(top_hits_fdr_noelev_nocent), value = TRUE))]
+hits_fdr_chr1 <- th_noelev_nocent[(th_noelev_nocent$chr == 1), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_nocent), value = TRUE))]
 
 #make a 1000bp window centered on the SNP
 hits_fdr_chr1$min <- hits_fdr_chr1$ps - 500
 hits_fdr_chr1$max <- hits_fdr_chr1$ps + 500
 
 # place for output
-chr1_overlap <- list()
+chr1_overlap_nc <- list()
 
 # nested loops
 for (i in c(1:length(hits_fdr_chr1$ps))){
@@ -1796,28 +1806,117 @@ for (i in c(1:length(hits_fdr_chr1$ps))){
     if (hits_fdr_chr1$ps[j] %in% tmp_list) {
     tmp_df <- rbind(tmp_df, hits_fdr_chr1[j, ])}
   }
-  if (length(tmp_df[,1]) > 2) {
-    chr1_overlap <- append(chr1_overlap, list(tmp_df))}
+  if (length(tmp_df[,1]) > 1) {
+    chr1_overlap_nc <- append(chr1_overlap_nc, list(tmp_df))}
   #print("End")
 }
-# now that my sample size is larger, this output is kinda ridiculous to go through by hand. So I want to add something that will make sure it is at least two different types of gwas I think (insted of a bunch of hits in binary that are overlapping which I do see now)
+# now that my sample size is larger, this output is kinda ridiculous to go through by hand. So I want to add something that will make sure it is at least two different types of gwas I think (instead of a bunch of hits in binary that are overlapping which I do see now)
 # the bigger concern might actually be trying to not have the duplicate outputs
 
 # output makes more sense when ran in the console
 
-# successfully make an output that is a list of dataframes! This still has 160 entries, so how to go through that with code?
-length(unique(chr1_overlap)) # only 74 are unique, that seems promising; it is just the first 74 though and that seems odd
-chr1_overlap[[75]] # I did manually find this in the unique output. manually checked: 75, 100, 104, 118, 145, 87 and found duplicates for all of them!
+# successfully make an output that is a list of dataframes! This still has 227 entries, so how to go through that with code? Wait, why do i and j end at 344 and not at 2452? I'm still worried something is wrong... quick try the loop without the second if statement. still only 344 elements in the list now but it should be all of them. oh I'm spacing out. 344 is everything from chromosome 1. so no real problem here, I was just being silly. 
+
+length(unique(chr1_overlap_nc)) # only 115 are unique, that seems promising; 
+
+# when I was only keeping locations with at least 3 SNPs, there were only 74 unique but: it is just the first 74 though and that seems odd
+# chr1_overlap_nc[[75]] # I did manually find this in the unique output. manually checked: 75, 100, 104, 118, 145, 87 and found duplicates for all of them!
 
 # do I still need to go through the unique value by hand then to figure out if multiple GWAS are overlapping? I feel like I should be able to write code to see if 3 of thefour gwas columns are NA and get rid of those, but keep if only 2 or fewer of the columns are NAs
 
-# manually scrolling through, all of the overlap just with nocent is only within a single gwas type... what changed?
+# first step - subset to just be evaluating the p values rows
+# if 3 are only NAs - delete
+# if less than three are only NAs - keep
 
-# maybe try it on all instead of NC?
+# problem with this is that the code checks by row, so this would require a single SNP to show up in multiple which is not what I want
+# so I don't think I can use rowSums because I don't want the row aspect of requiring it to be a single SNP.
+# I can use colSums. and then I want to keep any data frame where 2 of the columns have colSums less than the number of rows in that dataframe.
+# okay so I got it so I get the sum of columns that are not fully NAs. Then I only want to keep the whole dataframe if that sum is greater than 1. how do I do that part? so maybe I should first just make a list of the sums for each dataframe in my list of dataframes.
+cols_with_values <- c()
+for(d in c(1:length(chr1_overlap_nc))){
+  cols_with_values[d] <- sum(colSums(is.na(chr1_overlap_nc[[d]][,c("p_binary_nc", "p_raw_nc", "p_asin_nc", "p_subset_nc")])) < length(chr1_overlap_nc[[d]]$ps))
+}
+# don't expect this to keep any
+chr1_overlap_nc2 <- chr1_overlap_nc[c(cols_with_values > 1)]
+# and it didn't which for this case is a good sign because it is what I was expecting. see below for all of my testing code.
 
+# manually scrolling through, all of the overlap just with nocent is only within a single gwas type... what changed? some hits must not have made the cutoff.
+
+#maybe try it on all instead of NC?
+##### all  #####
+# only keep the p value columns
+hits_fdr_chr1_a <- th_noelev_all[(th_noelev_all$chr == 1), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_all), value = TRUE))]
+
+#make a 1000bp window centered on the SNP
+hits_fdr_chr1_a$min <- hits_fdr_chr1_a$ps - 500
+hits_fdr_chr1_a$max <- hits_fdr_chr1_a$ps + 500
+
+# place for output
+chr1_overlap_all <- list()
+
+# nested loops
+for (i in c(1:length(hits_fdr_chr1_a$ps))){
+  tmp_list <- c(hits_fdr_chr1_a$min[i]:hits_fdr_chr1_a$max[i])
+  tmp_df <- data.frame()
+  for (j in c(1:length(hits_fdr_chr1_a$ps))){
+    if (hits_fdr_chr1_a$ps[j] %in% tmp_list) {
+    tmp_df <- rbind(tmp_df, hits_fdr_chr1_a[j, ])}
+  }
+  if (length(tmp_df[,1]) > 1) {
+    chr1_overlap_all <- append(chr1_overlap_all, list(tmp_df))}
+  #print("End")
+}
+
+# This has 279 entries
+length(unique(chr1_overlap_all)) # only 133 are unique
+# manually checked the places where I had overlap with the top 50, and what seems to have changed in the 2243xxxx region is that those SNPS didn't make the cutoff for the subset analysis, so they are not included and my overlap has disappeared.
+
+cols_with_values <- c()
+for(d in c(1:length(chr1_overlap_all))){
+  cols_with_values[d] <- sum(colSums(is.na(chr1_overlap_all[[d]][,c("p_binary_all", "p_raw_all", "p_asin_all", "p_subset_all")])) < length(chr1_overlap_all[[d]]$ps))
+}
+# don't expect this to keep any
+chr1_overlap_all2 <- chr1_overlap_all[c(cols_with_values > 1)]
 ```
 
-I stopped working in the chunk above this note on 4/26/2023
+I stopped working in the chunk above this note on 5/16/2023
+
+The above code does what I want it to do for chromosome 1, but it would be nice to not need to copy and paste ALL of that code for each chromosome. However, I think it might be too complicated to make into a single function. I could probably make my loop that makes the long list into a function.
+
+```{r, eval = FALSE}
+### test to make sure the loop to only identify dataframes with p values from at least 2 GWAS types works on different types of dataframes. ###
+# data frame with only 1 value per row, but values are in 2 different columns
+df1 <- data.frame("p_binary_nc" = c(NA, 0.1, 0.1, 0.1), "p_raw_nc" = c(NA, NA, NA, NA), "p_asin_nc"= c(NA, NA, NA, NA), "p_subset_nc"= c(0.1, NA, NA, NA))
+# df with 1 value per row, but each value is in a different column
+df2 <- data.frame("p_binary_nc" = c(0.1, NA, NA, NA), "p_raw_nc" = c(NA, 0.1, NA, NA), "p_asin_nc"= c(NA, NA, 0.1, NA), "p_subset_nc"= c(NA, NA, NA, 0.1))
+# df that is all NAs
+df3 <- data.frame("p_binary_nc" = c(NA, NA, NA, NA), "p_raw_nc" = c(NA, NA, NA, NA), "p_asin_nc"= c(NA, NA, NA, NA), "p_subset_nc"= c(NA, NA, NA, NA))
+# df with values in the same row of multiple columns
+df4 <- data.frame("p_binary_nc" = c(0.1, NA, NA, NA), "p_raw_nc" = c(0.1, NA, NA, NA), "p_asin_nc"= c(NA, NA, NA, NA), "p_subset_nc"= c(NA, NA, NA, NA))
+# df with values in the same row of multiple columns. and values in two rows
+df5 <- data.frame("p_binary_nc" = c(0.1, NA, NA, NA), "p_raw_nc" = c(0.1, NA, NA, NA), "p_asin_nc"= c(NA, NA, 0.1, NA), "p_subset_nc"= c(NA, NA, NA, 0.1))
+# all values everywhere, and a different length
+df6 <- data.frame("p_binary_nc" = c(0.1, 0.1, 0.1), "p_raw_nc" = c(0.1, 0.1, 0.1), "p_asin_nc"= c(0.1, 0.1, 0.1), "p_subset_nc"= c(0.1, 0.1, 0.1))
+# df1 but different length
+df7 <- data.frame("p_binary_nc" = c(NA, 0.1, 0.1, 0.1, 0.1), "p_raw_nc" = c(NA, NA, NA, NA, NA), "p_asin_nc"= c(NA, NA, NA, NA, NA), "p_subset_nc"= c(0.1, NA, NA, NA, NA))
+# all values in one column
+df8 <- data.frame("p_binary_nc" = c(0.1, 0.1, 0.1, 0.1, 0.1), "p_raw_nc" = c(NA, NA, NA, NA, NA), "p_asin_nc"= c(NA, NA, NA, NA, NA), "p_subset_nc"= c(NA, NA, NA, NA, NA))
+tmp_dfs <- list(df1, df2, df3, df4, df5, df6, df7, df8)
+
+# I want my code to keep any instance where there are values in multiple columns, so that would be all but df3 and df8
+
+# loop!
+Cols_with_values <- c()
+for(d in c(1:length(tmp_dfs))){
+  Cols_with_values[d] <- sum(colSums(is.na(tmp_dfs[[d]][,c("p_binary_nc", "p_raw_nc", "p_asin_nc", "p_subset_nc")])) < length(tmp_dfs[[d]]$p_raw_nc))
+}
+
+# okay this works. the cols_wht_values list value is an integer that represents the number of columns with at least one value.
+
+# I then want to subset tmp_dfs based on this and only keep the entries where the corresponding Cols_with_values entry is greater than 1
+tmp_dfs_2 <- tmp_dfs[c(Cols_with_values > 1)]
+
+```
 
 ```{r}
 ## not updated to use top SNPs based on p value.
@@ -1980,7 +2079,7 @@ raw close to the big elev peak at 5:19462189 and the peak 5:19547140 then the pe
 
 Notes from wald analysis:
 all overlap of top hits is between raw, subset, and asin. There is one location where they all overlap at chr5:13458838 which is after and near to a peak in the binary dataset
-- raw and subset overlap most on chromsome 1, asin and raw overlap most on chromosome 5
+- raw and subset overlap most on chromsome 1, asin and raw overlap most on chromosome 5 - have a notesheet tacked up on my desk with the locations written out.
 but I do think it makes more sense to almost not look at the top hits and look for consistent patterns across all which means peaks that migt not be showing up here in this analysis, but that I think I want to like interactively click on the dot in the graph and have ggplot tell me what the name of the SNp is that is at the top of that peak... how can I do that???
 There will probably be more overlap in regions, but I can partly see that visually rather than going through it here...
 Most of the overlap is not in the centromere (only 1 is) which I think is a good sign.
