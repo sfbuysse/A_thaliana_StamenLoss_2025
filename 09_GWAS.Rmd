@@ -1764,9 +1764,16 @@ for (i in 1:length(files)){
 this code (finally) reads in the April file and writes the output to a list of lists rather than just to the console.
 
 ```{r}
+library(praise)
 ##### do it time 3 #####
 # read in top hits file
-top_hits_fdr_all <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv")
+top_hits_fdr_all <- read.csv("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv")
+
+#make a 1000bp window centered on the SNP
+top_hits_fdr_all$min <- top_hits_fdr_all$ps - 500
+top_hits_fdr_all$max <- top_hits_fdr_all$ps + 500
+
+### things that happen to all chromosomes at once ###
 
 # take out elevation for now and see if that increases the workability of my loop output
 
@@ -1786,30 +1793,60 @@ th_noelev_nocent <- th_noelev_nocent[rowSums(is.na(th_noelev_nocent)) < 12 , ]
 th_noelev_all <- th_noelev_all[rowSums(is.na(th_noelev_all)) < 12 , ] 
 # sample size went way down! but is larger than no cent.
 
+#### Functions ####
+
+# nested loops that give me an output that is a list of dataframes with at least 2 overlapping SNPs in the window
+id_snps <- function(input){
+  output <- list()
+  len <- length(input$ps) # to this point works
+  for (i in c(1:len)){
+    tmp_list <- c(input$min[i]:input$max[i])
+    tmp_df <- data.frame()
+    for (j in c(1:len)){
+     if (input$ps[j] %in% tmp_list) {
+        tmp_df <- rbind(tmp_df, input[j, ])}
+    }
+    if (length(tmp_df[,1]) > 1){
+      output <- append(output, list(tmp_df))}
+  }
+  return(output)
+}
+
+#testing123 <- id_snps(hits_fdr_chr1)
+#identical(testing123, chr1_overlap_nc)
+## celebrate!
+#praise()
+
+# function to identify if any of the overlapping regions are between at least 2 GWAS types
+# issue with this function is that the columns to check will change depending on if it is an nc file or an all file
+# I think this function might actually need a bit more testing
+nc_p_cols <- c("p_binary_nc", "p_raw_nc", "p_asin_nc", "p_subset_nc")
+all_p_cols <- c("p_binary_all", "p_raw_all", "p_asin_all", "p_subset_all")
+gwas_overlap <- function(input, keep_cols){
+  cols_with_values <- c()
+  for(d in c(1:length(input))){
+  cols_with_values[d] <- sum(colSums(is.na(input[[d]][,keep_cols])) < length(input[[d]][ ,1]))
+  }
+  # then write out the dataframes from the initial list
+  output <- input[c(cols_with_values > 1)]
+  return(output)
+}
+
+##testing further below, but it seems to work!
+#praise()
+```
+
+#### Chromosome 1
+
+```{r chr1}
 #### chr 1 ####
 ##### no cent #####
 # only keep the p value columns
-hits_fdr_chr1 <- th_noelev_nocent[(th_noelev_nocent$chr == 1), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_nocent), value = TRUE))]
+hits_fdr_chr1 <- th_noelev_nocent[(th_noelev_nocent$chr == 1), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_nocent), value = TRUE), "min", "max")]
 
-#make a 1000bp window centered on the SNP
-hits_fdr_chr1$min <- hits_fdr_chr1$ps - 500
-hits_fdr_chr1$max <- hits_fdr_chr1$ps + 500
+# run that function!
+chr1_overlap_nc <- id_snps(hits_fdr_chr1)
 
-# place for output
-chr1_overlap_nc <- list()
-
-# nested loops
-for (i in c(1:length(hits_fdr_chr1$ps))){
-  tmp_list <- c(hits_fdr_chr1$min[i]:hits_fdr_chr1$max[i])
-  tmp_df <- data.frame()
-  for (j in c(1:length(hits_fdr_chr1$ps))){
-    if (hits_fdr_chr1$ps[j] %in% tmp_list) {
-    tmp_df <- rbind(tmp_df, hits_fdr_chr1[j, ])}
-  }
-  if (length(tmp_df[,1]) > 1) {
-    chr1_overlap_nc <- append(chr1_overlap_nc, list(tmp_df))}
-  #print("End")
-}
 # now that my sample size is larger, this output is kinda ridiculous to go through by hand. So I want to add something that will make sure it is at least two different types of gwas I think (instead of a bunch of hits in binary that are overlapping which I do see now)
 # the bigger concern might actually be trying to not have the duplicate outputs
 
@@ -1832,12 +1869,9 @@ length(unique(chr1_overlap_nc)) # only 115 are unique, that seems promising;
 # so I don't think I can use rowSums because I don't want the row aspect of requiring it to be a single SNP.
 # I can use colSums. and then I want to keep any data frame where 2 of the columns have colSums less than the number of rows in that dataframe.
 # okay so I got it so I get the sum of columns that are not fully NAs. Then I only want to keep the whole dataframe if that sum is greater than 1. how do I do that part? so maybe I should first just make a list of the sums for each dataframe in my list of dataframes.
-cols_with_values <- c()
-for(d in c(1:length(chr1_overlap_nc))){
-  cols_with_values[d] <- sum(colSums(is.na(chr1_overlap_nc[[d]][,c("p_binary_nc", "p_raw_nc", "p_asin_nc", "p_subset_nc")])) < length(chr1_overlap_nc[[d]]$ps))
-}
+
 # don't expect this to keep any
-chr1_overlap_nc2 <- chr1_overlap_nc[c(cols_with_values > 1)]
+OverlapHits_chr1_nc <- gwas_overlap(chr1_overlap_nc, nc_p_cols)
 # and it didn't which for this case is a good sign because it is what I was expecting. see below for all of my testing code.
 
 # manually scrolling through, all of the overlap just with nocent is only within a single gwas type... what changed? some hits must not have made the cutoff.
@@ -1845,43 +1879,28 @@ chr1_overlap_nc2 <- chr1_overlap_nc[c(cols_with_values > 1)]
 #maybe try it on all instead of NC?
 ##### all  #####
 # only keep the p value columns
-hits_fdr_chr1_a <- th_noelev_all[(th_noelev_all$chr == 1), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_all), value = TRUE))]
+hits_fdr_chr1_a <- th_noelev_all[(th_noelev_all$chr == 1), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_all), value = TRUE), "min", "max")]
 
-#make a 1000bp window centered on the SNP
-hits_fdr_chr1_a$min <- hits_fdr_chr1_a$ps - 500
-hits_fdr_chr1_a$max <- hits_fdr_chr1_a$ps + 500
-
-# place for output
-chr1_overlap_all <- list()
-
-# nested loops
-for (i in c(1:length(hits_fdr_chr1_a$ps))){
-  tmp_list <- c(hits_fdr_chr1_a$min[i]:hits_fdr_chr1_a$max[i])
-  tmp_df <- data.frame()
-  for (j in c(1:length(hits_fdr_chr1_a$ps))){
-    if (hits_fdr_chr1_a$ps[j] %in% tmp_list) {
-    tmp_df <- rbind(tmp_df, hits_fdr_chr1_a[j, ])}
-  }
-  if (length(tmp_df[,1]) > 1) {
-    chr1_overlap_all <- append(chr1_overlap_all, list(tmp_df))}
-  #print("End")
-}
+# fancy function I wrote
+chr1_overlap_all <- id_snps(hits_fdr_chr1_a)
 
 # This has 279 entries
 length(unique(chr1_overlap_all)) # only 133 are unique
 # manually checked the places where I had overlap with the top 50, and what seems to have changed in the 2243xxxx region is that those SNPS didn't make the cutoff for the subset analysis, so they are not included and my overlap has disappeared.
 
-cols_with_values <- c()
-for(d in c(1:length(chr1_overlap_all))){
-  cols_with_values[d] <- sum(colSums(is.na(chr1_overlap_all[[d]][,c("p_binary_all", "p_raw_all", "p_asin_all", "p_subset_all")])) < length(chr1_overlap_all[[d]]$ps))
-}
-# don't expect this to keep any
-chr1_overlap_all2 <- chr1_overlap_all[c(cols_with_values > 1)]
+OverlapHits_chr1_all <- gwas_overlap(chr1_overlap_all, all_p_cols)
+
 ```
 
-I stopped working in the chunk above this note on 5/16/2023
 
-The above code does what I want it to do for chromosome 1, but it would be nice to not need to copy and paste ALL of that code for each chromosome. However, I think it might be too complicated to make into a single function. I could probably make my loop that makes the long list into a function.
+5/16/23: The above code does what I want it to do for chromosome 1, but it would be nice to not need to copy and paste ALL of that code for each chromosome. However, I think it might be too complicated to make into a single function. I could probably make my loop that makes the long list into a function.
+
+On 5/22/2023 I am working on making the chromosome 1 stuff into functions and we will see how that goes!
+
+Successfully made a function to run the nested loops and output the large list of dataframes where at least 2 SNPs are within a single window. yay!
+
+I think I also got a good function for the overlap! at least it works with my testing and for chromosome 1!
+##### some testing #####
 
 ```{r, eval = FALSE}
 ### test to make sure the loop to only identify dataframes with p values from at least 2 GWAS types works on different types of dataframes. ###
@@ -1916,99 +1935,140 @@ for(d in c(1:length(tmp_dfs))){
 # I then want to subset tmp_dfs based on this and only keep the entries where the corresponding Cols_with_values entry is greater than 1
 tmp_dfs_2 <- tmp_dfs[c(Cols_with_values > 1)]
 
+# now test the function
+gwas_overlap(tmp_dfs, nc_p_cols)
+
+# empty output which is what I was expecting, but I need to return early if I want to check the inner workings of the function.
+# BUT returning early gives me a list of zeros which is not what I want.
+# needed to fix how I was indexing the length of the columns, it now works by using [] and a number instead of $"name"
+
 ```
 
+no overlap when cutoff is fdr 0.10
+
+#### Chromosome 2
+
+```{r chr2}
+##### no cent #####
+# only keep the p value columns
+hits_fdr_chr2 <- th_noelev_nocent[(th_noelev_nocent$chr == 2), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_nocent), value = TRUE), "min", "max")]
+
+# run that function!
+chr2_overlap_nc <- id_snps(hits_fdr_chr2)
+#271 elements
+length(unique(chr2_overlap_nc)) # 103 unique
+
+# check for overlap between gwas types
+OverlapHits_chr2_nc <- gwas_overlap(chr2_overlap_nc, nc_p_cols)
+# empty list :(
+
+##### all  #####
+# only keep the p value columns
+hits_fdr_chr2_a <- th_noelev_all[(th_noelev_all$chr == 2), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_all), value = TRUE), "min", "max")]
+
+# fancy function I wrote
+chr2_overlap_all <- id_snps(hits_fdr_chr2_a) # 306 elements
+length(unique(chr2_overlap_all)) # 118 are unique
+# fancy function 2
+OverlapHits_chr2_all <- gwas_overlap(chr2_overlap_all, all_p_cols)
+# empty list
+```
+
+No overlap when cutoff is fdr 0.10
+
+#### Chromosome 3
+
+```{r chr3}
+##### no cent #####
+# only keep the p value columns
+hits_fdr_chr3 <- th_noelev_nocent[(th_noelev_nocent$chr == 3), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_nocent), value = TRUE), "min", "max")]
+
+# run that function!
+chr3_overlap_nc <- id_snps(hits_fdr_chr3)
+#628 elements
+length(unique(chr3_overlap_nc)) # 272 unique
+
+# check for overlap between gwas types
+OverlapHits_chr3_nc <- gwas_overlap(chr3_overlap_nc, nc_p_cols)
+# empty list :(
+
+##### all  #####
+# only keep the p value columns
+hits_fdr_chr3_a <- th_noelev_all[(th_noelev_all$chr == 3), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_all), value = TRUE), "min", "max")]
+
+# fancy function I wrote
+chr3_overlap_all <- id_snps(hits_fdr_chr3_a) # 758 elements
+length(unique(chr3_overlap_all)) # 328 are unique
+# fancy function 2
+OverlapHits_chr3_all <- gwas_overlap(chr3_overlap_all, all_p_cols)
+# empty list
+```
+
+No overlap when cutoff is fdr 0.10
+
+#### Chromosome 4
+
+```{r chr4}
+##### no cent #####
+# only keep the p value columns
+hits_fdr_chr4 <- th_noelev_nocent[(th_noelev_nocent$chr == 4), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_nocent), value = TRUE), "min", "max")]
+
+# run that function!
+chr4_overlap_nc <- id_snps(hits_fdr_chr4)
+#only 36!
+length(unique(chr4_overlap_nc)) # 17 unique
+
+# check for overlap between gwas types
+OverlapHits_chr4_nc <- gwas_overlap(chr4_overlap_nc, nc_p_cols)
+# empty list :(
+
+##### all  #####
+# only keep the p value columns
+hits_fdr_chr4_a <- th_noelev_all[(th_noelev_all$chr == 4), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_all), value = TRUE), "min", "max")]
+
+# fancy function I wrote
+chr4_overlap_all <- id_snps(hits_fdr_chr4_a) # 43 elements
+length(unique(chr4_overlap_all)) # 16 are unique
+# fancy function 2
+OverlapHits_chr4_all <- gwas_overlap(chr4_overlap_all, all_p_cols)
+# empty list
+```
+
+No overlap when cutoff is fdr 0.10
+
+#### Chromosome 5
+
+```{r chr5}
+##### no cent #####
+# only keep the p value columns
+hits_fdr_chr5 <- th_noelev_nocent[(th_noelev_nocent$chr == 5), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_nocent), value = TRUE), "min", "max")]
+
+# run that function!
+chr5_overlap_nc <- id_snps(hits_fdr_chr5)
+#624 elements!
+length(unique(chr5_overlap_nc)) # 278 unique - wow that cut down a lot
+
+# check for overlap between gwas types
+OverlapHits_chr5_nc <- gwas_overlap(chr5_overlap_nc, nc_p_cols)
+# list of 8!
+
+##### all  #####
+# only keep the p value columns
+hits_fdr_chr5_a <- th_noelev_all[(th_noelev_all$chr == 5), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_all), value = TRUE), "min", "max")]
+
+# fancy function I wrote
+chr5_overlap_all <- id_snps(hits_fdr_chr5_a) #  1191 elements - something going on in this centromere
+length(unique(chr5_overlap_all)) # 602 are unique
+# fancy function 2
+OverlapHits_chr5_all <- gwas_overlap(chr5_overlap_all, all_p_cols)
+# list of 11!
+```
+
+Finally some overlap! Wow this is exciting! But, my time on this is up for today (5/22/2023) so pick up looking into the overlap another day.
+
+#### in progress
+ Code below this text has not been updated
 ```{r}
-## not updated to use top SNPs based on p value.
-# what I might wnat to do is figure out the LD decay in my sample and use that to determine window size?
-
-##### chr 2 #####
-hits_chr2 <- top_hits[(top_hits$chr == 2), c(1:3, 24:33)]
-
-#make a 1000bp window centered on the SNP
-hits_chr2$min <- hits_chr2$ps - 500
-hits_chr2$max <- hits_chr2$ps + 500
-
-#nested loops?
-for (i in c(1:length(hits_chr2$ps))){
-  tmp_list <- c(hits_chr2$min[i]:hits_chr2$max[i])
-  tmp_df <- NA
-  for (j in c(1:length(hits_chr2$ps))){
-    if (hits_chr2$ps[j] %in% tmp_list) {
-    tmp_df <- rbind(tmp_df, hits_chr2[j, ])}
-    # this way does print back the row that includes the snp I made the tmp_list with
-    # eventually I will not want that cause the output will be too much I think
-  }
-  if (length(tmp_df[,1]) > 2) {
-    print(hits_chr2$rs[i])
-    print(tmp_df)}
-}
-
-##### chr 3 #####
-hits_chr3 <- top_hits[(top_hits$chr == 3), c(1:3, 24:33)]
-
-#make a 1000bp window centered on the SNP
-hits_chr3$min <- hits_chr3$ps - 500
-hits_chr3$max <- hits_chr3$ps + 500
-
-#nested loops?
-for (i in c(1:length(hits_chr3$ps))){
-  tmp_list <- c(hits_chr3$min[i]:hits_chr3$max[i])
-  tmp_df <- NA
-  for (j in c(1:length(hits_chr3$ps))){
-    if (hits_chr3$ps[j] %in% tmp_list) {
-    tmp_df <- rbind(tmp_df, hits_chr3[j, ])}
-    # this way does print back the row that includes the snp I made the tmp_list with
-    # eventually I will not want that cause the output will be too much I think
-  }
-  if (length(tmp_df[,1]) > 2) {
-    print(hits_chr3$rs[i])
-    print(tmp_df)}
-}
-
-##### chr 4 #####
-hits_chr4 <- top_hits[(top_hits$chr == 4), c(1:3, 24:33)]
-
-#make a 1000bp window centered on the SNP
-hits_chr4$min <- hits_chr4$ps - 500
-hits_chr4$max <- hits_chr4$ps + 500
-
-#nested loops?
-for (i in c(1:length(hits_chr4$ps))){
-  tmp_list <- c(hits_chr4$min[i]:hits_chr4$max[i])
-  tmp_df <- NA
-  for (j in c(1:length(hits_chr4$ps))){
-    if (hits_chr4$ps[j] %in% tmp_list) {
-    tmp_df <- rbind(tmp_df, hits_chr4[j, ])}
-    # this way does print back the row that includes the snp I made the tmp_list with
-    # eventually I will not want that cause the output will be too much I think
-  }
-  if (length(tmp_df[,1]) > 2) {
-    print(hits_chr4$rs[i])
-    print(tmp_df)}
-}
-
-##### chr 5 #####
-hits_chr5 <- top_hits[(top_hits$chr == 5), c(1:3, 24:33)]
-
-#make a 1000bp window centered on the SNP
-hits_chr5$min <- hits_chr5$ps - 500
-hits_chr5$max <- hits_chr5$ps + 500
-
-#nested loops?
-for (i in c(1:length(hits_chr5$ps))){
-  tmp_list <- c(hits_chr5$min[i]:hits_chr5$max[i])
-  tmp_df <- NA
-  for (j in c(1:length(hits_chr5$ps))){
-    if (hits_chr5$ps[j] %in% tmp_list) {
-    tmp_df <- rbind(tmp_df, hits_chr5[j, ])}
-    # this way does print back the row that includes the snp I made the tmp_list with
-    # eventually I will not want that cause the output will be too much I think
-  }
-  if (length(tmp_df[,1]) > 2) {
-    print(hits_chr5$rs[i])
-    print(tmp_df)}
-}
 
 ##### let's visualize where the overlap is #####
 #library(qqman)
