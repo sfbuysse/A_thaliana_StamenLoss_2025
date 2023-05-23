@@ -1406,7 +1406,7 @@ This code does not need to be run every time. The code chunk ends by writing out
 
 
 # load in the file!
-load(file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/GWAS_fdradjusted_pvals.ROBJ")
+load(file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/GWAS_fdradjusted_pvals.ROBJ")
 
 # because this is the fdr adjusted value, I do still need to do the -log of them if I want low p values at the top, but I also think if I want a 0.10 cutoff, I can just print all values below that 
 
@@ -1767,7 +1767,7 @@ this code (finally) reads in the April file and writes the output to a list of l
 library(praise)
 ##### do it time 3 #####
 # read in top hits file
-top_hits_fdr_all <- read.csv("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv")
+top_hits_fdr_all <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv")
 
 #make a 1000bp window centered on the SNP
 top_hits_fdr_all$min <- top_hits_fdr_all$ps - 500
@@ -2062,41 +2062,24 @@ length(unique(chr5_overlap_all)) # 602 are unique
 # fancy function 2
 OverlapHits_chr5_all <- gwas_overlap(chr5_overlap_all, all_p_cols)
 # list of 11!
+
+# make a list of all the SNPs overlapping at all here to highlight in a GWAS figure.
+shared_snps <- unique(c(OverlapHits_chr5_all[[1]]$rs, OverlapHits_chr5_all[[3]]$rs, OverlapHits_chr5_all[[8]]$rs, OverlapHits_chr5_all[[9]]$rs, OverlapHits_chr5_nc[[1]]$rs, OverlapHits_chr5_nc[[4]]$rs, OverlapHits_chr5_nc[[5]]$rs, OverlapHits_chr5_nc[[6]]$rs))
+
 ```
 
 Finally some overlap! Wow this is exciting! But, my time on this is up for today (5/22/2023) so pick up looking into the overlap another day.
 
-#### in progress
+Picking it up on 5/23/2023 for a few minutes to figure out what these regions look like. All of the SNPs in NC are also in ALL which is a good sign, but a few of them are in the centromere (or lower significance in NC) which is not a great sign. What I do want to do is make a GWAS graph where these SNPs are highlighted in each of the analyses. I already have the code for this written below, I just need to fill it in with the SNPs I want.
+
+#### highlight certain SNPs in the GWAS figures.
  Code below this text has not been updated
 ```{r}
-
 ##### let's visualize where the overlap is #####
-#library(qqman)
+# chr5 only from the final analysis I was doing.
 
 # list of all the files I am interested in
 files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c")
-shared_snps <- c(
-  "Chr1:22432765",
-  "Chr1:22432769",
-  "Chr1:22432563",
-  "Chr1:22432567",
-  "Chr1:22439115",
-  "Chr1:22438996",
-  "Chr1:22432154",
-  "Chr1:22435312",
-  "Chr1:22435533",
-  "Chr1:22435250",
-  "Chr1:14262517",
-  "Chr5:19462189",
-  "Chr5:19462166",
-  "Chr5:19462172",
-  "Chr5:19462162",
-  "Chr5:19462165",
-  "Chr5:4899798",
-  "Chr5:4899803",
-  "Chr5:6539447",
-  "Chr5:6539509"
-  )
 
 highlight_snps <- function(identifier){
   filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
@@ -2111,8 +2094,8 @@ highlight_snps <- function(identifier){
   print(paste0("Done making plots for: ", identifier))
 }
 
-# test 1
-highlight_snps("NoCent.PlinkFiltering_Binary.c")
+## test 1
+#highlight_snps("NoCent.PlinkFiltering_Binary.c")
 
 # and loop it
 
@@ -2121,7 +2104,7 @@ for (i in 1:length(files)){
 }
 ```
 
-Notes from lrt analysis:
+**Notes from lrt analysis:**
 overlap asin both and raw nc at 5:10731197
 overlap raw and asin all at 5:12231366
 asin and all overlap at 5:13458838
@@ -2137,13 +2120,18 @@ raw, asin, and ginary all get close at 5:13353978 and 5:13458838
 raw and binary close at 5:16585826 and 5:16672957
 raw close to the big elev peak at 5:19462189 and the peak 5:19547140 then the peak seems closer I guess to 5:19700000-19800000
 
-Notes from wald analysis:
+**Notes from wald analysis:**
 all overlap of top hits is between raw, subset, and asin. There is one location where they all overlap at chr5:13458838 which is after and near to a peak in the binary dataset
 - raw and subset overlap most on chromsome 1, asin and raw overlap most on chromosome 5 - have a notesheet tacked up on my desk with the locations written out.
 but I do think it makes more sense to almost not look at the top hits and look for consistent patterns across all which means peaks that migt not be showing up here in this analysis, but that I think I want to like interactively click on the dot in the graph and have ggplot tell me what the name of the SNp is that is at the top of that peak... how can I do that???
 There will probably be more overlap in regions, but I can partly see that visually rather than going through it here...
 Most of the overlap is not in the centromere (only 1 is) which I think is a good sign.
 how do I want to look at effect sizes? like the effect of just the top hits or what?
+
+**Notes from wald/fdr analysis (try 3)**
+overlap on chr5 with fdr cutoff set to 0.10. This included fewer snps for most gwas types than the 50 cutoff, but more snps for the binary analysis for sure.
+These snps are not high p value at all in the elevation GWAS.
+From looking at the figure I made, I do think I will want to try again with a lower FDR, but how low can I go??
 
 # Step 7: Effect Sizes #
 ```{r}
