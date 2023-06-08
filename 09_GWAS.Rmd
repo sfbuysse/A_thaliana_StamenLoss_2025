@@ -1324,9 +1324,9 @@ start here on 1/23/2023 to figure out any hits that align now that I also did th
 
 ```{r top_hits}
 # read in packages
-library(ggplot2)
-library(dplyr)
-library(qqman)
+suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(qqman))
 
 # list of all the files I am interested in
 files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c")
@@ -1450,7 +1450,7 @@ sum(fdr_pvals[[10]] < 0.15)
 # the indexing should be the same, so I should be able to use the indexing from fdr_pvals
 #so for each gwas file, I want to subset out based on fdr_vals[[i]] < 0.10
 # let's test it on no cent binary
-nocent_bin <- read.delim(file = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", files[1], ".assoc.txt"))
+nocent_bin <- read.delim(file = paste0("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", files[1], ".assoc.txt"))
 
 # check that lengths match
 length(nocent_bin$ps)
