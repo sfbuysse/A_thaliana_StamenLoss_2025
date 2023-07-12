@@ -1787,6 +1787,7 @@ th_noelev_nocent <- top_hits_fdr_all[, grep("all", colnames(th_fdr_noelev), valu
 # using the 'inverse of nocent' code so the first three columns are also kept
 th_noelev_all <- top_hits_fdr_all[, grep("nc", colnames(th_fdr_noelev), value = TRUE, invert = TRUE)]
 
+
 # so count NAs, and  keep rows with fewer than 12 NAs (3 columns should have values for all rows)
 th_noelev_nocent <- th_noelev_nocent[rowSums(is.na(th_noelev_nocent)) < 12 , ] 
 # sample size went way down!
@@ -2065,15 +2066,14 @@ OverlapHits_chr5_all <- gwas_overlap(chr5_overlap_all, all_p_cols)
 
 # make a list of all the SNPs overlapping at all here to highlight in a GWAS figure.
 shared_snps <- unique(c(OverlapHits_chr5_all[[1]]$rs, OverlapHits_chr5_all[[3]]$rs, OverlapHits_chr5_all[[8]]$rs, OverlapHits_chr5_all[[9]]$rs, OverlapHits_chr5_nc[[1]]$rs, OverlapHits_chr5_nc[[4]]$rs, OverlapHits_chr5_nc[[5]]$rs, OverlapHits_chr5_nc[[6]]$rs))
-
+shared_snps
 ```
 
 Finally some overlap! Wow this is exciting! But, my time on this is up for today (5/22/2023) so pick up looking into the overlap another day.
 
-Picking it up on 5/23/2023 for a few minutes to figure out what these regions look like. All of the SNPs in NC are also in ALL which is a good sign, but a few of them are in the centromere (or lower significance in NC) which is not a great sign. What I do want to do is make a GWAS graph where these SNPs are highlighted in each of the analyses. I already have the code for this written below, I just need to fill it in with the SNPs I want.
+Picking it up on 5/23/2023 for a few minutes to figure out what these regions look like. All of the SNPs in NC are also in ALL which is a good sign, but a few of them are in the centromere (or lower significance in NC) which is not a great sign. What I do want to do is make a GWAS graph where these SNPs are highlighted in each of the analyses. I already have the code for this written below, I just need to fill it in with the SNPs I want. I did this
 
 #### highlight certain SNPs in the GWAS figures.
- Code below this text has not been updated
 ```{r}
 ##### let's visualize where the overlap is #####
 # chr5 only from the final analysis I was doing.
@@ -2083,7 +2083,7 @@ files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "No
 
 highlight_snps <- function(identifier){
   filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
-  mplot_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/mplot_topSNPs/mplot_window_", identifier, "_highlight.png")
+  mplot_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/mplot_topSNPs/mplot_window_", identifier, "_highlight_Jul122023.png")
   results <- read.delim(file= filename, header = T, stringsAsFactors = F)
   ##### Manhattan plot with qqman #####
 
