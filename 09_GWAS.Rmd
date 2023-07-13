@@ -2164,6 +2164,60 @@ for (i in 1:length(files)){
 }
 ```
 
+Now let's highlight just the fdr > 0.05 SNPs in each GWAS (just the ones significant for that GWAS)
+```{r}
+# I think it might actually be easiest to do this using the top_hits_fdr from the 0.05 section because that is already split up by type. Then, instead of merging them all together, I want to merge them together just by cent/nocent
+#top_hits_fdr_all <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023_05.csv")
+
+# or I just pull out rows that are not NA for certain columns. Maybe that is better?
+
+### Raw
+tmp_raw <- top_hits_fdr_all[!(is.na(top_hits_fdr_all$p_raw_all)) | !(is.na(top_hits_fdr_all$p_raw_nc)), c("chr", "rs", "ps", "beta_raw_all", "se_raw_all", "p_raw_all", "beta_raw_nc", "se_raw_nc", "p_raw_nc")]
+raw_hits <- tmp_raw$rs
+
+### Asin
+tmp_asin <- top_hits_fdr_all[!(is.na(top_hits_fdr_all$p_asin_all)) | !(is.na(top_hits_fdr_all$p_asin_nc)), c("chr", "rs", "ps", "beta_asin_all", "se_asin_all", "p_asin_all", "beta_asin_nc", "se_asin_nc", "p_asin_nc")]
+asin_hits <- tmp_asin$rs
+
+### subset
+tmp_subset <- top_hits_fdr_all[!(is.na(top_hits_fdr_all$p_subset_all)) | !(is.na(top_hits_fdr_all$p_subset_nc)), c("chr", "rs", "ps", "beta_subset_all", "se_subset_all", "p_subset_all", "beta_subset_nc", "se_subset_nc", "p_subset_nc")]
+subset_hits <- tmp_subset$rs
+
+### binary
+tmp_binary <- top_hits_fdr_all[!(is.na(top_hits_fdr_all$p_binary_all)) | !(is.na(top_hits_fdr_all$p_binary_nc)), c("chr", "rs", "ps", "beta_binary_all", "se_binary_all", "p_binary_all", "beta_binary_nc", "se_binary_nc", "p_binary_nc")]
+binary_hits <- tmp_binary$rs
+
+tmp_elev <- top_hits_fdr_all[!(is.na(top_hits_fdr_all$p_elev_all)) | !(is.na(top_hits_fdr_all$p_elev_nc)), c("chr", "rs", "ps", "beta_elev_all", "se_elev_all", "p_elev_all", "beta_elev_nc", "se_elev_nc", "p_elev_nc")]
+elev_hits <- tmp_elev$rs
+
+# make a list of lists in the same order as the list of lies that I'll want to use
+highlight_these <- list(binary_hits, raw_hits, asin_hits, elev_hits, asin_hits, raw_hits, elev_hits, binary_hits, subset_hits, subset_hits)
+
+## make the plots just with qqman
+files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c")
+
+loop_highlight_snps <- function(identifier){
+  filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+  mplot_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/mplot_topSNPs/mplot_fdr05_", identifier, "_highlight_Jul132023.png")
+  results <- read.delim(file= filename, header = T, stringsAsFactors = F)
+  ##### Manhattan plot with qqman #####
+
+  png(mplot_name)
+  manhattan(x = results, chr = "chr", bp  = "ps", p = "p_wald", snp = "rs", suggestiveline = FALSE, genomewideline = FALSE, highlight = highlight_these[[i]])
+  dev.off()
+  
+  print(paste0("Done making plots for: ", identifier))
+}
+
+# and loop it - it only works in a loop becuase of the way I wrote the highlighting script
+
+for (i in 1:length(files)){
+  loop_highlight_snps(files[[i]])
+}
+
+```
+Maybe I actually should have done that with just the top hits form that one? so like not combining the all and nc hits? oh well. I'm out of steam to do it today.
+
 **Notes from lrt analysis:**
 overlap asin both and raw nc at 5:10731197
 overlap raw and asin all at 5:12231366
