@@ -1384,10 +1384,10 @@ write.csv(top_hits_all, "C:/Users/Sophie/Michigan State University/Conner, Jeffr
 ```
 
 ## New Code: pull out all hits above fdr
-This code does not need to be run every time. The code chunk ends by writing out a csv.
+This code does not need to be run every time. The code chunk ends by writing out a csv with all the hits above fdr. 0.10
 
 ```{r}
-##### pull out all hits above fdr #####
+##### pull out all hits above fdr 0.10#####
 
 # step one: decide fdr level to use
 ## make a dataframe that only has the fdr adjusted p values. do this in a loop for space reasons I think? wait can I do that?
@@ -1487,6 +1487,66 @@ colnames(top_hits_fdr_all) <- c("chr", "rs", "ps", "beta_binary_nc", "se_binary_
 
 # write this out
 write.csv(top_hits_fdr_all, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv", row.names = FALSE)
+
+```
+
+
+This next section pulls out all the hits above fdr 0.05 to use for genome browsing becuase of Emily's thought that some of the GWAS might miss something so there could be something biologically meaningful that was only picked up by one of the GWAS. It writes out a .cvs just like the previous section.
+```{r}
+##### pull out all hits above fdr 0.05 #####
+
+# load in the file!
+load(file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/GWAS_fdradjusted_pvals.ROBJ")
+
+# because this is the fdr adjusted value, I do still need to do the -log of them if I want low p values at the top, but I also think if I want a 0.10 cutoff, I can just print all values below that 
+
+sum(fdr_pvals[[1]] < 0.05)
+#1004 - no cent - binary
+sum(fdr_pvals[[2]] < 0.05)
+#2 - no cent - raw
+sum(fdr_pvals[[3]] < 0.05)
+# 1 - no cent - asin
+sum(fdr_pvals[[4]] < 0.05)
+# 7302 - no cent - elev
+sum(fdr_pvals[[5]] < 0.05)
+#2 - allSNPS - asin
+sum(fdr_pvals[[6]] < 0.05)
+#2 - allSNPs - raw
+sum(fdr_pvals[[7]] < 0.05)
+# 5108 - allSNPs - elev
+sum(fdr_pvals[[8]] < 0.05)
+# 1707 - allSNPs - binary
+sum(fdr_pvals[[9]] < 0.05)
+#3 - allSNPs - subset
+sum(fdr_pvals[[10]] < 0.05)
+#7 - no cent - subset
+
+# step two: pull out all snps above 0.05
+
+# the indexing should be the same, so I should be able to use the indexing from fdr_pvals
+#so for each gwas file, I want to subset out based on fdr_vals[[i]] < 0.05
+
+# loop outline
+top_hits_fdr <- list()
+for (i in c(1:length(files))){
+  identifier <- files[i]
+  filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+  results <- read.delim(file= filename, header = T, stringsAsFactors = F)
+  top_hits_fdr[[i]] <- results[fdr_pvals[[i]] < 0.05, c("chr", "rs", "ps", "beta", "se", "p_wald")]
+  # rename the columns
+  colnames(top_hits_fdr[[i]]) <- c("chr", "rs", "ps", paste0("beta_",files[i]), paste0("se_",files[i]), paste0("p_",files[i]))
+  rm(results)
+} 
+
+# check that all the lengths are what i was expecting - did this manually with my environment
+
+# step four: merge into single dataset
+top_hits_fdr_all <- Reduce(function(dtf1, dtf2) merge(dtf1, dtf2, by = c("chr", "rs", "ps"), all = TRUE),
+        top_hits_fdr)
+colnames(top_hits_fdr_all) <- c("chr", "rs", "ps", "beta_binary_nc", "se_binary_nc", "p_binary_nc", "beta_raw_nc", "se_raw_nc", "p_raw_nc", "beta_asin_nc", "se_asin_nc", "p_asin_nc", "beta_elev_nc", "se_elev_nc", "p_elev_nc", "beta_asin_all", "se_asin_all", "p_asin_all", "beta_raw_all", "se_raw_all", "p_raw_all", "beta_elev_all", "se_elev_all", "p_elev_all", "beta_binary_all", "se_binary_all", "p_binary_all", "beta_subset_all", "se_subset_all", "p_subset_all", "beta_subset_nc", "se_subset_nc", "p_subset_nc")
+
+# write this out
+write.csv(top_hits_fdr_all, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023_05.csv", row.names = FALSE)
 
 ```
 
