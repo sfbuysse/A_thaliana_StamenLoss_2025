@@ -1860,7 +1860,7 @@ th_noelev_all <- th_noelev_all[rowSums(is.na(th_noelev_all)) < 12 , ]
 #### Functions ####
 
 # nested loops that give me an output that is a list of dataframes with at least 2 overlapping SNPs in the window
-# after commenting out and testing on chromosome 5, it did keep the 1 SNP I had identified that should have been included and wasn't previously (5:13458838) which I think is a good sign, and the second function really cut down the included windows enough so I am going to commit, then remove the commented out lines from  the id_snps function that filter for only having 2+ rows becuase I don't need them anymore
+# after commenting out and testing on chromosome 5, it did keep the 1 SNP I had identified that should have been included and wasn't previously (5:13458838) which I think is a good sign, and the second function really cut down the included windows enough so I am going to commit, then remove the commented out lines from  the id_snps function that filter for only having 2+ rows because I don't need them anymore
 id_snps <- function(input){
   output <- list()
   len <- length(input$ps) # to this point works
@@ -1873,9 +1873,7 @@ id_snps <- function(input){
      if (input$ps[j] %in% tmp_list) {
         tmp_df <- rbind(tmp_df, input[j, ])}
     }
-    # if statement to only keep output dataframes with more than one SNP - I think this is causing problems currently, Maybe I can just remove it b/c the multiple types of GWAS code will bring down my sample size?
-    #if (length(tmp_df[,1]) > 1){
-    #  output <- append(output, list(tmp_df))}
+    # add new dataframe to a list of dataframes to be in the output
     output <- append(output, list(tmp_df))
   }
   return(output)
@@ -1923,7 +1921,7 @@ chr1_overlap_nc <- id_snps(hits_fdr_chr1)
 
 # successfully make an output that is a list of dataframes! This still has 227 entries, so how to go through that with code? Wait, why do i and j end at 344 and not at 2452? I'm still worried something is wrong... quick try the loop without the second if statement. still only 344 elements in the list now but it should be all of them. oh I'm spacing out. 344 is everything from chromosome 1. so no real problem here, I was just being silly. 
 
-length(unique(chr1_overlap_nc)) # only 115 are unique, that seems promising; 
+length(unique(chr1_overlap_nc)) # only 115 are unique, that seems promising; 232 unique when keeping tmp_df with only one row (i.e., one SNP)
 
 # when I was only keeping locations with at least 3 SNPs, there were only 74 unique but: it is just the first 74 though and that seems odd
 # chr1_overlap_nc[[75]] # I did manually find this in the unique output. manually checked: 75, 100, 104, 118, 145, 87 and found duplicates for all of them!
@@ -1954,11 +1952,12 @@ hits_fdr_chr1_a <- th_noelev_all[(th_noelev_all$chr == 1), c("chr", "rs", "ps", 
 chr1_overlap_all <- id_snps(hits_fdr_chr1_a)
 
 # This has 279 entries
-length(unique(chr1_overlap_all)) # only 133 are unique
+length(unique(chr1_overlap_all)) # only 133 are unique with 2+ SNPs, 285 are unique with at least one SNP
 # manually checked the places where I had overlap with the top 50, and what seems to have changed in the 2243xxxx region is that those SNPS didn't make the cutoff for the subset analysis, so they are not included and my overlap has disappeared.
 
 OverlapHits_chr1_all <- gwas_overlap(chr1_overlap_all, all_p_cols)
 
+shared_snps <- unique(c(OverlapHits_chr1_all[[1]]$rs))
 ```
 
 
@@ -1969,6 +1968,11 @@ On 5/22/2023 I am working on making the chromosome 1 stuff into functions and we
 Successfully made a function to run the nested loops and output the large list of dataframes where at least 2 SNPs are within a single window. yay!
 
 I think I also got a good function for the overlap! at least it works with my testing and for chromosome 1!
+
+no overlap when cutoff is fdr 0.10 for no cent. This remains after including windows with only 1 SNP.
+
+7/17/2023: After fixing this to include windows with only one SNP, there is one SNP included with all that has overlap in all but not nc! It is at Chr1:14262517 - is this in the centromere? or one that showed up for a different reason? well I will see when I include it in my shared snps code! because now that needs to include more snps :)
+
 ##### some testing #####
 
 ```{r, eval = FALSE}
@@ -2013,7 +2017,7 @@ gwas_overlap(tmp_dfs, nc_p_cols)
 
 ```
 
-no overlap when cutoff is fdr 0.10
+
 
 #### Chromosome 2
 
@@ -2025,7 +2029,7 @@ hits_fdr_chr2 <- th_noelev_nocent[(th_noelev_nocent$chr == 2), c("chr", "rs", "p
 # run that function!
 chr2_overlap_nc <- id_snps(hits_fdr_chr2)
 #271 elements
-length(unique(chr2_overlap_nc)) # 103 unique
+length(unique(chr2_overlap_nc)) # 103 unique, 210 when including windows with only 1 SNP
 
 # check for overlap between gwas types
 OverlapHits_chr2_nc <- gwas_overlap(chr2_overlap_nc, nc_p_cols)
@@ -2037,13 +2041,13 @@ hits_fdr_chr2_a <- th_noelev_all[(th_noelev_all$chr == 2), c("chr", "rs", "ps", 
 
 # fancy function I wrote
 chr2_overlap_all <- id_snps(hits_fdr_chr2_a) # 306 elements
-length(unique(chr2_overlap_all)) # 118 are unique
+length(unique(chr2_overlap_all)) # 118 are unique, 244 are unique when including windows with only 1 SNP
 # fancy function 2
 OverlapHits_chr2_all <- gwas_overlap(chr2_overlap_all, all_p_cols)
 # empty list
 ```
 
-No overlap when cutoff is fdr 0.10
+No overlap when cutoff is fdr 0.10. This remains when looking at windows with only 1 SNP.
 
 #### Chromosome 3
 
@@ -2054,12 +2058,12 @@ hits_fdr_chr3 <- th_noelev_nocent[(th_noelev_nocent$chr == 3), c("chr", "rs", "p
 
 # run that function!
 chr3_overlap_nc <- id_snps(hits_fdr_chr3)
-#628 elements
-length(unique(chr3_overlap_nc)) # 272 unique
+#628 elements, 826 when keeping one SNP windows
+length(unique(chr3_overlap_nc)) # 272 unique, 470 unique when keeping one SNP windows
 
 # check for overlap between gwas types
 OverlapHits_chr3_nc <- gwas_overlap(chr3_overlap_nc, nc_p_cols)
-# empty list :(
+# keeps 3 when keeping windows with only one SNP (none if require 2 SNPs)
 
 ##### all  #####
 # only keep the p value columns
@@ -2067,13 +2071,16 @@ hits_fdr_chr3_a <- th_noelev_all[(th_noelev_all$chr == 3), c("chr", "rs", "ps", 
 
 # fancy function I wrote
 chr3_overlap_all <- id_snps(hits_fdr_chr3_a) # 758 elements
-length(unique(chr3_overlap_all)) # 328 are unique
+length(unique(chr3_overlap_all)) # 328 are unique, 581 unique when keeping 1 SNP windows
 # fancy function 2
 OverlapHits_chr3_all <- gwas_overlap(chr3_overlap_all, all_p_cols)
-# empty list
+# list of 3, the same as the ones that show up with nc
+
+shared_snps <- append(shared_snps, unique(c(OverlapHits_chr3_all[[1]]$rs, OverlapHits_chr3_all[[2]]$rs, OverlapHits_chr3_all[[3]]$rs)))
+shared_snps
 ```
 
-No overlap when cutoff is fdr 0.10
+3 SNPs overlap with fdr 0.10 cutoff. These are the same for both nc and all
 
 #### Chromosome 4
 
@@ -2084,8 +2091,8 @@ hits_fdr_chr4 <- th_noelev_nocent[(th_noelev_nocent$chr == 4), c("chr", "rs", "p
 
 # run that function!
 chr4_overlap_nc <- id_snps(hits_fdr_chr4)
-#only 36!
-length(unique(chr4_overlap_nc)) # 17 unique
+#only 36! 64 when including 1 SNP windows
+length(unique(chr4_overlap_nc)) # 17 unique, 45 with 1 SNP windows
 
 # check for overlap between gwas types
 OverlapHits_chr4_nc <- gwas_overlap(chr4_overlap_nc, nc_p_cols)
@@ -2096,14 +2103,14 @@ OverlapHits_chr4_nc <- gwas_overlap(chr4_overlap_nc, nc_p_cols)
 hits_fdr_chr4_a <- th_noelev_all[(th_noelev_all$chr == 4), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_all), value = TRUE), "min", "max")]
 
 # fancy function I wrote
-chr4_overlap_all <- id_snps(hits_fdr_chr4_a) # 43 elements
-length(unique(chr4_overlap_all)) # 16 are unique
+chr4_overlap_all <- id_snps(hits_fdr_chr4_a) # 43 elements (82 with 1 SNP windows)
+length(unique(chr4_overlap_all)) # 16 are unique (55 unique with 1 SNp windows)
 # fancy function 2
 OverlapHits_chr4_all <- gwas_overlap(chr4_overlap_all, all_p_cols)
 # empty list
 ```
 
-No overlap when cutoff is fdr 0.10
+No overlap when cutoff is fdr 0.10 even when including 1 SNP windows.
 
 #### Chromosome 5
 
@@ -2114,7 +2121,7 @@ hits_fdr_chr5 <- th_noelev_nocent[(th_noelev_nocent$chr == 5), c("chr", "rs", "p
 
 # run that function!
 chr5_overlap_nc <- id_snps(hits_fdr_chr5)
-#624 elements!
+#624 elements! (840 with 1 SNP windows)
 length(unique(chr5_overlap_nc)) 
 # 278 unique that have 2+ SNPs - wow that cut down a lot
 # 494 unique without the filtering for 2+ SNPs. so does this mean there are only 494 unique windows out of 840? I guess I'm not entirely sure what this means right now.
@@ -2129,14 +2136,15 @@ OverlapHits_chr5_nc <- gwas_overlap(chr5_overlap_nc, nc_p_cols)
 hits_fdr_chr5_a <- th_noelev_all[(th_noelev_all$chr == 5), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_all), value = TRUE), "min", "max")]
 
 # fancy function I wrote
-chr5_overlap_all <- id_snps(hits_fdr_chr5_a) #  1191 elements - something going on in this centromere
-length(unique(chr5_overlap_all)) # 602 are unique
+chr5_overlap_all <- id_snps(hits_fdr_chr5_a) #  1191 elements - something going on in this centromere (1505 with 1 SNP windows)
+length(unique(chr5_overlap_all)) # 602 are unique ( 916 unique with 1 SNP windows)
 # fancy function 2
 OverlapHits_chr5_all <- gwas_overlap(chr5_overlap_all, all_p_cols)
 # list of 11!
+# list of 13 when including 1 SNP windows. which means all only added 2 new windows but nc added 3. hmm.
 
-# make a list of all the SNPs overlapping at all here to highlight in a GWAS figure.
-shared_snps <- unique(c(OverlapHits_chr5_all[[1]]$rs, OverlapHits_chr5_all[[3]]$rs, OverlapHits_chr5_all[[8]]$rs, OverlapHits_chr5_all[[9]]$rs, OverlapHits_chr5_nc[[1]]$rs, OverlapHits_chr5_nc[[4]]$rs, OverlapHits_chr5_nc[[5]]$rs, OverlapHits_chr5_nc[[6]]$rs))
+# add to list of all the SNPs overlapping at all here to highlight in a GWAS figure.
+shared_snps <- append(shared_snps, unique(c(OverlapHits_chr5_all[[1]]$rs, OverlapHits_chr5_all[[2]]$rs, OverlapHits_chr5_all[[3]]$rs, OverlapHits_chr5_all[[4]]$rs, OverlapHits_chr5_all[[5]]$rs, OverlapHits_chr5_all[[6]]$rs, OverlapHits_chr5_all[[7]]$rs, OverlapHits_chr5_all[[8]]$rs, OverlapHits_chr5_all[[9]]$rs, OverlapHits_chr5_all[[10]]$rs, OverlapHits_chr5_all[[11]]$rs, OverlapHits_chr5_all[[12]]$rs, OverlapHits_chr5_all[[13]]$rs, OverlapHits_chr5_nc[[1]]$rs, OverlapHits_chr5_nc[[2]]$rs, OverlapHits_chr5_nc[[3]]$rs, OverlapHits_chr5_nc[[4]]$rs, OverlapHits_chr5_nc[[5]]$rs, OverlapHits_chr5_nc[[6]]$rs, OverlapHits_chr5_nc[[7]]$rs, OverlapHits_chr5_nc[[8]]$rs, OverlapHits_chr5_nc[[9]]$rs, OverlapHits_chr5_nc[[10]]$rs, OverlapHits_chr5_nc[[11]]$rs)))
 shared_snps
 ```
 
@@ -2153,8 +2161,8 @@ Picking it up on 5/23/2023 for a few minutes to figure out what these regions lo
 files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c")
 
 highlight_snps <- function(identifier){
-  filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
-  mplot_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/mplot_topSNPs/mplot_window_", identifier, "_highlight_Jul122023.png")
+  filename = paste0("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+  mplot_name = paste0("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/mplot_topSNPs/mplot_window_", identifier, "_highlight_Jul172023.png")
   results <- read.delim(file= filename, header = T, stringsAsFactors = F)
   ##### Manhattan plot with qqman #####
 
