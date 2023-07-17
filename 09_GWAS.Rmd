@@ -1854,19 +1854,24 @@ th_noelev_nocent <- th_noelev_nocent[rowSums(is.na(th_noelev_nocent)) < 12 , ]
 th_noelev_all <- th_noelev_all[rowSums(is.na(th_noelev_all)) < 12 , ] 
 # sample size went way down! but is larger than no cent.
 
+## trouble shooting note: 5:13458838 still exists in the dataset at this point in time. SO I do think the issue is in the id_snps function requires at least 2 overlapping SNPs.
+
 #### Functions ####
 
 # nested loops that give me an output that is a list of dataframes with at least 2 overlapping SNPs in the window
 id_snps <- function(input){
   output <- list()
   len <- length(input$ps) # to this point works
+  # loop that makes a list of all SNPs in the window
   for (i in c(1:len)){
     tmp_list <- c(input$min[i]:input$max[i])
     tmp_df <- data.frame()
+    # loop that checks if snps in the dataframe are in the list of all SNPs in the window
     for (j in c(1:len)){
      if (input$ps[j] %in% tmp_list) {
         tmp_df <- rbind(tmp_df, input[j, ])}
     }
+    # if statement to only keep output dataframes with more than one SNP - I think this is causing problems currently, Maybe I can just remove it b/c the multiple types of GWAS code will bring down my sample size?
     if (length(tmp_df[,1]) > 1){
       output <- append(output, list(tmp_df))}
   }
