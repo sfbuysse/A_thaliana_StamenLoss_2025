@@ -1827,7 +1827,8 @@ this code (finally) reads in the April file and writes the output to a list of l
 library(praise)
 ##### do it time 3 #####
 # read in top hits file
-top_hits_fdr_all <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv")
+#top_hits_fdr_all <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv")
+top_hits_fdr_all <- read.csv("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv")
 
 #make a 1000bp window centered on the SNP
 top_hits_fdr_all$min <- top_hits_fdr_all$ps - 500
@@ -1859,6 +1860,7 @@ th_noelev_all <- th_noelev_all[rowSums(is.na(th_noelev_all)) < 12 , ]
 #### Functions ####
 
 # nested loops that give me an output that is a list of dataframes with at least 2 overlapping SNPs in the window
+# after commenting out and testing on chromosome 5, it did keep the 1 SNP I had identified that should have been included and wasn't previously (5:13458838) which I think is a good sign, and the second function really cut down the included windows enough so I am going to commit, then remove the commented out lines from  the id_snps function that filter for only having 2+ rows becuase I don't need them anymore
 id_snps <- function(input){
   output <- list()
   len <- length(input$ps) # to this point works
@@ -1872,8 +1874,9 @@ id_snps <- function(input){
         tmp_df <- rbind(tmp_df, input[j, ])}
     }
     # if statement to only keep output dataframes with more than one SNP - I think this is causing problems currently, Maybe I can just remove it b/c the multiple types of GWAS code will bring down my sample size?
-    if (length(tmp_df[,1]) > 1){
-      output <- append(output, list(tmp_df))}
+    #if (length(tmp_df[,1]) > 1){
+    #  output <- append(output, list(tmp_df))}
+    output <- append(output, list(tmp_df))
   }
   return(output)
 }
@@ -2112,11 +2115,14 @@ hits_fdr_chr5 <- th_noelev_nocent[(th_noelev_nocent$chr == 5), c("chr", "rs", "p
 # run that function!
 chr5_overlap_nc <- id_snps(hits_fdr_chr5)
 #624 elements!
-length(unique(chr5_overlap_nc)) # 278 unique - wow that cut down a lot
+length(unique(chr5_overlap_nc)) 
+# 278 unique that have 2+ SNPs - wow that cut down a lot
+# 494 unique without the filtering for 2+ SNPs. so does this mean there are only 494 unique windows out of 840? I guess I'm not entirely sure what this means right now.
 
 # check for overlap between gwas types
 OverlapHits_chr5_nc <- gwas_overlap(chr5_overlap_nc, nc_p_cols)
-# list of 8!
+# list of 8 that have 2+ SNPs!
+# list of 11 that have at least 1 SNP - includes the 8 from before plus 3 earlier in the chromosome
 
 ##### all  #####
 # only keep the p value columns
