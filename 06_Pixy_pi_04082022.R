@@ -111,9 +111,6 @@ str(comp$pop)
 ### key is that you need to order the whole sheet AND reorder the factor. BOTH, not just one.
 comp$labels <- paste0(comp$pop, " - ", comp$Elev_m, "m")
 
-##### mess around with labelling scheme #####
-# things to try soon: add a 5th shape? the downwards triangle?
-# try a different palette
 # with terrain, I can get as many colors as I want I think bc it is a function
 # for PC where I didn't want it filled in before because there is overlap, maybe I should just change alpha?
 barplot(rep(1,6), col = terrain.colors(6))
@@ -130,19 +127,17 @@ ggplot(comp)+
             alpha = 0.5, linewidth = 0.75)+
   labs(x= "Elevation (m)", y= "Mean Pi", title = "")+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
-  #scale_color_manual(name = "Population",
-  #                   labels = comp$label,
-  #                   values = c(rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4))))+
   scale_shape_manual(name = "Population",
                      labels = comp$label,
-                     values = c(rep(c(22, 21, 24, 23), times = 4)))+
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 16),
-    legend.text = element_text(color = "black", size = 16),
-    axis.title = element_text(color = "black", size = 16),
-    axis.text = element_text(color = "black", size = 16),
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_topo.png", height = 7, width = 9)
 
 ggplot(comp)+
   geom_point(data=comp, aes(x=Elev_m, y=Mean.pi, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
@@ -154,21 +149,18 @@ ggplot(comp)+
             alpha = 0.5, linewidth = 0.75)+
   labs(x= "Elevation (m)", y= "Mean Pi", title = "")+
   scale_fill_gradientn(name = "Elevation", colours = terrain.colors(10))+
-  #scale_color_manual(name = "Population",
-  #                   labels = comp$label,
-  #                   values = c(rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4))))+
   scale_shape_manual(name = "Population",
                      labels = comp$label,
                      values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 16),
-    legend.text = element_text(color = "black", size = 16),
-    axis.title = element_text(color = "black", size = 16),
-    axis.text = element_text(color = "black", size = 16),
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_terrain.png", height = 7, width = 9)
 
-#####
 # with a linear fit line of elevation explaining mean pi
 ggplot(comp)+
   geom_point(data=comp, aes(x=Elev_m, y=Mean.pi, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
@@ -199,6 +191,51 @@ ggplot(comp)+
 ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/PiPerPop_pixy_04082022.png", height = 7, width = 9)
 
 ### ssn by elevation
+ggplot(comp)+
+  geom_point(data=comp, aes(x=Elev_m, y=Full_PopFlwrMean, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit), linetype = "solid",
+            alpha = 0.7, size = 1.25)+
+  geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit+1.96*pred.ssn.el.se.fit), linetype = "solid",
+            alpha = 0.3, size = 0.75)+
+  geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit-1.96*pred.ssn.el.se.fit), linetype = "solid",
+            alpha = 0.5, size = 0.75)+
+  labs(x= "Elevation (m)", y= "Mean Short Stamen Number - Full Phenotype Set", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(10))+
+  scale_shape_manual(name = "Population",
+                     labels = comp$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20))
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/MeanSSNByElev_topo.png", height = 7, width = 9)
+
+ggplot(comp)+
+  geom_point(data=comp, aes(x=Elev_m, y=Full_PopFlwrMean, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit), linetype = "solid",
+            alpha = 0.7, size = 1.25)+
+  geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit+1.96*pred.ssn.el.se.fit), linetype = "solid",
+            alpha = 0.3, size = 0.75)+
+  geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit-1.96*pred.ssn.el.se.fit), linetype = "solid",
+            alpha = 0.5, size = 0.75)+
+  labs(x= "Elevation (m)", y= "Mean Short Stamen Number - Full Phenotype Set", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(10))+
+  scale_shape_manual(name = "Population",
+                     labels = comp$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20))
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/MeanSSNByElev_terrain.png", height = 7, width = 9)
+
+# old plot
 ggplot(comp)+
   geom_point(data=comp, aes(x=Elev_m, y=Full_PopFlwrMean, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit), linetype = "solid",
@@ -291,6 +328,51 @@ ggplot(comp)+
 
 
 ### SSN by Pi
+ggplot(comp)+
+  geom_point(data=comp, aes(y=Seq_PopFlwrMean, x=Mean.pi, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit), linetype = "solid",
+            alpha = 0.7, size = 1.25)+
+  geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit+1.96*pred.pi.ssn.se.fit), linetype = "solid",
+            alpha = 0.3, size = 0.75)+
+  geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit-1.96*pred.pi.ssn.se.fit), linetype = "solid",
+            alpha = 0.5, size = 0.75)+
+  labs(y="Mean Short Stamen Number - Sequenced Only" , x= "Mean Pi", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(10))+
+  scale_shape_manual(name = "Population",
+                     labels = comp$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_topo.png", height = 7, width = 9)
+
+ggplot(comp)+
+  geom_point(data=comp, aes(y=Seq_PopFlwrMean, x=Mean.pi, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit), linetype = "solid",
+            alpha = 0.7, size = 1.25)+
+  geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit+1.96*pred.pi.ssn.se.fit), linetype = "solid",
+            alpha = 0.3, size = 0.75)+
+  geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit-1.96*pred.pi.ssn.se.fit), linetype = "solid",
+            alpha = 0.5, size = 0.75)+
+  labs(y="Mean Short Stamen Number - Sequenced Only" , x= "Mean Pi", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(10))+
+  scale_shape_manual(name = "Population",
+                     labels = comp$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_terrain.png", height = 7, width = 9)
+
+#old plot
 ggplot(comp)+
   geom_point(data=comp, aes(y=Seq_PopFlwrMean, x=Mean.pi, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
   geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit), linetype = "solid",

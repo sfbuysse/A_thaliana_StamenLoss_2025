@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE, tidy.opts = list(width.cutoff=75), tidy = TRU
 ```
 
 Goal: identifying sequencing quality by line and by population
-Run on the HPCC due to file size, but code is below. Made figures on local machine b/c HPCC down on 8/17
+Run on the HPCC due to file size, but code is below. Made figures on local machine b/c HPCC
 
 https://gatk.broadinstitute.org/hc/en-us/articles/360035531692-VCF-Variant-Call-Format
 .
@@ -46,6 +46,7 @@ module load GCC/9.3.0  OpenMPI/4.0.3 R/4.0.3
 #module load GDAL/3.0.4-Python-3.8.2
 R
 ```
+
 ```{r, eval = FALSE}
 library(dplyr)
 rm(list = ls())
@@ -62,6 +63,21 @@ head(NoCent[ ,1:6])
 - allele depth is the reference allele, alternate allele \
 - GT is the gentype \
 - don't think PL will be helpful \
+QUAL is the Phred-scaled probability that the site has no variant and is computed as:
+QUAL = -10*log10 (posterior genotype probability of a homozygous-reference genotype (GT=0/0))
+
+That is, QUAL = GP (GT=0/0), where GP = posterior genotype probability in Phred scale.
+
+QUAL = 20 means there is 99% probability that there is a variant at the site. The GP values are also given in Phred-scale in the VCF file.
+
+•	GQ is the Phred-scaled Probability that the call is incorrect.
+GQ=-10*log10(p), where p is the probability that the call is incorrect.
+
+GQ=-10*log10(sum(10.^(-GP(i)/10))) where the sum is taken over the GT that did not win.
+
+So, GQ of 3 means there's a 50 percent chance that the call is incorrect, and GQ of 20 means there's a 1 percent chance that the call is incorrect.
+
+•	QD is the QUAL normalized by the read depth, DP.
 - AD is depth for each allele, DP is their sum. use DP b/c most are homozygous if I check random intervals \
 \
 So all I really want to keep to calculate the means is GQ and DP. Others might be helpful later on, but not right now
