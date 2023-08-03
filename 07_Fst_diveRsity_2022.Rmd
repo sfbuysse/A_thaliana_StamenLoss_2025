@@ -73,6 +73,7 @@ tmp2 <- as.data.frame(tmp2)
 head(tmp2)
 
 save(tmp2, file = "~/R/GenotypeMatrix_plinkFiltered_Cent_Dec2022.ROBJ")
+# on 8/3/2023 this output file was copied to /mnt/research/josephslab/Sophie/Qpc
 
 #### subset 10,000 randomly chosen SNPs for fst matrix ####
 
@@ -112,7 +113,7 @@ save(test_output, file = "~/R/fastDivPart_plinkFilter_sub_SNPS_Dec2022.ROBJ")
 ##### load data #####
 rm(list = ls())
 load("~/R/GenotypeMatrix_plinkFiltered_Cent_Dec2022.ROBJ")
-
+# on 8/3/2023 this output file was copied to /mnt/research/josephslab/Sophie/Qpc
 ##### format data #####
 colnames(tmp2)[2:62] <- substr(toupper(colnames(tmp2)[2:62]), 1, 3)
 colnames(tmp2)
@@ -202,6 +203,7 @@ tmp2 <- as.data.frame(tmp2)
 head(tmp2)
 
 save(tmp2, file = "~/R/GenotypeMatrix_plinkFiltered_NoCent_Dec2022.ROBJ")
+# on 8/3/2023 this output file was copied to /mnt/research/josephslab/Sophie/Qpc
 
 #### subset 10,000 randomly chosen SNPs for fst matrix ####
 
