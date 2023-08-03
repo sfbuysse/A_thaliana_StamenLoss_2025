@@ -7,4 +7,4 @@ I also apparently have old code, so pay attention to the date espcially for pixy
 
 In general this project needs new organization so that it is synced with the HPCC and the code is in a similar place to all the data, but currently the code is here and the data is there and I do lots of copying and pasting... room for workflow improvement!
 
-Most of the data is in my scratch space, but the most important things should be backed up either to my home directory or the josephs lab shared space (there's some stuff in both places)
+Most of the data is in my scratch space, but the most important things should be backed up to the josephslab directory, but some things are backed up twice and it isn't super organized. 
