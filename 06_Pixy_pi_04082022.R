@@ -3,7 +3,7 @@ library(dplyr)
 library(ggplot2)
 library(ggpubr)
 ####Need to read in the results
-dat <- read.delim("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/pixy_042022/all_filtered.50k_pi_042022.out_pi.txt", header=TRUE)
+dat <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/pixy_042022/all_filtered.50k_pi_042022.out_pi.txt", header=TRUE)
 head(dat)
 tail(dat)
 
@@ -111,15 +111,73 @@ str(comp$pop)
 ### key is that you need to order the whole sheet AND reorder the factor. BOTH, not just one.
 comp$labels <- paste0(comp$pop, " - ", comp$Elev_m, "m")
 
+##### mess around with labelling scheme #####
+# things to try soon: add a 5th shape? the downwards triangle?
+# try a different palette
+# with terrain, I can get as many colors as I want I think bc it is a function
+# for PC where I didn't want it filled in before because there is overlap, maybe I should just change alpha?
+barplot(rep(1,6), col = terrain.colors(6))
+barplot(rep(1,10), col = terrain.colors(10))
+barplot(rep(1,16), col = terrain.colors(16))
+# with a linear fit line of elevation explaining mean pi
+ggplot(comp)+
+  geom_point(data=comp, aes(x=Elev_m, y=Mean.pi, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit), linetype = "solid",
+            alpha = 0.7, linewidth = 1.25)+
+  geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit+1.96*pred.pi.el.se.fit), linetype = "solid",
+            alpha = 0.3, linewidth = 0.75)+
+  geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit-1.96*pred.pi.el.se.fit), linetype = "solid",
+            alpha = 0.5, linewidth = 0.75)+
+  labs(x= "Elevation (m)", y= "Mean Pi", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
+  #scale_color_manual(name = "Population",
+  #                   labels = comp$label,
+  #                   values = c(rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4))))+
+  scale_shape_manual(name = "Population",
+                     labels = comp$label,
+                     values = c(rep(c(22, 21, 24, 23), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 16),
+    axis.title = element_text(color = "black", size = 16),
+    axis.text = element_text(color = "black", size = 16),
+    legend.spacing.y = unit(0.03, "cm"))
+
+ggplot(comp)+
+  geom_point(data=comp, aes(x=Elev_m, y=Mean.pi, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit), linetype = "solid",
+            alpha = 0.7, linewidth = 1.25)+
+  geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit+1.96*pred.pi.el.se.fit), linetype = "solid",
+            alpha = 0.3, linewidth = 0.75)+
+  geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit-1.96*pred.pi.el.se.fit), linetype = "solid",
+            alpha = 0.5, linewidth = 0.75)+
+  labs(x= "Elevation (m)", y= "Mean Pi", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(10))+
+  #scale_color_manual(name = "Population",
+  #                   labels = comp$label,
+  #                   values = c(rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4))))+
+  scale_shape_manual(name = "Population",
+                     labels = comp$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 16),
+    axis.title = element_text(color = "black", size = 16),
+    axis.text = element_text(color = "black", size = 16),
+    legend.spacing.y = unit(0.03, "cm"))
+
+#####
 # with a linear fit line of elevation explaining mean pi
 ggplot(comp)+
   geom_point(data=comp, aes(x=Elev_m, y=Mean.pi, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit), linetype = "solid",
-            alpha = 0.7, size = 1.25)+
+            alpha = 0.7, linewidth = 1.25)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit+1.96*pred.pi.el.se.fit), linetype = "solid",
-            alpha = 0.3, size = 0.75)+
+            alpha = 0.3, linewidth = 0.75)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit-1.96*pred.pi.el.se.fit), linetype = "solid",
-            alpha = 0.5, size = 0.75)+
+            alpha = 0.5, linewidth = 0.75)+
   labs(x= "Elevation (m)", y= "Mean Pi", title = "")+
   scale_color_manual(name = "Population",
                      labels = comp$label,
@@ -134,6 +192,10 @@ ggplot(comp)+
     axis.title = element_text(color = "black", size = 16),
     axis.text = element_text(color = "black", size = 16),
     legend.spacing.y = unit(0.03, "cm"))
+
+
+
+
 ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/PiPerPop_pixy_04082022.png", height = 7, width = 9)
 
 ### ssn by elevation
