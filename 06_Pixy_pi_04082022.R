@@ -16,7 +16,6 @@ tail(dat)
 sums <- dat %>% group_by(pop) %>% summarize(Sum.count.diff = sum(count_diffs, na.rm = T), Sum.count.comp = sum(count_comparisons, na.rm = T))
 sums$Mean.pi <- sums$Sum.count.diff/sums$Sum.count.comp
 ####### this should be right following the pixy documentation
-#####
 ###### add the other population information
 ###### Should have labels ARU and SAL
 ###### this has both the full and only the sequenced means.
@@ -28,7 +27,7 @@ sums$Mean.pi <- sums$Sum.count.diff/sums$Sum.count.comp
 ###### save as an R object
 ###save(comp, file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_allsite_04082022.ROBJ")
 
-load("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_allsite_04082022.ROBJ")
+load("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_allsite_04082022.ROBJ")
 
 
 ##### Correlation/regressions between Variables #######
@@ -137,7 +136,9 @@ ggplot(comp)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_topo.png", height = 7, width = 9)
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_topo.png",
+       height = 7, width = 9, device = "png", dpi = 500)
+# can also give plot name (useful if making multipanel plots in r) and give dimensions in pixels
 
 ggplot(comp)+
   geom_point(data=comp, aes(x=Elev_m, y=Mean.pi, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
@@ -159,7 +160,8 @@ ggplot(comp)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_terrain.png", height = 7, width = 9)
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_terrain.png", 
+       height = 7, width = 9,device = "png", dpi = 500)
 
 # with a linear fit line of elevation explaining mean pi
 ggplot(comp)+
@@ -185,9 +187,6 @@ ggplot(comp)+
     axis.text = element_text(color = "black", size = 16),
     legend.spacing.y = unit(0.03, "cm"))
 
-
-
-
 ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/PiPerPop_pixy_04082022.png", height = 7, width = 9)
 
 ### ssn by elevation
@@ -211,7 +210,8 @@ ggplot(comp)+
     legend.spacing.y = unit(0.03, "cm"),
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20))
-ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/MeanSSNByElev_topo.png", height = 7, width = 9)
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/MeanSSNByElev_topo.png",
+       height = 7, width = 9, device = "png", dpi = 500)
 
 ggplot(comp)+
   geom_point(data=comp, aes(x=Elev_m, y=Full_PopFlwrMean, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
@@ -233,7 +233,8 @@ ggplot(comp)+
     legend.spacing.y = unit(0.03, "cm"),
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20))
-ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/MeanSSNByElev_terrain.png", height = 7, width = 9)
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/MeanSSNByElev_terrain.png",
+       height = 7, width = 9, device = "png", dpi = 500)
 
 # old plot
 ggplot(comp)+
@@ -348,7 +349,8 @@ ggplot(comp)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_topo.png", height = 7, width = 9)
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_topo.png",
+       height = 7, width = 9, device = "png", dpi = 500)
 
 ggplot(comp)+
   geom_point(data=comp, aes(y=Seq_PopFlwrMean, x=Mean.pi, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
@@ -370,7 +372,8 @@ ggplot(comp)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_terrain.png", height = 7, width = 9)
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_terrain.png",
+       height = 7, width = 9, device = "png", dpi = 500)
 
 #old plot
 ggplot(comp)+
@@ -603,7 +606,7 @@ require(ggpubr)
 #### now rbind them all back together
 ###dat.clean <- rbind(Chr1, Chr2, Chr3, Chr4, Chr5)
 ###save(dat.clean, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/pi_noCent_50k_04082022.ROBJ")
-load("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/pi_noCent_50k_04082022.ROBJ")
+load("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/pi_noCent_50k_04082022.ROBJ")
 
 ######## Calculate population global pi for centromere trimmed data ########
 # use dyplyr to group by population
@@ -652,10 +655,11 @@ ggplot(sum.comparison)+
 #comp.c <- merge(sums.c, Elev_Means, by.x = "pop", by.y = "Population")
 
 #save(comp.c, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_NoCent_04082022.ROBJ")
-load("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_NoCent_04082022.ROBJ")
+load("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_NoCent_04082022.ROBJ")
 
 ##### Correlations with no centromere values and variables #####
 # these are correlations, not regressions like I am doing above.
+# on 8/7/2023 I am adding in the new regressions (or some are already here.)
 
 ## Mean pi and Elevation
 plot(Mean.pi.c ~ Elev_m, data = comp.c)
@@ -664,9 +668,12 @@ cor.test(comp.c$Mean.pi.c, comp.c$Elev_m, method = "pearson")
 # p val = 0.0001808, cor = -0.802886
 m2.pi.elev <- lm(Mean.pi.c ~ Elev_m, data = comp.c)
 summary(m2.pi.elev)
-### r2 = 0.6446. p val is significant and exactly the same as the correlation(but from stats I recall I should not look at this)
+### r2 = 0.6446. p val is significant (0.000181) and exactly the same as the correlation(but from stats I recall I should not look at this)
 ### means that elevation does explain pi. (same as with the centromere included)
+### estimate is -1.672e-6 so I think that is the beta?
 
+
+## mean pi and SSN
 plot(Mean.pi.c ~ Seq_PopFlwrMean, data = comp.c)
 cor.test(comp.c$Mean.pi.c, comp.c$Seq_PopFlwrMean, method = "pearson")
 # p = 0.3872
@@ -674,10 +681,11 @@ cor.test(comp.c$Mean.pi.c, comp.c$Seq_PopFlwrMean, method = "pearson")
 # pretty weak like nothing going on here
 m2.pi.ssn <- lm(Seq_PopFlwrMean ~ Mean.pi.c, dat = comp.c)
 summary(m2.pi.ssn)
-# r squared is tiny. 0.05383. p value again exactly matches the correlation
+# r squared is tiny. 0.05383. p value (0.387) again exactly matches the correlation
 # so really, no relationship between these two variables shown here
 # so this does not support drift b/c genetic variation doesn't explain short stamen number
 # OK, so no evidence for drift which changes what my previous narrative was.
+# estimate is -66.6471
 
 ### Simulate Data for Plots
 
@@ -691,7 +699,7 @@ forplot3 <- data.frame('newd3' = newdata3,
                        'pred.pi.el' = m2.pi.elev.pred,
                        'pred.pi.ssn' = m2.pi.ssn.pred)
 
-# fancy plot.
+##### fancy plots. #####
 ## pi
 comp.c <- comp.c[order(comp.c$Elev_m),]
 comp.c$pop <- as.factor(comp.c$pop)
@@ -701,6 +709,54 @@ str(comp.c$pop)
 # key is that you need to order the whole sheet AND reorder the factor. BOTH, not just one.
 comp.c$labels <- paste0(comp.c$pop, " - ", comp.c$Elev_m, "m")
 # with a linear fit line of elevation explaining mean pi
+# topo
+ggplot(comp.c)+
+  geom_point(data=comp.c, aes(x=Elev_m, y=Mean.pi.c, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit), linetype = "solid",
+            alpha = 0.7, linewidth = 1.25)+
+  geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit+1.96*pred.pi.el.se.fit), linetype = "solid",
+            alpha = 0.3, linewidth = 0.75)+
+  geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit-1.96*pred.pi.el.se.fit), linetype = "solid",
+            alpha = 0.5, linewidth = 0.75)+
+  labs(x= "Elevation (m)", y= "Mean Pi", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
+  scale_shape_manual(name = "Population",
+                     labels = comp.c$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_NoCent_topo.png",
+       height = 7, width = 9, device = "png", dpi = 500)
+# can also give plot name (useful if making multipanel plots in r) and give dimensions in pixels
+
+ggplot(comp.c)+
+  geom_point(data=comp.c, aes(x=Elev_m, y=Mean.pi.c, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit), linetype = "solid",
+            alpha = 0.7, linewidth = 1.25)+
+  geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit+1.96*pred.pi.el.se.fit), linetype = "solid",
+            alpha = 0.3, linewidth = 0.75)+
+  geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit-1.96*pred.pi.el.se.fit), linetype = "solid",
+            alpha = 0.5, linewidth = 0.75)+
+  labs(x= "Elevation (m)", y= "Mean Pi", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(10))+
+  scale_shape_manual(name = "Population",
+                     labels = comp.c$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_NoCent_terrain.png", 
+       height = 7, width = 9,device = "png", dpi = 500)
+# old plot
 ggplot(comp.c)+
   geom_point(data=comp.c, aes(x=Elev_m, y=Mean.pi.c, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
   geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit), linetype = "solid",
@@ -726,6 +782,54 @@ ggplot(comp.c)+
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/PiPerPop_NoCent_50k_pixy_04082022.png", height = 7, width = 9)
 
 ##ssn by mean.pi
+ggplot(comp.c)+
+  geom_point(data=comp.c, aes(y=Seq_PopFlwrMean, x=Mean.pi.c, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit), linetype = "solid",
+            alpha = 0.7, size = 1.25)+
+  geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit+1.96*pred.pi.ssn.se.fit), linetype = "solid",
+            alpha = 0.3, size = 0.75)+
+  geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit-1.96*pred.pi.ssn.se.fit), linetype = "solid",
+            alpha = 0.5, size = 0.75)+
+  labs(y="Mean Short Stamen Number - Sequenced Only" , x= "Mean Nucleotide Diversity", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(10))+
+  scale_shape_manual(name = "Population",
+                     labels = comp.c$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_NoCent_topo.png",
+       height = 7, width = 9, device = "png", dpi = 500)
+
+ggplot(comp.c)+
+  geom_point(data=comp.c, aes(y=Seq_PopFlwrMean, x=Mean.pi.c, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit), linetype = "solid",
+            alpha = 0.7, size = 1.25)+
+  geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit+1.96*pred.pi.ssn.se.fit), linetype = "solid",
+            alpha = 0.3, size = 0.75)+
+  geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit-1.96*pred.pi.ssn.se.fit), linetype = "solid",
+            alpha = 0.5, size = 0.75)+
+  labs(y="Mean Short Stamen Number - Sequenced Only" , x= "Mean Nucleotide Diversity", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(10))+
+  scale_shape_manual(name = "Population",
+                     labels = comp.c$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_NoCent_terrain.png",
+       height = 7, width = 9, device = "png", dpi = 500)
+
+
+# old plot
 ggplot(comp.c)+
   geom_point(data=comp.c, aes(x=Mean.pi.c, y=Seq_PopFlwrMean, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
   geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit), linetype = "solid",
@@ -799,41 +903,139 @@ ggsave("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalys
 
 
 ######## more complex model! #######
-m.ssn.elev.pi <- lm(Seq_PopFlwrMean ~ Elev_m + Mean.pi.c, dat = comp.c)
+# this is done with the no cent file pi values.
+comp.c$Elev_m2 <- (comp.c$Elev_m)^2
+m.ssn.elev.pi <- lm(Seq_PopFlwrMean ~ Elev_m + Elev_m2 + Mean.pi.c, dat = comp.c)
 summary(m.ssn.elev.pi)
-# so this seems to show that elevation is a better predictor than pi
-# how would I visualize this? I think I would want a graph with mean.pi.c as the x axis variable but then use this model information 
-# to draw the line
+# results from Seq_PopFlwrMean ~ Elev_m + Mean.pi.c
+# elev estimate = 6.320e-4, p value is 0.00904
+# mean.pi.c estimate is 1.771e02, p value is 0.09714
+#r squared is 0.4507
+
+# results from Seq_PopFlwrMean ~ Elev_m + (Elev_m^2) + Mean.pi.c
+# elev_m : estimate = 1.66e-03, p 0.0583
+# elev_m2: estimate = -3.095e-07, p = 0.3227
+# mean.pi.c : estimate = 1.551e02, p = 0.1508
+# rsquared = 0.4954
+# r2 got a little better, so this model should be doing better than the one without elev_m2?
+
+# but I think a potential issue here is that I haven't standardized things? so there are big differences in scale between elevation and pi
+tmp.standard <- lm(Seq_PopFlwrMean ~ scale(Elev_m) + scale(Elev_m^2) + scale(Mean.pi.c), dat = comp.c)
+summary(tmp.standard)
+# okay. so the estimates here have changes (because scale changed, so that makes sense)
+# but the p values match the non-scaled values and the r squared is also exactly the same, so I don't think this is the issue
+# just for the sake of reporting, these are the estimates:
+# elev_m = 0.6315
+# elev_m2 = -0.3170
+# mean.pi.c = 0.1749
 
 # to graph, I want the residuals of ssn ~ elevation and plot those against mean pi I think. not sure how I would make a line exactly, but that is what I would want intially
-# should this be the residuals from the quadratic regression?
-m.tmp <- lm(Seq_PopFlwrMean ~ Elev_m, dat = comp.c)
-plot(residuals(m.tmp))
+# should this be the residuals from the quadratic regression? I vote yes. so also changed the model above to include the quadratic term
+#m.tmp <- lm(Seq_PopFlwrMean ~ Elev_m, dat = comp.c)
+#plot(residuals(m.tmp))
 # ok, so these seem decently random I guess
 
-comp.c$Elev_m2 <- (comp.c$Elev_m)^2
 m.ssn.elev.c <- lm(Seq_PopFlwrMean ~ Elev_m + Elev_m2, data = comp.c)
 summary(m.ssn.elev.c)
-plot(residuals(m.ssn.elev.c))
+identical(residuals(m.ssn.elev.c), residuals(m.ssn.elev))
+# why do these two not match?
+# because m.ssn.elev uses Full_PopFlwrMean but I want to only use the sequenced lines here.
 
+# in this model (m.ssn.elev.c) elev_m has ap value of 0.085 and elev_m2 has a p value of 0.21 and the r2 is 0.3964
+# for reference, in this same dataset, the rsquared of just the linear term is 0.31
+#summary(lm(Seq_PopFlwrMean ~ Elev_m, data = comp.c))
+
+plot(residuals(m.ssn.elev.c))
+# kinda seems like two chunks?
+
+# now need to use the residuals in a plot
 
 #comp.c$Elev_residuals <- residuals(m.tmp)
-comp.c$Elev_residuals <- residuals(m.ssn.elev.c)
+comp.c$Elev_residuals <- residuals(m.ssn.elev.c) # index order matches row name order.
+
 plot(comp.c$Mean.pi.c, comp.c$Elev_residuals)
 # there is maybe a positive relationship here? worth a model I think.
 # residuals range from -0.6 to 0.4
 m.resid.pi <- lm(Elev_residuals ~ Mean.pi.c, dat = comp.c)
 summary(m.resid.pi)
+# mean.pi.c estimate = 52.6855, p value = 0.379, r squared = 0.05573 so this is a terrible fit.
 
-# use newdata 3 and 4 from earlier
+# then I want the inverse. so the residuals of ssn ~ mean.pi.c regressed with elevation
+# making new model b/c need order to match comp.c row order
+tmp.resid <- residuals(lm(Seq_PopFlwrMean ~ Mean.pi.c, data = comp.c))
+tmp.resid
+plot(tmp.resid)
+# kinda two curves again?
+comp.c$Pi_residuals <- tmp.resid
+plot(comp.c$Elev_m, comp.c$Pi_residuals)
+# not great, but doesn't include the quadratic term.
+m.resid.elev <- lm(Pi_residuals ~ Elev_m + Elev_m2, dat = comp.c)
+summary(m.resid.elev)
+# Elev_m estimate = 1.051e-03, p value = 0.1196,
+# Elev_m2 estimate = -4.481e-07, p value = 0.2022
+# r squared = 0.2528 so this is not a great fit but is much better than the other residual plot!
+
+
+# use newdata (elevations) and 4 (mean.pi values) from earlier
+
 ### Now use predict to get the predictions
-newdata5 <- cbind(newdata3, newdata4, Elev_residuals = seq(-0.7,.5, length = 2000) )
+newdata5 <- cbind(newdata, newdata4, Elev_residuals = seq(-0.7,.4, length = 2000), Pi_residuals = seq(-0.8, 0.5, length = 2000) )
 #m.ssn.elev.pi.pred = predict(m.ssn.elev.pi, newdata = newdata5, se.fit = TRUE)
 m.resid.pi.pred = predict(m.resid.pi, newdata = newdata5, se.fit = TRUE)
-forplot4 <- data.frame('newd3' = newdata3,
+m.resid.elev.pred = predict(m.resid.elev, newdata = newdata5, se.fit = TRUE)
+forplot4 <- data.frame('Elev_m' = newdata$Elev_m,
+                       'Elev_m2' = newdata$Elev_m2,
                        'newd4' = newdata4,
-                       'newd_res' = newdata5$Elev_residuals,
-                       'pred.m.resid.pi' = m.resid.pi.pred)
+                       'newd_res_elev' = newdata5$Elev_residuals,
+                       'pred.m.resid.pi' = m.resid.pi.pred,
+                       'newd_res_pi' = newdata5$Pi_residuals,
+                       'pred.m.resid.elev' = m.resid.elev.pred)
+
+## and plot
+ggplot(comp.c)+
+  geom_point(data=comp.c, aes(x=Mean.pi.c, y=Elev_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit), linetype = "solid",
+            alpha = 0.7, linewidth = 1.25)+
+  geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit+1.96*pred.m.resid.pi.se.fit), linetype = "solid",
+            alpha = 0.3, linewidth = 0.75)+
+  geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit-1.96*pred.m.resid.pi.se.fit), linetype = "solid",
+            alpha = 0.5, linewidth = 0.75)+
+  labs(x= "Mean Pi", y= "Residuals of SSN ~ Elevation + Elevation^2", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
+  scale_shape_manual(name = "Population",
+                     labels = comp.c$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNElevQuadResid_NoCent_topo.png",
+       height = 7, width = 9, device = "png", dpi = 500)
+ggplot(comp.c)+
+  geom_point(data=comp.c, aes(x=Mean.pi.c, y=Elev_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit), linetype = "solid",
+            alpha = 0.7, linewidth = 1.25)+
+  geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit+1.96*pred.m.resid.pi.se.fit), linetype = "solid",
+            alpha = 0.3, linewidth = 0.75)+
+  geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit-1.96*pred.m.resid.pi.se.fit), linetype = "solid",
+            alpha = 0.5, linewidth = 0.75)+
+  labs(x= "Mean Pi", y= "Residuals of SSN ~ Elevation + Elevation^2", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(16))+
+  scale_shape_manual(name = "Population",
+                     labels = comp.c$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNElevQuadResid_NoCent_terrain.png",
+       height = 7, width = 9, device = "png", dpi = 500)
 
 ggplot(comp.c)+
   geom_point(data=comp.c, aes(x=Mean.pi.c, y=Elev_residuals, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
@@ -857,7 +1059,77 @@ ggplot(comp.c)+
     axis.title = element_text(color = "black", size = 16),
     axis.text = element_text(color = "black", size = 16),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/SSNElevQuadResid_ByPi_06232022.png", height = 7, width = 9)
+#ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/SSNElevQuadResid_ByPi_06232022.png", height = 7, width = 9)
+
+# pi residuals
+ggplot(comp.c)+
+  geom_point(data=comp.c, aes(x=Elev_m, y=Pi_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit), linetype = "solid",
+            alpha = 0.7, linewidth = 1.25)+
+  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit+1.96*pred.m.resid.elev.se.fit), linetype = "solid",
+            alpha = 0.3, linewidth = 0.75)+
+  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit-1.96*pred.m.resid.elev.se.fit), linetype = "solid",
+            alpha = 0.5, linewidth = 0.75)+
+  labs(y= "Residuals of SSN ~ Mean.pi", x= "Elevation (m)", title = "line from resid ~ elev + elev2")+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
+  scale_shape_manual(name = "Population",
+                     labels = comp.c$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNPiResid_NoCent_topo.png",
+       height = 7, width = 9, device = "png", dpi = 500)
+
+ggplot(comp.c)+
+  geom_point(data=comp.c, aes(x=Elev_m, y=Pi_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit), linetype = "solid",
+            alpha = 0.7, linewidth = 1.25)+
+  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit+1.96*pred.m.resid.elev.se.fit), linetype = "solid",
+            alpha = 0.3, linewidth = 0.75)+
+  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit-1.96*pred.m.resid.elev.se.fit), linetype = "solid",
+            alpha = 0.5, linewidth = 0.75)+
+  labs(y= "Residuals of SSN ~ Mean.pi", x= "Elevation (m)", title = "line from resid ~ elev + elev2")+
+  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(16))+
+  scale_shape_manual(name = "Population",
+                     labels = comp.c$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNPiResid_NoCent_terrain.png",
+       height = 7, width = 9, device = "png", dpi = 500)
+
+ggplot(comp.c)+
+  geom_point(data=comp.c, aes(x=Elev_m, y=Pi_residuals, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
+  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit), linetype = "solid",
+            alpha = 0.7, size = 1.25)+
+  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit+1.96*pred.m.resid.pi.se.fit), linetype = "solid",
+            alpha = 0.3, size = 0.75)+
+  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit-1.96*pred.m.resid.pi.se.fit), linetype = "solid",
+            alpha = 0.5, size = 0.75)+
+  labs(y= "Residuals of SSN ~ Mean.pi", x= "Elevation (m)", title = "line from resid ~ elev + elev2")+
+  scale_color_manual(name = "Population",
+                     labels = comp.c$label,
+                     values = c(rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4))))+
+  scale_shape_manual(name = "Population",
+                     labels = comp.c$label,
+                     values = c(rep(c(0, 1, 2, 5), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 16),
+    legend.text = element_text(color = "black", size = 16),
+    axis.title = element_text(color = "black", size = 16),
+    axis.text = element_text(color = "black", size = 16),
+    legend.spacing.y = unit(0.03, "cm"))
 
 ### test an interaction term
 m2.ssn.elev.pi <- lm(Seq_PopFlwrMean ~ Elev_m * Mean.pi.c, dat = comp.c)
