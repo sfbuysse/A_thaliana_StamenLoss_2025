@@ -38,14 +38,13 @@ spain_elev <- crop(elev_raster, spain)
 plot(spain_elev)
 
 # Make a spatial polygon that includes only the pyrenees region
-# got extent values from the min and max lat and long of the populations
-pyrenees <- as(extent(-0.50, 3.5, 41.00, 43.00), 'SpatialPolygons')
+# got extent values from the min and max lat and long of the populations (originally -0.50, 3.5, 41.00, 43.00)
+# but max x is actually 3.16, so changes to 3.2
+# but this means the pyrenees extend out beyond the limits of spain... becuase the spain elev raster x max is 3.04
+pyrenees <- as(extent(-0.50, 3.2, 41.00, 43.00), 'SpatialPolygons')
 
 # set the coordinate reference system to match the elevation and World dataset
 crs(pyrenees) <- "+proj=longlat +datum=WGS84 +no_defs"
-
-# Now crop elevation raster down to pyrenees region
-pyr_elev <- crop(elev_raster, pyrenees)
 
 # Get the location for points and set coordinate reference system
 pop_loc <- data.frame(lon = metadata$Lon_DecDeg, lat = metadata$Lat_DecDeg, pop = metadata$PopCode) %>%
@@ -60,12 +59,16 @@ st_is_longlat(pop_loc)
 
 # First, make a quick map without detail.
 # this would be a good subset panel to show which region is shown in detail.
-tm_shape(spain) +
-  tm_borders("black", lwd = 0.5)+
+outline <- tm_shape(spain) +
+  tm_borders("black", lwd = 1)+
   tm_shape(pyrenees) +
-  tm_borders("red", lwd = 0.5)
+  tm_borders("red", lwd = 1)
+outline
+tmap_save(outline, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/OutlineMap.png", dpi = 500)
 
 # Then, make the detailed map
+# Now crop elevation raster down to pyrenees region, with a little buffer for labels to fit
+pyr_elev <- crop(elev_raster, as(extent(-0.50, 3.5, 41.00, 43.00), 'SpatialPolygons'))
 
 # manual jitter for labels -> built in jitter (auto.placement) was too random and not lining up well.
 pop_loc2 <- data.frame(lon = c(metadata$Lon_DecDeg[1:6], metadata$Lon_DecDeg[7]-0.04, 
@@ -131,13 +134,34 @@ pop_loc$pop <- as.factor(pop_loc$pop)
     stretch.palette = TRUE, size = 0.5, shape = 'for.shape', 
     shapes = c('0' = 22, '1' = 21, '2' = 24, '5' = 23), 
     legend.col.show = TRUE, legend.shape.show =  FALSE)
- # just make a black point 
-  tm_shape(pyr_elev)+
-    tm_raster(palette = terrain.colors(16), alpha = 0.6, title = "Elevation")+
-    tm_legend(legend.position = c("right", "bottom"))+
+# just make a black point 
+black <-  tm_shape(pyr_elev)+
+    tm_raster(palette = terrain.colors(16), alpha = 0.8, title = "Elevation")+
+    tm_legend(scale = 0.4, legend.outside = FALSE, legend.position = c("right", "bottom"))+
     tm_shape(pop_loc2)+
-    tm_text('pop', col = 'black', auto.placement = FALSE)+
+    tm_text('pop', col = 'black', auto.placement = FALSE, size = 1)+
     tm_shape(pop_loc)+
-    tm_symbols(col = "black", shape = 21, 
-               stretch.palette = TRUE, size = 0.5, 
-               legend.col.show = TRUE, legend.shape.show =  TRUE)
+    tm_symbols(col = "black", border.col = "black", shape = 21, 
+               stretch.palette = TRUE, size = 0.25, 
+               legend.col.show = FALSE, legend.shape.show =  FALSE)
+tmap_save(black, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/BlackDotMap.png", 
+          dpi = 500,
+          outer.margins = c(0, 0, 0, 0),
+          insets_tm = outline, 
+          insets_vp = viewport(x = unit(0.15, "npc"),
+                               y = unit(0.18, "npc"),
+                               width = unit(0.35, "npc"),
+                               height = unit(0.35, "npc"),
+                               default.units = "npc",
+                               just = "centre",gp = gpar(),
+                               clip = "inherit",
+                               mask = "inherit",
+                               xscale = c(0, 1),
+                               yscale = c(0, 1),
+                               angle = 0,
+                               layout = NULL,
+                               layout.pos.row = NULL, layout.pos.col = NULL,name = NULL),
+          width = 3 ,
+          height = 2,
+          units = 'in',
+          add.titles = "test")
