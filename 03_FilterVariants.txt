@@ -153,7 +153,7 @@ plink -bfile allsites_filtered_plinkTest --chr Chr4 \
 --threads 4 \
 --from-bp 1800000 \
 --to-bp 5150000 \
---make-bed --out Chr4_noCent_plink
+--make-bed --out Chr4_CentSites_plink
 # 79,958 sites
 
 # Chr 5
