@@ -177,7 +177,7 @@ ggplot(comp)+
             alpha = 0.3, linewidth = 0.75)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit-1.96*pred.pi.el.se.fit), linetype = "solid",
             alpha = 0.5, linewidth = 0.75)+
-  labs(x= "Elevation (m)", y= "Mean Pi", title = "")+
+  labs(x= "Elevation (m)", y= "Nucleotide Diversity", title = "")+
   scale_color_manual(name = "Population",
                      labels = comp$label,
                      values = c(rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4))))+
@@ -342,7 +342,7 @@ ggplot(comp)+
             alpha = 0.3, size = 0.75)+
   geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit-1.96*pred.pi.ssn.se.fit), linetype = "solid",
             alpha = 0.5, size = 0.75)+
-  labs(y="Mean Short Stamen Number - Sequenced Only" , x= "Mean Pi", title = "")+
+  labs(y="Mean Short Stamen Number" , x= "Nucleotide Diversity", title = "")+ # - Sequenced Only
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(10))+
   scale_shape_manual(name = "Population",
                      labels = comp$label,
@@ -354,31 +354,31 @@ ggplot(comp)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_topo.png",
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp/SSNbyPi_topo.png",
        height = 7, width = 9, device = "png", dpi = 500)
 
-ggplot(comp)+
-  geom_point(data=comp, aes(y=Seq_PopFlwrMean, x=Mean.pi, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
-  geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit), linetype = "solid",
-            alpha = 0.7, size = 1.25)+
-  geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit+1.96*pred.pi.ssn.se.fit), linetype = "solid",
-            alpha = 0.3, size = 0.75)+
-  geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit-1.96*pred.pi.ssn.se.fit), linetype = "solid",
-            alpha = 0.5, size = 0.75)+
-  labs(y="Mean Short Stamen Number - Sequenced Only" , x= "Mean Pi", title = "")+
-  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(10))+
-  scale_shape_manual(name = "Population",
-                     labels = comp$label,
-                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_terrain.png",
-       height = 7, width = 9, device = "png", dpi = 500)
+#ggplot(comp)+
+#  geom_point(data=comp, aes(y=Seq_PopFlwrMean, x=Mean.pi, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
+#  geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit), linetype = "solid",
+#            alpha = 0.7, size = 1.25)+
+#  geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit+1.96*pred.pi.ssn.se.fit), linetype = "solid",
+#            alpha = 0.3, size = 0.75)+
+#  geom_line(dat = forplot2, aes(x = Mean.pi, y = pred.pi.ssn.fit-1.96*pred.pi.ssn.se.fit), linetype = "solid",
+#            alpha = 0.5, size = 0.75)+
+#  labs(y="Mean Short Stamen Number - Sequenced Only" , x= "Mean Pi", title = "")+
+#  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(10))+
+#  scale_shape_manual(name = "Population",
+#                     labels = comp$label,
+#                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+#  theme_classic()+
+#  theme(
+#    legend.title = element_text(color = "black", size = 20),
+#    legend.text = element_text(color = "black", size = 20),
+#    axis.title = element_text(color = "black", size = 20),
+#    axis.text = element_text(color = "black", size = 20),
+#    legend.spacing.y = unit(0.03, "cm"))
+#ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_terrain.png",
+#       height = 7, width = 9, device = "png", dpi = 500)
 
 #old plot
 ggplot(comp)+
@@ -611,7 +611,7 @@ require(ggpubr)
 #### now rbind them all back together
 ###dat.clean <- rbind(Chr1, Chr2, Chr3, Chr4, Chr5)
 ###save(dat.clean, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/pi_noCent_50k_04082022.ROBJ")
-load("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/pi_noCent_50k_04082022.ROBJ")
+load("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/pi_noCent_50k_04082022.ROBJ")
 
 ######## Calculate population global pi for centromere trimmed data ########
 # use dyplyr to group by population
@@ -659,8 +659,12 @@ ggplot(sum.comparison)+
 
 #comp.c <- merge(sums.c, Elev_Means, by.x = "pop", by.y = "Population")
 
+# check how similar the pi values are
+cor(x=comp$Mean.pi, y=comp.c$Mean.pi.c)
+# 0.9981597
+
 #save(comp.c, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_NoCent_04082022.ROBJ")
-load("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_NoCent_04082022.ROBJ")
+load("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_NoCent_04082022.ROBJ")
 
 ##### Correlations with no centromere values and variables #####
 # these are correlations, not regressions like I am doing above.
@@ -723,7 +727,7 @@ ggplot(comp.c)+
             alpha = 0.3, linewidth = 0.75)+
   geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit-1.96*pred.pi.el.se.fit), linetype = "solid",
             alpha = 0.5, linewidth = 0.75)+
-  labs(x= "Elevation (m)", y= "Mean Pi", title = "")+
+  labs(x= "Elevation (m)", y= "Nucleotide Diversity", title = "")+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   scale_shape_manual(name = "Population",
                      labels = comp.c$label,
@@ -735,32 +739,32 @@ ggplot(comp.c)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_NoCent_topo.png",
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_NoCent_topo.png",
        height = 7, width = 9, device = "png", dpi = 500)
 # can also give plot name (useful if making multipanel plots in r) and give dimensions in pixels
 
-ggplot(comp.c)+
-  geom_point(data=comp.c, aes(x=Elev_m, y=Mean.pi.c, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
-  geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit), linetype = "solid",
-            alpha = 0.7, linewidth = 1.25)+
-  geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit+1.96*pred.pi.el.se.fit), linetype = "solid",
-            alpha = 0.3, linewidth = 0.75)+
-  geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit-1.96*pred.pi.el.se.fit), linetype = "solid",
-            alpha = 0.5, linewidth = 0.75)+
-  labs(x= "Elevation (m)", y= "Mean Pi", title = "")+
-  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(10))+
-  scale_shape_manual(name = "Population",
-                     labels = comp.c$label,
-                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_NoCent_terrain.png", 
-       height = 7, width = 9,device = "png", dpi = 500)
+#ggplot(comp.c)+
+#  geom_point(data=comp.c, aes(x=Elev_m, y=Mean.pi.c, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+#  geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit), linetype = "solid",
+#            alpha = 0.7, linewidth = 1.25)+
+#  geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit+1.96*pred.pi.el.se.fit), linetype = "solid",
+#            alpha = 0.3, linewidth = 0.75)+
+#  geom_line(dat = forplot3, aes(x = Elev_m, y = pred.pi.el.fit-1.96*pred.pi.el.se.fit), linetype = "solid",
+#            alpha = 0.5, linewidth = 0.75)+
+#  labs(x= "Elevation (m)", y= "Mean Pi", title = "")+
+#  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(10))+
+#  scale_shape_manual(name = "Population",
+#                     labels = comp.c$label,
+#                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+#  theme_classic()+
+#  theme(
+#    legend.title = element_text(color = "black", size = 20),
+#    legend.text = element_text(color = "black", size = 20),
+#    axis.title = element_text(color = "black", size = 20),
+#    axis.text = element_text(color = "black", size = 20),
+#    legend.spacing.y = unit(0.03, "cm"))
+#ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_NoCent_terrain.png", 
+#       height = 7, width = 9,device = "png", dpi = 500)
 # old plot
 ggplot(comp.c)+
   geom_point(data=comp.c, aes(x=Elev_m, y=Mean.pi.c, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
@@ -795,7 +799,7 @@ ggplot(comp.c)+
             alpha = 0.3, size = 0.75)+
   geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit-1.96*pred.pi.ssn.se.fit), linetype = "solid",
             alpha = 0.5, size = 0.75)+
-  labs(y="Mean Short Stamen Number - Sequenced Only" , x= "Mean Nucleotide Diversity", title = "")+
+  labs(y="Mean Short Stamen Number" , x= "Nucleotide Diversity", title = "")+ # - Sequenced Only
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(10))+
   scale_shape_manual(name = "Population",
                      labels = comp.c$label,
@@ -807,31 +811,31 @@ ggplot(comp.c)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_NoCent_topo.png",
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_NoCent_topo.png",
        height = 7, width = 9, device = "png", dpi = 500)
 
-ggplot(comp.c)+
-  geom_point(data=comp.c, aes(y=Seq_PopFlwrMean, x=Mean.pi.c, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
-  geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit), linetype = "solid",
-            alpha = 0.7, size = 1.25)+
-  geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit+1.96*pred.pi.ssn.se.fit), linetype = "solid",
-            alpha = 0.3, size = 0.75)+
-  geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit-1.96*pred.pi.ssn.se.fit), linetype = "solid",
-            alpha = 0.5, size = 0.75)+
-  labs(y="Mean Short Stamen Number - Sequenced Only" , x= "Mean Nucleotide Diversity", title = "")+
-  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(10))+
-  scale_shape_manual(name = "Population",
-                     labels = comp.c$label,
-                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_NoCent_terrain.png",
-       height = 7, width = 9, device = "png", dpi = 500)
+#ggplot(comp.c)+
+#  geom_point(data=comp.c, aes(y=Seq_PopFlwrMean, x=Mean.pi.c, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
+#  geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit), linetype = "solid",
+#            alpha = 0.7, size = 1.25)+
+#  geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit+1.96*pred.pi.ssn.se.fit), linetype = "solid",
+#            alpha = 0.3, size = 0.75)+
+#  geom_line(dat = forplot3, aes(x = Mean.pi.c, y = pred.pi.ssn.fit-1.96*pred.pi.ssn.se.fit), linetype = "solid",
+#            alpha = 0.5, size = 0.75)+
+#  labs(y="Mean Short Stamen Number - Sequenced Only" , x= "Mean Nucleotide Diversity", title = "")+
+#  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(10))+
+#  scale_shape_manual(name = "Population",
+#                     labels = comp.c$label,
+#                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+#  theme_classic()+
+#  theme(
+#    legend.title = element_text(color = "black", size = 20),
+#    legend.text = element_text(color = "black", size = 20),
+#    axis.title = element_text(color = "black", size = 20),
+#    axis.text = element_text(color = "black", size = 20),
+#    legend.spacing.y = unit(0.03, "cm"))
+#ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_NoCent_terrain.png",
+#       height = 7, width = 9, device = "png", dpi = 500)
 
 
 # old plot
@@ -951,7 +955,7 @@ identical(residuals(m.ssn.elev.c), residuals(m.ssn.elev))
 #summary(lm(Seq_PopFlwrMean ~ Elev_m, data = comp.c))
 
 plot(residuals(m.ssn.elev.c))
-# kinda seems like two chunks?
+# kinda seems like two chunks? like two arcs?
 
 # now need to use the residuals in a plot
 
@@ -1017,30 +1021,30 @@ ggplot(comp.c)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNElevQuadResid_NoCent_topo.png",
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNElevQuadResid_NoCent_topo.png",
        height = 7, width = 9, device = "png", dpi = 500)
-ggplot(comp.c)+
-  geom_point(data=comp.c, aes(x=Mean.pi.c, y=Elev_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
-  geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit), linetype = "solid",
-            alpha = 0.7, linewidth = 1.25)+
-  geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit+1.96*pred.m.resid.pi.se.fit), linetype = "solid",
-            alpha = 0.3, linewidth = 0.75)+
-  geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit-1.96*pred.m.resid.pi.se.fit), linetype = "solid",
-            alpha = 0.5, linewidth = 0.75)+
-  labs(x= "Mean Pi", y= "Residuals of SSN ~ Elevation + Elevation^2", title = "")+
-  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(16))+
-  scale_shape_manual(name = "Population",
-                     labels = comp.c$label,
-                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNElevQuadResid_NoCent_terrain.png",
-       height = 7, width = 9, device = "png", dpi = 500)
+#ggplot(comp.c)+
+#  geom_point(data=comp.c, aes(x=Mean.pi.c, y=Elev_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+#  geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit), linetype = "solid",
+#            alpha = 0.7, linewidth = 1.25)+
+#  geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit+1.96*pred.m.resid.pi.se.fit), linetype = "solid",
+#            alpha = 0.3, linewidth = 0.75)+
+#  geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit-1.96*pred.m.resid.pi.se.fit), linetype = "solid",
+#            alpha = 0.5, linewidth = 0.75)+
+#  labs(x= "Mean Pi", y= "Residuals of SSN ~ Elevation + Elevation^2", title = "")+
+#  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(16))+
+#  scale_shape_manual(name = "Population",
+#                     labels = comp.c$label,
+#                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+#  theme_classic()+
+#  theme(
+#    legend.title = element_text(color = "black", size = 20),
+#    legend.text = element_text(color = "black", size = 20),
+#    axis.title = element_text(color = "black", size = 20),
+#    axis.text = element_text(color = "black", size = 20),
+#    legend.spacing.y = unit(0.03, "cm"))
+#ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNElevQuadResid_NoCent_terrain.png",
+#       height = 7, width = 9, device = "png", dpi = 500)
 
 ggplot(comp.c)+
   geom_point(data=comp.c, aes(x=Mean.pi.c, y=Elev_residuals, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
@@ -1075,7 +1079,7 @@ ggplot(comp.c)+
             alpha = 0.3, linewidth = 0.75)+
   geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit-1.96*pred.m.resid.elev.se.fit), linetype = "solid",
             alpha = 0.5, linewidth = 0.75)+
-  labs(y= "Residuals of SSN ~ Mean.pi", x= "Elevation (m)", title = "line from resid ~ elev + elev2")+
+  labs(y= "Residuals of SSN ~ Nucleotide Diversity", x= "Elevation (m)")+ #title = "line from resid ~ elev + elev2"
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   scale_shape_manual(name = "Population",
                      labels = comp.c$label,
@@ -1087,31 +1091,31 @@ ggplot(comp.c)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNPiResid_NoCent_topo.png",
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNPiResid_NoCent_topo.png",
        height = 7, width = 9, device = "png", dpi = 500)
 
-ggplot(comp.c)+
-  geom_point(data=comp.c, aes(x=Elev_m, y=Pi_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
-  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit), linetype = "solid",
-            alpha = 0.7, linewidth = 1.25)+
-  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit+1.96*pred.m.resid.elev.se.fit), linetype = "solid",
-            alpha = 0.3, linewidth = 0.75)+
-  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit-1.96*pred.m.resid.elev.se.fit), linetype = "solid",
-            alpha = 0.5, linewidth = 0.75)+
-  labs(y= "Residuals of SSN ~ Mean.pi", x= "Elevation (m)", title = "line from resid ~ elev + elev2")+
-  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(16))+
-  scale_shape_manual(name = "Population",
-                     labels = comp.c$label,
-                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNPiResid_NoCent_terrain.png",
-       height = 7, width = 9, device = "png", dpi = 500)
+#ggplot(comp.c)+
+#  geom_point(data=comp.c, aes(x=Elev_m, y=Pi_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+#  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit), linetype = "solid",
+#            alpha = 0.7, linewidth = 1.25)+
+#  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit+1.96*pred.m.resid.elev.se.fit), linetype = "solid",
+#            alpha = 0.3, linewidth = 0.75)+
+#  geom_line(dat = forplot4, aes(x = Elev_m, y = pred.m.resid.elev.fit-1.96*pred.m.resid.elev.se.fit), linetype = "solid",
+#            alpha = 0.5, linewidth = 0.75)+
+#  labs(y= "Residuals of SSN ~ Mean.pi", x= "Elevation (m)", title = "line from resid ~ elev + elev2")+
+#  scale_fill_gradientn(name = "Elevation", colours = terrain.colors(16))+
+#  scale_shape_manual(name = "Population",
+#                     labels = comp.c$label,
+#                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+#  theme_classic()+
+#  theme(
+#    legend.title = element_text(color = "black", size = 20),
+#    legend.text = element_text(color = "black", size = 20),
+#    axis.title = element_text(color = "black", size = 20),
+#    axis.text = element_text(color = "black", size = 20),
+#    legend.spacing.y = unit(0.03, "cm"))
+#ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNPiResid_NoCent_terrain.png",
+#       height = 7, width = 9, device = "png", dpi = 500)
 
 ggplot(comp.c)+
   geom_point(data=comp.c, aes(x=Elev_m, y=Pi_residuals, shape = as.factor(pop), col= as.factor(pop)), size = 5, stroke = 1.75)+
