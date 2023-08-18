@@ -367,7 +367,7 @@ row.labs <- paste0(elev.nam, " - ", elev[order(elev)], "m")
 
 
 pheatmap(elev_mat, cluster_rows = FALSE, cluster_cols = FALSE, color = colorRampPalette(brewer.pal(n = 9, name =
-  "YlOrRd"))(100), border_color = NA, labels_row = row.labs, fontsize_row = 15, fontsize_col = 15, filename = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/fst_heatmap_elevation_Dec2022_10k.png",height = 9, width = 9)
+  "YlOrRd"))(100), border_color = NA, labels_row = row.labs, fontsize_row = 15, fontsize_col = 15, filename = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp/fst_heatmap_elevation_Dec2022_10k.png",height = 9, width = 9)
 
 # cool! This went way easier than I thought it would. I should try and find a resource that uses diveRsity so I make sure I have something to cite and there isn't general backlash against this method...
 
@@ -435,7 +435,7 @@ Repeat for the no centromere file
 Note: code seems to be out of order here but I did the Fst calculation without the centromeres, and then visualized it so this code is reading in the no centromere results. I might need to search around on the HPCC to find that code.
 ```{r fst_heatmap2, eval = TRUE}
 # clear everything
-rm(l-st= ls())
+rm(list= ls())
 
 ##### visualizing fst matrices
 library(RColorBrewer)
@@ -506,7 +506,7 @@ elev_mat <- as.matrix(elev_mat[elev.nam , elev.nam])
 row.labs <- paste0(elev.nam, " - ", elev[order(elev)], "m")
 
 pheatmap(elev_mat, cluster_rows = FALSE, cluster_cols = FALSE, color = colorRampPalette(brewer.pal(n = 9, name =
-  "YlOrRd"))(100), border_color = NA, labels_row = row.labs, fontsize_row = 15, fontsize_col = 15, filename = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/fst_heatmap_NoCent_elevation_Dec2022_10k.png",height = 9, width = 9)
+  "YlOrRd"))(100), border_color = NA, labels_row = row.labs, fontsize_row = 15, fontsize_col = 15, filename = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp/fst_heatmap_NoCent_elevation_Dec2022_10k.png",height = 9, width = 9)
 
 
 ##### Now with when Fst was calculated with population identifiers #####

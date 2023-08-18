@@ -7,7 +7,9 @@ dat <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - S
 head(dat)
 tail(dat)
 
-######### Calculate Population global pi #######
+########## with Centromeres ##########
+#most of this just goes in the supplement.
+###### Calculate Population global pi ######
 ##### use dyplyr to group by population
 #### make a facto
 ###dat$pop <- as.factor(dat$pop)
@@ -30,7 +32,7 @@ sums$Mean.pi <- sums$Sum.count.diff/sums$Sum.count.comp
 load("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_allsite_04082022.ROBJ")
 
 
-##### Correlation/regressions between Variables #######
+###### Correlation/regressions between Variables ######
 ### Pi and Elevation ###
 plot(Mean.pi ~ Elev_m, data = comp)
 cor.test(comp$Mean.pi, comp$Elev_m, method = "pearson")
@@ -84,7 +86,7 @@ summary(m.pi.ssn)
 cor.test(comp$Full_PopFlwrMean, comp$Seq_PopFlwrMean, method = "pearson")
 # r = 0.985 p < 0.001
 
-##### simulate data to draw lines on the plots where elevation is the predictor #######
+###### simulate data to draw lines on the plots where elevation is the predictor ######
 new_elev <- seq(55,1750, length = 2000)
 newdata <- data.frame(Elev_m = new_elev, Elev_m2 = new_elev**2)
 newdata2 <- data.frame(Mean.pi = seq(0.001,.0051, length = 2000))
@@ -100,7 +102,7 @@ forplot2 <- data.frame('newd1' = newdata$Elev_m,
                        'pred.pi.el' = m.pi.elev.pred,
                        'pred.pi.ssn' = m.pi.ssn.pred)
 
-##### fancy plot. #######
+###### fancy plot. ######
 ### pi by elevation
 comp <- comp[order(comp$Elev_m),]
 comp$pop <- as.factor(comp$pop)
@@ -425,7 +427,7 @@ ggplot(comp)+
     legend.spacing.y = unit(0.03, "cm"))
 ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/MeanComparison_02022022.png", height = 7, width = 9)
 
-####### Population windowed pi #######
+###### Population windowed pi ######
 #the purpose of this is to find regions of elevated pi (kinda a selection test but I removed the centromere instead of doing any stats)
 # this is informing which region of the centromere to exclude, though I didn't actually do the excluding until later.
 # the pi values I calculated previously in this code DO NOT exclude the centromere region. Should they? Depends on what I show below.
@@ -471,7 +473,7 @@ ggsave("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalys
 
 # there are definitely still peaks in pi at the centromeres.
 
-##### for Kieran #####
+###### for Kieran ######
 Coc_pi <- varName[[6]]
 
 for (i in 1:16){
@@ -533,7 +535,7 @@ ggplot(pi[pi$pop == 'COC', ], aes(x=psCum, y= avg_pi)) +
 # thoughts: do I need to exclude the centromere region and calculate pi and run all the analyses again? 
 # I think that makes sense in case the centromere region is shifting the global pi calculation.
 
-########## Remove Centromere ##########
+########## Without Centromeres ##########
 require(dplyr)
 require(ggplot2)
 require(ggpubr)
@@ -613,7 +615,7 @@ require(ggpubr)
 ###save(dat.clean, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/pi_noCent_50k_04082022.ROBJ")
 load("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/pi_noCent_50k_04082022.ROBJ")
 
-######## Calculate population global pi for centromere trimmed data ########
+###### Calculate population global pi for centromere trimmed data ######
 # use dyplyr to group by population
 ## to calculate aggregated value
 ## (window 1 count_diffs + window 2 count_diffs) / (window 1 comparisons + window 2 comparisons)
@@ -666,7 +668,7 @@ cor(x=comp$Mean.pi, y=comp.c$Mean.pi.c)
 #save(comp.c, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_NoCent_04082022.ROBJ")
 load("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/PopGlobalPi_NoCent_04082022.ROBJ")
 
-##### Correlations with no centromere values and variables #####
+###### Correlations with no centromere values and variables ######
 # these are correlations, not regressions like I am doing above.
 # on 8/7/2023 I am adding in the new regressions (or some are already here.)
 
@@ -700,6 +702,7 @@ summary(m2.pi.ssn)
 
 newdata3 <- data.frame(Elev_m = seq(55,1750, length = 2000))
 newdata4 <- data.frame(Mean.pi.c = seq(0.0001,.004, length = 2000))
+
 ### Now use predict to get the predictions
 m2.pi.elev.pred = predict(m2.pi.elev, newdata = newdata3, se.fit = TRUE)
 m2.pi.ssn.pred = predict(m2.pi.ssn, newdata = newdata4, se.fit = TRUE)
@@ -708,7 +711,7 @@ forplot3 <- data.frame('newd3' = newdata3,
                        'pred.pi.el' = m2.pi.elev.pred,
                        'pred.pi.ssn' = m2.pi.ssn.pred)
 
-##### fancy plots. #####
+###### fancy plots. ######
 ## pi
 comp.c <- comp.c[order(comp.c$Elev_m),]
 comp.c$pop <- as.factor(comp.c$pop)
@@ -865,7 +868,7 @@ ggplot(comp.c)+
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/SSNBYPi_NoCent_50k_pixy_04082022.png", height = 7, width = 9)
 
 # windowed to check that it looks like I am expecting it to. The values are lower here if I look at the y axis scale but the trends remain the same.
-##### Population windowed pi #####
+###### Population windowed pi ######
 pi <- dat.clean
 
 pops <- c("ALE","ARU","BAR","BIS","BOS","COC","HOR","MUR","PAL","PAN","PIN","POB","RAB","SAL",
@@ -911,7 +914,7 @@ ggsave("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalys
 # would want to use same spacing as the unremoved centromere if I am actually comparing the two though.
 
 
-######## more complex model! #######
+###### more complex model! ######
 # this is done with the no cent file pi values.
 comp.c$Elev_m2 <- (comp.c$Elev_m)^2
 m.ssn.elev.pi <- lm(Seq_PopFlwrMean ~ Elev_m + Elev_m2 + Mean.pi.c, dat = comp.c)
@@ -1009,7 +1012,7 @@ ggplot(comp.c)+
             alpha = 0.3, linewidth = 0.75)+
   geom_line(dat = forplot4, aes(x = Mean.pi.c, y = pred.m.resid.pi.fit-1.96*pred.m.resid.pi.se.fit), linetype = "solid",
             alpha = 0.5, linewidth = 0.75)+
-  labs(x= "Mean Pi", y= "Residuals of SSN ~ Elevation + Elevation^2", title = "")+
+  labs(x= "Nucleotide Diversity", y= "Residuals of SSN ~ Elevation + Elevation^2", title = "")+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   scale_shape_manual(name = "Population",
                      labels = comp.c$label,
@@ -1019,7 +1022,7 @@ ggplot(comp.c)+
     legend.title = element_text(color = "black", size = 20),
     legend.text = element_text(color = "black", size = 20),
     axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 19.5),
     legend.spacing.y = unit(0.03, "cm"))
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNElevQuadResid_NoCent_topo.png",
        height = 7, width = 9, device = "png", dpi = 500)
@@ -1150,3 +1153,23 @@ AIC(m.ssn.elev.pi)
 # this one is a better fit than the interaction model
 AIC(m2.ssn.elev.pi)
 # 8.528473
+
+########## Figure Legend ##########
+ggplot(comp.c)+
+  geom_point(data=comp.c, aes(x=rep(1, times = 16), y=rev(c(1:16)), shape = as.factor(pop), fill= Elev_m), col = "black", size = 6, stroke = 1.75, show.legend = FALSE)+
+  geom_text(aes(x=rep(1, times = 16), y=rev(c(1:16)), label = comp.c$label), size = 20/.pt, hjust = -0.25)+
+  labs(x= "just one", y= "rank value", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
+  scale_shape_manual(name = "Population",
+                     labels = comp.c$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    axis.text.x=element_blank(), #remove x axis labels
+    axis.ticks.x=element_blank(), #remove x axis ticks
+    axis.text.y=element_blank(),  #remove y axis labels
+    axis.ticks.y=element_blank(),  #remove y axis ticks
+    axis.title = element_blank()
+    )
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/Legend.png",
+       height = 7, width = 9, device = "png", dpi = 500)
