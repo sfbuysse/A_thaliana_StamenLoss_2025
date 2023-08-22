@@ -2107,6 +2107,8 @@ I am going to calculate this with plink to be consistent with the PCA and the GW
 ```{bash}
 module load PLINK/1.9b_4.1-x86_64
 plink -bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest --het --out /mnt/scratch/buysseso/PCA/indv_plink_het
+
+plink -bfile /mnt/scratch/buysseso/GVCF/allChrs_SNPs_NoCent --het --out /mnt/scratch/buysseso/PCA/indv_plink_het_noCent
 ```
 
 This output is a .het file. I think the easiest thing to do is then to read the .het file into R as a delimiter file and calculate heterozygosty by subtraction and then I can map the inbreeding F statistic and expected and observed heterozygosity per individual.
@@ -2121,12 +2123,17 @@ module load GDAL/3.0.4-Python-3.8.2
 R
 ```
 
+NOTE! het_dat is saved at the end of this code, so you can start by reading that in.
 ```{r}
 library(ggplot2)
 
 # annoyingly, this file had a different number of spaces between columns, so I manually made it into a tab separated file.
 dat <- read.delim("/mnt/scratch/buysseso/PCA/indv_plink_het.het", header = TRUE, sep = "\t")
 dat<- dat[1:61,]
+
+# manually made this one comma separated becuase it was easier.
+dat_nc <- read.delim("/mnt/scratch/buysseso/PCA/indv_plink_het_noCent.het", header = TRUE, sep = ",")
+str(dat_nc)
 
 # observed heterozygotes = num sites (n.nm) - observed homozygosity (O.HOM.)
 colnames(dat)
@@ -2136,19 +2143,62 @@ dat$freq_het <- dat$O.HET/dat$N.NM.
 plot(dat$freq_het)
 # one outlier in heterozygosity, and a few low outliers but really just the high outlier I think
 
-dat$pop <- toupper(substr(dat$FID, 1, 3))
+colnames(dat_nc)
+dat_nc$O.HET <- dat_nc$N.NM. - dat_nc$O.HOM.
+dat_nc$freq_het <- dat_nc$O.HET/dat_nc$N.NM.
+
+plot(dat$freq_het)
+# outlier remains, I think that is a good sign honestly.
+
+# let's make both dataframes ordered the same way
+dat <- dat[order(dat$IID), ]
+dat_nc <- dat_nc[order(dat_nc$IID), ]
+identical(dat$IID, dat_nc$IID)
+# true, yay
+
+# let's put the columns of most interest together
+het_dat <- data.frame(dat$IID, dat$freq_het, dat_nc$IID, dat_nc$freq_het)
+
+cor(het_dat$dat.freq_het, het_dat$dat_nc.freq_het, method = "pearson")
+# 0.3313797 well that seems low.
+plot(dat$freq_het, dat_nc$freq_het)
+# hmm, well they are different outliers which is not a good sign I don't think...
+# besides the outliers they seem decently highly correlated?
+
+# can I do a correlation without the outliers?
+tmp <-  het_dat[!(het_dat$dat.IID %in% c("MUR16", "Ale-4")), ]
+cor(tmp$dat.freq_het, tmp$dat_nc.freq_het, method = "pearson")
+#  0.9792351
+# yeah that is more what I was expecting. not entirely sure how to deal with this. IS Ale-4 different on the pCA?
+# ALE-4 does have a point away from the rest on both PC1/PC2 and PC3/PC4. huh, well that is the new outlier to investigate I guess.
+
+# hmm wait but Mur16 is actually kinda similar in the two datasets.
+tmp2 <-  het_dat[!(het_dat$dat.IID %in% c("Ale-4")), ]
+cor(tmp2$dat.freq_het, tmp2$dat_nc.freq_het, method = "pearson")
+# 0.980302 still good, so the change is just in Ale-4
+plot(tmp2$dat.freq_het, tmp2$dat_nc.freq_het)
+
+# let's make a pop column
+het_dat$pop <- toupper(substr(het_dat$dat.IID, 1, 3))
 
 # histogram
-ggplot(data = dat)+
-  geom_histogram(aes(O.HET), bins = 15)+
+ggplot(data = het_dat)+
+  geom_histogram(aes(dat.freq_het), bins = 15)+
   theme_classic()
 
-# plot not working
-dat$x_val <- c(1:62)
+ggplot(data = het_dat)+
+  geom_histogram(aes(dat_nc.freq_het), bins = 35)+
+  theme_classic()
+ggplot(data = tmp)+
+  geom_histogram(aes(dat_nc.freq_het), bins = 15)+
+  theme_classic()
+ggplot(data = tmp2)+
+  geom_histogram(aes(dat_nc.freq_het), bins = 15)+
+  theme_classic()
 
 # change population names to match  metadata
-dat[dat$pop == "ARB", "pop"] <- "ARU"
-dat[dat$pop == "SPE", "pop"] <- "SAL"
+het_dat[het_dat$pop == "ARB", "pop"] <- "ARU"
+het_dat[het_dat$pop == "SPE", "pop"] <- "SAL"
 
 # load the meta data
 metadata <- read.csv("/mnt/gs21/scratch/buysseso/PCA/SpanishMasterDataset_PopMetaData.csv", header = TRUE)
@@ -2157,34 +2207,73 @@ metadata <- read.csv("/mnt/gs21/scratch/buysseso/PCA/SpanishMasterDataset_PopMet
 metadata <- metadata[1:16,c("Population", "PopCode", "Elev_m", "Lat_DecDeg", "Lon_DecDeg")]
 
 # merge 
-dat$elev <- metadata$Elev_m[match(dat$pop, metadata$PopCode)]
+het_dat$elev <- metadata$Elev_m[match(het_dat$pop, metadata$PopCode)]
 # then match with row names to add metadata column
 # do this for lat and long now too
-dat$lat <- metadata$Lat_DecDeg[match(dat$pop, metadata$PopCode)]
-dat$lon <- metadata$Lon_DecDeg[match(dat$pop, metadata$PopCode)]
+het_dat$lat <- metadata$Lat_DecDeg[match(het_dat$pop, metadata$PopCode)]
+het_dat$lon <- metadata$Lon_DecDeg[match(het_dat$pop, metadata$PopCode)]
 
 # order by elevation
-dat <- dat[order(dat$elev),]
-dat$label <- paste0(dat$pop, " - ", dat$elev, "m")
-dat$pop <- factor(dat$pop, levels = unique(dat$pop[order(dat$elev)]))
+het_dat <- het_dat[order(het_dat$elev),]
+het_dat$label <- paste0(het_dat$pop, " - ", het_dat$elev, "m")
+het_dat$pop <- factor(het_dat$pop, levels = unique(het_dat$pop[order(het_dat$elev)]))
+# need to force an x value for the plot to work
+het_dat$x_val <- c(1:61)
 
-ggplot(data = dat)+
-  geom_point(aes(x = x_val, y = freq_het, col = pop, shape = pop), size = 3, stroke = 1.25, show.legend = TRUE)+
-  #geom_text(aes(x = x_val, y = freq_het, label = FID), nudge_x = 0, nudge_y = 0.005, col = "black")+
+### with centromere ###
+# new plot
+ggplot(data = het_dat)+
+  geom_point(aes(x = x_val, y = dat.freq_het, fill = elev, shape = pop), col = "black", size = 3, stroke = 1.25, show.legend = FALSE)+
+  geom_text(aes(x = x_val, y = dat.freq_het, label = dat.IID), nudge_x = 0, nudge_y = -0.005, col = "black")+
   labs(x = " ", y = "Observed Heterozygosity (frequency)")+
-  scale_shape_manual(name = "Population", labels = unique(dat$label), values = rep(c(0, 1, 2, 5), times = 4))+
-  scale_color_manual(name = "Population", labels = unique(dat$label), values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+  scale_shape_manual(name = "Population", labels = unique(het_dat$label), values = rep(c(22, 21, 24, 23, 25), times = 4))+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm")) # was 0.001
+ggsave(filename = "plink_het_PlinkFiltering_labels.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9, dpi = 500)
+# old plot
+ggplot(data = het_dat)+
+  geom_point(aes(x = x_val, y = dat.freq_het, col = pop, shape = pop), size = 3, stroke = 1.25, show.legend = TRUE)+
+  geom_text(aes(x = x_val, y = dat.freq_het, label = dat.IID), nudge_x = 0, nudge_y = -0.005, col = "black")+
+  labs(x = " ", y = "Observed Heterozygosity (frequency)")+
+  scale_shape_manual(name = "Population", labels = unique(het_dat$label), values = rep(c(0, 1, 2, 5), times = 4))+
+  scale_color_manual(name = "Population", labels = unique(het_dat$label), values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
   theme_classic()+
   theme(
     legend.title = element_text(color = "black", size = 12),
     legend.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.0001, "cm"))
 #ggsave(filename = "plink_het_PlinkFiltering_labels.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
-ggsave(filename = "plink_het_PlinkFiltering.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+#ggsave(filename = "plink_het_PlinkFiltering.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+
+### without centromere ###
+# new plot
+ggplot(data = het_dat)+
+  geom_point(aes(x = x_val, y = dat_nc.freq_het, fill = elev, shape = pop), col = "black", size = 3, stroke = 1.25, show.legend = FALSE)+
+  geom_text(aes(x = x_val, y = dat_nc.freq_het, label = dat_nc.IID), nudge_x = 0, nudge_y = -0.02, col = "black")+
+  labs(x = " ", y = "Observed Heterozygosity (frequency)")+
+  scale_shape_manual(name = "Population", labels = unique(het_dat$label), values = rep(c(22, 21, 24, 23, 25), times = 4))+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm")) # was 0.001
+ggsave(filename = "plink_het_PlinkFiltering_noCent_labels.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9, dpi = 500)
 
 
 # save dat with the updates as an R object!
-save(dat, file = "/mnt/scratch/buysseso/PCA/heterozygosity_df.ROBJ")
+#save(dat, file = "/mnt/scratch/buysseso/PCA/heterozygosity_df.ROBJ")
+
+# save het_dat as an R object
+save(het_dat, file = "/mnt/scratch/buysseso/PCA/heterozygosity_comparison.ROBJ")
 ```
 
 # Archive below this point
