@@ -1056,6 +1056,28 @@ ggplot(data = eigenVectors_noCent) +
     legend.spacing.y = unit(0.03, "cm"))
 ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill_tmp.png", path = "/mnt/scratch/buysseso/PCA", height = 4, width = 4, device = "png", dpi = 500)
 
+## topo fill PC1/PC2 labelled points to check out ALe-4 and compare to heterozygosity
+ggplot(data = eigenVectors_noCent) +
+  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
+  #geom_text(data = eigenVectors_noCent[eigenVectors_noCent$SeqID == "Ale-4", ], aes(x = PC1, y = PC2, label = SeqID), nudge_x = 0, nudge_y = +0.02, col = "black")+
+  geom_text(aes(x = PC1, y = PC2, label = SeqID), nudge_x = 0, nudge_y = +0.02, col = "black")+
+  geom_hline(yintercept = 0, linetype="dotted") +
+  geom_vline(xintercept = 0, linetype="dotted") +
+  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No Centromere",
+      x = paste0("Principal component 1 (",pve_noCent[1,1]," %)"),
+      y = paste0("Principal component 2 (",pve_noCent[2,1]," %)")) +
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_noCent$label),
+                     values = rep(c(22, 21, 24, 23, 25), times = 4))+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill_labels.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
 
 ## topo color PC3/PC4
 ggplot(data = eigenVectors_noCent) +
@@ -1080,6 +1102,7 @@ ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_topo_color.png", path = "/
 ## topo fill PC3/PC4
 ggplot(data = eigenVectors_noCent) +
   geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
+  #geom_text(aes(x = PC3, y = PC4, label = SeqID), nudge_x = 0, nudge_y = +0.02, col = "black")+
   geom_hline(yintercept = 0, linetype="dotted") +
   geom_vline(xintercept = 0, linetype="dotted") +
   labs(title = "PCA of Pyrenees Pops: Plink Filtering, No Centromere",
