@@ -65,6 +65,29 @@ summary(m.ssn.elev)
 #  stat_smooth(aes(x = Elev_m, y = Full_PopFlwrMean), method = "lm", formula = y ~ x, colour = "red") +
 #  stat_smooth(aes(x = Elev_m, y = Full_PopFlwrMean), method = "lm", formula = y ~ poly(x, 2), colour = "blue")
 
+
+## model noodling to try type 3 to see if it matches Jeff's
+#options(contrasts=c("contr.sum","contr.poly"))
+#tmp <- lm(Full_PopFlwrMean ~ Elev_m + Elev_m2, data = comp)
+#summary(tmp)
+#
+#tmp2 <- lm(Full_PopFlwrMean ~ Elev_m2 + Elev_m, data = comp)
+#summary(tmp2)
+#
+#m.ssn.elev_3 <- lm(Full_PopFlwrMean ~ Elev_m + Elev_m2, data = comp, contrasts=list(Elev_m=contr.sum, Elev_m2=contr.sum))
+#anova(m.ssn.elev) # this would be the default so it would be type I
+#library(car)
+#Anova(m.ssn.elev, type = 3)
+comp$Elev_c2 <- (comp$Elev_m - mean(comp$Elev_m))^2
+tmp4 <- lm(Full_PopFlwrMean ~ Elev_m + Elev_c2, data = comp)
+summary(tmp4)
+# yes, matches on 8/24/2023. need to determine if I want to center (and understand why) to decide which model to use
+
+# try just a linear fit to see if it matches Jeff's model
+m.ssn.elev.linear <- lm(Full_PopFlwrMean ~ Elev_m, data = comp)
+summary(m.ssn.elev.linear)
+# yep, this matches on 8/24/2023
+
 ### Pi and SSN ###
 ## here only use the sequenced lines because that is what pi was calculated from
 plot(Seq_PopFlwrMean ~ Mean.pi, data = comp)
