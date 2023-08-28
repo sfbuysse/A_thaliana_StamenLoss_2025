@@ -170,7 +170,7 @@ plink -bfile /mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest --threads 4 
 # output: 57 individuals remaining
 # 1858706 variants remain -> same as with BOS so that seems to be a good sign I think?
 
-# no cent
+# no cent and no BOS
 plink -bfile /mnt/scratch/buysseso/GVCF/allChrs_SNPs_NoCent --threads 4 --remove /mnt/scratch/buysseso/PCA/Bos_indv.txt --make-bed --out /mnt/scratch/buysseso/GVCF/allChrs_noCent_noBOS
 
 # Run PCA
@@ -524,37 +524,45 @@ Rscript filename.R
 ```
 
 Do everything for the plink filtered with and without linkage pruning.
+
+manually moved important data file to my local machine to make higher quality figures.
+
 ```{r}
 library(dplyr)
 library(ggplot2)
 
-# read in data
+# read in data from local machine this time!
 # plink filter, all
-eigenValues_test <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_plinkFilterTest.eigenval", sep = " ", header = F)
-eigenVectors_test <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_plinkFilterTest.eigenvec", sep = " ", header = F)
+eigenValues_test <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/data/plinkPCA_plinkFilterTest.eigenval", sep = " ", header = F)
+eigenVectors_test <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/data/plinkPCA_plinkFilterTest.eigenvec", sep = " ", header = F)
 # each row is a genotype, each column is a PC.
 colnames(eigenVectors_test) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_test)-2)))
 
 # plink filter, LD pruned
-eigenValues_pruned <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_pruned.eigenval", sep = " ", header = F)
-eigenVectors_pruned <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_pruned.eigenvec", sep = " ", header = F)
+eigenValues_pruned <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/data/plinkPCA_pruned.eigenval", sep = " ", header = F)
+eigenVectors_pruned <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/data/plinkPCA_pruned.eigenvec", sep = " ", header = F)
 colnames(eigenVectors_pruned) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_pruned)-2)))
 
 # plink filter, no BOS
-eigenValues_noBOS <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_noBOS.eigenval", sep = " ", header = F)
-eigenVectors_noBOS <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_noBOS.eigenvec", sep = " ", header = F)
+eigenValues_noBOS <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/data/plinkPCA_noBOS.eigenval", sep = " ", header = F)
+eigenVectors_noBOS <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/data/plinkPCA_noBOS.eigenvec", sep = " ", header = F)
 # each row is a genotype, each column is a PC.
 colnames(eigenVectors_noBOS) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_noBOS)-2)))
 
 # plink filter, no centromere
-eigenValues_noCent <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_noCent.eigenval", sep = " ", header = F)
-eigenVectors_noCent <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_noCent.eigenvec", sep = " ", header = F)
+eigenValues_noCent <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/data/plinkPCA_noCent.eigenval", sep = " ", header = F)
+
+#eigenValues_noCent2 <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/data/plinkPCA_NoCent_2.eigenval", sep = " ", header = F) #this onen also exists?
+#identical(eigenValues_noCent, eigenValues_noCent2)
+# oh these are very different... going with the one that was originally referenced... found it ! the commented out one does not have plink filtering.
+
+eigenVectors_noCent <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/data/plinkPCA_noCent.eigenvec", sep = " ", header = F)
 # each row is a genotype, each column is a PC.
 colnames(eigenVectors_noCent) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_noCent)-2)))
 
 # plink filter, no centromere, no BOS
-eigenValues_noCent_noBOS <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_nocent_noBOS.eigenval", sep = " ", header = F)
-eigenVectors_noCent_noBOS <- read.delim("/mnt/scratch/buysseso/PCA/plinkPCA_nocent_noBOS.eigenvec", sep = " ", header = F)
+eigenValues_noCent_noBOS <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/data/plinkPCA_nocent_noBOS.eigenval", sep = " ", header = F)
+eigenVectors_noCent_noBOS <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/data/plinkPCA_nocent_noBOS.eigenvec", sep = " ", header = F)
 # each row is a genotype, each column is a PC.
 colnames(eigenVectors_noCent_noBOS) <- c("Line", "SeqID", paste0("PC", 1:(ncol(eigenVectors_noCent_noBOS)-2)))
 
@@ -601,7 +609,7 @@ eigenVectors_noCent_noBOS[eigenVectors_noCent_noBOS$Pop == "ARB", "Pop"] <- "ARU
 eigenVectors_noCent_noBOS[eigenVectors_noCent_noBOS$Pop == "SPE", "Pop"] <- "SAL"
 
 # load the meta data
-metadata <- read.csv("/mnt/gs21/scratch/buysseso/PCA/SpanishMasterDataset_PopMetaData.csv", header = TRUE)
+metadata <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/SpanishMasterDataset_PopMetaData.csv", header = TRUE)
 
 # clean up a little
 metadata <- metadata[1:16,c("Population", "PopCode", "Elev_m", "Lat_DecDeg", "Lon_DecDeg")]
@@ -662,6 +670,7 @@ eigenVectors_noCent_noBOS <- eigenVectors_noCent_noBOS[order(eigenVectors_noCent
 eigenVectors_noCent_noBOS$label <- paste0(eigenVectors_noCent_noBOS$Pop, " - ", eigenVectors_noCent_noBOS$elev, "m")
 eigenVectors_noCent_noBOS$Pop <- factor(eigenVectors_noCent_noBOS$Pop, levels = unique(eigenVectors_noCent_noBOS$Pop[order(eigenVectors_noCent_noBOS$elev)]))
 ```
+
 ### Make Plots ###
 Plink filtering, includes centromere
 ```{r}
@@ -694,7 +703,7 @@ ggplot(data = eigenVectors_test) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_topo_color.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_topo_color.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 ## topo fill PC1/PC2
 ggplot(data = eigenVectors_test) +
   geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
@@ -714,7 +723,7 @@ ggplot(data = eigenVectors_test) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_topo_fill.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 
 ## topo color PC3/PC4
 ggplot(data = eigenVectors_test) +
@@ -735,7 +744,7 @@ ggplot(data = eigenVectors_test) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_topo_color.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_topo_color.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 ## topo fill PC3/PC4
 ggplot(data = eigenVectors_test) +
   geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
@@ -755,7 +764,7 @@ ggplot(data = eigenVectors_test) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_topo_fill.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 
   
 #old plots
@@ -878,7 +887,7 @@ ggplot(data = eigenVectors_noBOS) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noBOS_topo_color.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noBOS_topo_color.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 ## topo fill PC1/PC2
 ggplot(data = eigenVectors_noBOS) +
   geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
@@ -898,7 +907,7 @@ ggplot(data = eigenVectors_noBOS) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noBOS_topo_fill.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 
 ## topo color PC3/PC4
 ggplot(data = eigenVectors_noBOS) +
@@ -939,7 +948,7 @@ ggplot(data = eigenVectors_noBOS) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noBOS_topo_fill.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 
 # old plots
 ggplot(data = eigenVectors_noBOS) +
@@ -1033,7 +1042,7 @@ ggplot(data = eigenVectors_noCent) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 
 ## topo fill PC1/PC2 testing with size
 ggplot(data = eigenVectors_noCent) +
@@ -1054,7 +1063,7 @@ ggplot(data = eigenVectors_noCent) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill_tmp.png", path = "/mnt/scratch/buysseso/PCA", height = 4, width = 4, device = "png", dpi = 500)
+#ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill_tmp.png", path = "/mnt/scratch/buysseso/PCA", height = 4, width = 4, device = "png", dpi = 500)
 
 ## topo fill PC1/PC2 labelled points to check out ALe-4 and compare to heterozygosity
 ggplot(data = eigenVectors_noCent) +
@@ -1077,7 +1086,7 @@ ggplot(data = eigenVectors_noCent) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill_labels.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill_labels.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 
 ## topo color PC3/PC4
 ggplot(data = eigenVectors_noCent) +
@@ -1119,7 +1128,7 @@ ggplot(data = eigenVectors_noCent) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_topo_fill.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 
 # old plots
 ggplot(data = eigenVectors_noCent) +
@@ -1205,7 +1214,7 @@ ggplot(data = eigenVectors_noCent_noBOS) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_noBOS_topo_fill.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 
 ## topo color PC3/PC4
 ggplot(data = eigenVectors_noCent_noBOS) +
@@ -1246,7 +1255,7 @@ ggplot(data = eigenVectors_noCent_noBOS) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_noBOS_topo_fill.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 ```
 manually moved graphs to local computer either with filezilla or just within mobaxterm.
 
@@ -2243,6 +2252,9 @@ het_dat$pop <- factor(het_dat$pop, levels = unique(het_dat$pop[order(het_dat$ele
 # need to force an x value for the plot to work
 het_dat$x_val <- c(1:61)
 
+# if you skipped stuff, load in the data here
+load("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/data/heterozygosity_comparison.ROBJ")
+
 ### with centromere ###
 # new plot
 ggplot(data = het_dat)+
@@ -2258,7 +2270,7 @@ ggplot(data = het_dat)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm")) # was 0.001
-ggsave(filename = "plink_het_PlinkFiltering_labels.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9, dpi = 500)
+ggsave(filename = "plink_het_PlinkFiltering_labels.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 9, dpi = 500)
 # old plot
 ggplot(data = het_dat)+
   geom_point(aes(x = x_val, y = dat.freq_het, col = pop, shape = pop), size = 3, stroke = 1.25, show.legend = TRUE)+
@@ -2289,7 +2301,7 @@ ggplot(data = het_dat)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm")) # was 0.001
-ggsave(filename = "plink_het_PlinkFiltering_noCent_labels.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9, dpi = 500)
+ggsave(filename = "plink_het_PlinkFiltering_noCent_labels.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 9, dpi = 500)
 
 
 # save dat with the updates as an R object!
