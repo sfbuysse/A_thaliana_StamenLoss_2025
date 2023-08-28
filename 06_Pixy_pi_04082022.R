@@ -83,6 +83,20 @@ tmp4 <- lm(Full_PopFlwrMean ~ Elev_m + Elev_c2, data = comp)
 summary(tmp4)
 # yes, matches on 8/24/2023. need to determine if I want to center (and understand why) to decide which model to use
 
+# see what output poly() gives me
+# hmm. well this looks totally different in terms of estimates and the linear term p values
+# the quadratic and full model p values have not changed; neither have the r squareds
+# if I set raw = TRUE, then everything matches my original model (squared term not centered)
+tmp5 <- lm(Full_PopFlwrMean ~ poly(Elev_m, 2, raw = TRUE), data = comp)
+summary(tmp5)
+
+# if I think about the decreasing colinearity argument, how correlated are my two terms? I would expect highly correlated...
+cor(comp$Elev_m, comp$Elev_m2, method = "pearson")
+# 0.9752654
+cor(comp$Elev_m, comp$Elev_c2, method = "pearson")
+# 0.4363318
+# well it does decrease that correlation.
+
 # try just a linear fit to see if it matches Jeff's model
 m.ssn.elev.linear <- lm(Full_PopFlwrMean ~ Elev_m, data = comp)
 summary(m.ssn.elev.linear)
