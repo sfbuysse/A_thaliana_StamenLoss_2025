@@ -181,7 +181,8 @@ bamtools coverage -in ALE10_TCCTGAGC-CTCTCTAT_bwa.bam -out ALE10_bwa_coverage.tx
 # error. data not sorted correctly. ok! not this one.
 
 bamtools coverage -in sorted_ALE10_TCCTGAGC-CTCTCTAT_bwa.bam -out ALE10_sorted_coverage.txt
-# this is taking like 30 minutes to run for a single sample. 
+# this is taking like an hour to run for a single sample... should it take that long?
+# at the end I still just had a bunch of "data not sorted correctly" errors. so that isn't great.
 
 bamtools coverage -in ALE10_TCCTGAGC-CTCTCTAT_rg.bam -out ALE10_rg_coverage.txt
 bamtools coverage -in ALE10_TCCTGAGC-CTCTCTAT_rg_rmdup.bam -out ALE10_rmdup_coverage.txt
