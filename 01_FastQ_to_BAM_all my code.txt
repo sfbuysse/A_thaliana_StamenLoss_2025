@@ -179,13 +179,24 @@ module purge
 module load GCC/11.3.0 BamTools/2.5.2
 bamtools coverage -in ALE10_TCCTGAGC-CTCTCTAT_bwa.bam -out ALE10_bwa_coverage.txt
 # error. data not sorted correctly. ok! not this one.
+# output file still seems to have stuff for chr4, cht5, chloroplast, and mitochondria
+# has row as Chr	location	0/1
 
 bamtools coverage -in sorted_ALE10_TCCTGAGC-CTCTCTAT_bwa.bam -out ALE10_sorted_coverage.txt
 # this is taking like an hour to run for a single sample... should it take that long?
 # at the end I still just had a bunch of "data not sorted correctly" errors. so that isn't great.
+# output file has values starting at the beginning of chromosome 1 and going through mitochondria
+# values in third column are much higher than in the first file I tried
 
 bamtools coverage -in ALE10_TCCTGAGC-CTCTCTAT_rg.bam -out ALE10_rg_coverage.txt
-bamtools coverage -in ALE10_TCCTGAGC-CTCTCTAT_rg_rmdup.bam -out ALE10_rmdup_coverage.txt
+# started 9/27/2023 at 1:51pm
+# done at 2:54 and still just got a bunch of data not sorted correctly messages.
+# output that I did get seems to be identical to the sorted file from what I briefly looked at for the top and bottom of the file
+# so maybe these actually worked?? not sure what the sorted incorrectly messages were then...
+
+bamtools coverage -in ALE10_TCCTGAGC-CTCTCTAT_rg_rmdup.bam -out ALE10_rmdup_coverage.txt &
+# started 9/27/23 at 3:00ish
+# might have accidentally ruined this by loading different modules that made bamtools inactive at 3:36
 
 ALE10_TCCTGAGC-CTCTCTAT_bwa.bam
 ALE10_TCCTGAGC-CTCTCTAT_rg.bam
