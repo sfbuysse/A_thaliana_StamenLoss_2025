@@ -605,3 +605,17 @@ scontrol show job $SLURM_JOB_ID
 # run time was 19 hours
 
 # done with this code on 3/31/2022
+
+##### Step 16: Get some genotyping quality information from this vcf #####
+module purge
+module load GCC/6.4.0-2.28  OpenMPI/2.1.2  VCFtools/0.1.15-Perl-5.26.1
+
+# individuals stats
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz --missing-indv --out allsites_PostBQSR
+# submitted this code at 3:45pm on 9/27/2023
+# not finished by 4pm, and I am taking off for the day.
+# expect output with suffix .imiss
+
+# SNP stats
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz --site-quality --missing-site --out allsites_PostBQSR
+# expect output files with suffix .lmiss and .lqual

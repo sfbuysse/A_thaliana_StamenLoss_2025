@@ -197,10 +197,6 @@ bamtools coverage -in ALE10_TCCTGAGC-CTCTCTAT_rg.bam -out ALE10_rg_coverage.txt
 bamtools coverage -in ALE10_TCCTGAGC-CTCTCTAT_rg_rmdup.bam -out ALE10_rmdup_coverage.txt &
 # started 9/27/23 at 3:00ish
 # might have accidentally ruined this by loading different modules that made bamtools inactive at 3:36
+# the tail is in the chloroplast, so maybe it actually got far enough! seems to have things for Chr1-Chr5 and part of chloroplast which should be good enough
 
-ALE10_TCCTGAGC-CTCTCTAT_bwa.bam
-ALE10_TCCTGAGC-CTCTCTAT_rg.bam
-ALE10_TCCTGAGC-CTCTCTAT_rg_rmdup.bam - indexed
-sorted_ALE10_TCCTGAGC-CTCTCTAT_bwa.bam - indexed
-
-
+# if I am going to submit a larger job, maybe I should try to exclude the chloroplast and mitochondria if that is presumable taking up like half the running time
