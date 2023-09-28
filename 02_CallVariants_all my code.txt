@@ -622,6 +622,7 @@ vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz --missing-indv --out allsites_Po
 # expect output with suffix .imiss
 #The N_MISS column is the number of sites the individual does not have any data for. The F_MISS column is the frequency of missing data for that individual (N_MISS / TOTAL SITES)
 
+# for quality, I think I need a loop to pull out read depth from the header? need to do a bit more thining on that one.
 
 # SNP stats
 #expect output files with suffix .lmiss and .lqual
