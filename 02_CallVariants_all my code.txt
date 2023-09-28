@@ -614,8 +614,29 @@ module load GCC/6.4.0-2.28  OpenMPI/2.1.2  VCFtools/0.1.15-Perl-5.26.1
 vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz --missing-indv --out allsites_PostBQSR
 # submitted this code at 3:45pm on 9/27/2023
 # not finished by 4pm, and I am taking off for the day.
+# mobaxterm was closed when I got in the next day, seems like my computer restarted
+# resubmitted the code at 9:02am on 9/28/23
+#After filtering, kept 116855685 out of a possible 116855685 Sites
+#Run Time = 1271.00 seconds (~22 minutes)
+
 # expect output with suffix .imiss
+#The N_MISS column is the number of sites the individual does not have any data for. The F_MISS column is the frequency of missing data for that individual (N_MISS / TOTAL SITES)
+
 
 # SNP stats
-vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz --site-quality --missing-site --out allsites_PostBQSR
-# expect output files with suffix .lmiss and .lqual
+#expect output files with suffix .lmiss and .lqual
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz --missing-site --out allsites_PostBQSR
+# started 9/28/2023 at 1:27 pm
+# done at 2:02pm
+# After filtering, kept 116855685 out of a possible 116855685 Sites
+# Run Time = 2153.00 seconds
+# still has N_miss and F_miss. also has n_genotype_filtered but these should all be 0 b/c all sites were kept I think?
+
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz --site-quality --out allsites_PostBQSR
+# started 9/28 at 2:02 pm
+#After filtering, kept 116855685 out of a possible 116855685 Sites
+#Run Time = 1058.00 seconds
+# output fils has chrom, position, quality. at the start of chrom 1, values already range from 5 to 1347... that is a lot.
+# I do want to note that this is the unfilitered file, and I should maybe repeat these vcftools code with the filtered file
+
+# but I thought vcf filtering was wrong, so maybe check if plink has a way to get these stats?
