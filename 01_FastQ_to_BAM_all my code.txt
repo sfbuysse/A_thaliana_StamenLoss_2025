@@ -207,6 +207,22 @@ bamtools coverage -in ALE10_TCCTGAGC-CTCTCTAT_rg_rmdup.bam -out ALE10_rmdup_cove
 # if I am going to submit a larger job, maybe I should try to exclude the chloroplast and mitochondria if that is presumable taking up like half the running time?
 
 # for first run of longer code, lets use the sorted files.
+
+#!/bin/bash
+#SBATCH --job-name=Coverage
+#SBATCH -e Coverage.err
+#SBATCH -o Coverage.out
+
+##Job Resources
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem-per-cpu=6gb
+#SBATCH -t 99:59:00
+#SBATCH --mail-user=buysseso@msu.edu
+#SBATCH --mail-type=FAIL,BEGIN,END
+
+##### code lines #####
 module purge
 module load GCC/11.3.0 BamTools/2.5.2
 
@@ -214,3 +230,9 @@ cd /mnt/scratch/buysseso/BWA_bam
 
 while IFS= read -r line; do
 bamtools coverage -in sorted_"$line"_bwa.bam -out "$line"_sorted_coverage.txt > "$line"_coverage_screen.txt; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID.txt
+
+scontrol show job $SLURM_JOB_ID
+
+# first test of just this loop gave me the initial output I was expecting but the coverage screen file is empty - not going to worry about it right now. transforming it into an sbatch job
+# Submitted batch job  22808742 - might be pending for a while because of how long I asked for.
+# code at /mnt/research/josephslab/Sophie/Athal_2/Coverage.sb
