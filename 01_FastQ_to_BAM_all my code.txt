@@ -228,11 +228,24 @@ module load GCC/11.3.0 BamTools/2.5.2
 
 cd /mnt/scratch/buysseso/BWA_bam
 
-while IFS= read -r line; do
-bamtools coverage -in sorted_"$line"_bwa.bam -out "$line"_sorted_coverage.txt > "$line"_coverage_screen.txt; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID.txt
+while IFS= read -r line; do bamtools coverage -in sorted_"$line"_bwa.bam -out "$line"_sorted_coverage.txt > "$line"_coverage_screen.txt; done < /mnt/research/josephslab/Sophie/Athal_2/SeqID.txt
 
 scontrol show job $SLURM_JOB_ID
 
 # first test of just this loop gave me the initial output I was expecting but the coverage screen file is empty - not going to worry about it right now. transforming it into an sbatch job
 # Submitted batch job  22808742 - might be pending for a while because of how long I asked for.
 # code at /mnt/research/josephslab/Sophie/Athal_2/Coverage.sb
+
+# failed after 90 seconds b/c couldn't find function. I think it is because of where I had an enter in the code.
+
+# tried again on 10/2/2023 - first ran in terminal and it ran and made it mostly through the first loop. I wonder if it is like one chromosome that is sorted wrong or something?
+
+# submitted as job 23026464
+
+
+# little ditty to check sorting - well that took way longer than I was expecting and 1.5 hours later nothing had printed yet... leaving to see if anything will happen overnight.
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load SAMtools
+cd /mnt/scratch/buysseso/BWA_bam
+while IFS= read -r line; do samtools stats sorted_"$line"_bwa.bam | grep "is sorted:" ; done

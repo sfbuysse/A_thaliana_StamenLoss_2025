@@ -297,6 +297,14 @@ Note: No phenotypes present.
 
 # This output file is not actually allsites, I think it is actually just SNPs, no? this is so dang confusing.
 
+# find missinginess in this file
+module purge
+module load PLINK/1.9b_4.1-x86_64
+cd /mnt/scratch/buysseso/GVCF
+
+plink --bfile allsites_filtered_plinkTest --missing --out missing_allsites_plink
+# this code happened in literally seconds.
+
 
 #### Step 3: Filter to exclude centromere region before calculating anything ####
 module purge
@@ -522,6 +530,14 @@ plink --bfile Chr1_SNPs_NoCent --bmerge Chr2_SNPs_NoCent --make-bed -out allChrs
 plink --merge-list PlinkChrFiles.txt --make-bed -out allChrs_SNPs_NoCent
 # 1,507,328 variants pass.
 # matches expectation. I should have 436213 + 217934 + 279018 + 214611 + 359553 = 1,507,328
+
+# find missinginess in this file
+module purge
+module load PLINK/1.9b_4.1-x86_64
+cd /mnt/scratch/buysseso/GVCF
+
+plink --bfile allChrs_SNPs_NoCent --missing --out missing_allChrs_NoCent_plink
+# this code happened in literally seconds.
 
 ## At the end of this code file, I have now created 3 dataset files:
 1. all.filtered.vcf.gz -> vcf file format. Includes variant and nonvariants sites. Include centromeres. To be used to calculate pi.
