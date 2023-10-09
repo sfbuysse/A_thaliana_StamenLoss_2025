@@ -241,6 +241,8 @@ scontrol show job $SLURM_JOB_ID
 # tried again on 10/2/2023 - first ran in terminal and it ran and made it mostly through the first loop. I wonder if it is like one chromosome that is sorted wrong or something?
 
 # submitted as job 23026464
+# finished in 1-18:16:20 - less than expected!
+# but also all the coverage_screen.txt files are emtpy, so don't need that part of the code. I deleted all of those files.
 
 
 # little ditty to check sorting - well that took way longer than I was expecting and 1.5 hours later nothing had printed yet... leaving to see if anything will happen overnight.
@@ -249,3 +251,6 @@ module load GCC/7.3.0-2.30  OpenMPI/3.1.1
 module load SAMtools
 cd /mnt/scratch/buysseso/BWA_bam
 while IFS= read -r line; do samtools stats sorted_"$line"_bwa.bam | grep "is sorted:" ; done
+
+# computer restarted overnight so nothing happened.
+# creating R code to work on getting statistics out of the coverage data I have. Using just an R script so I can hopefully run in on the HPCC and not have to move all the files.
