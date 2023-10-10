@@ -73,51 +73,69 @@
 # # 0.9956 so this is all basically the same so I just want to get rid of the chloroplast and mitochondria because I think that makes sense because they are then removed during the haplocaller step?
 # # based on this example, practically it should not matter... so actually let's just leave it in and make the calculating code a tiny bit easier for me.
 
+############## start here pm HPCC ###################
+## load in modules
+#module purge
+#module load  GCC/11.2.0  OpenMPI/4.1.1 R/4.2.2
+#R
+
+
 ## need a loop to do the calculations on each file and then make an output table at the end
 # okay so first I want to read in all the files that follow this pattern:
 files_all <- list.files(path = "/mnt/scratch/buysseso/BWA_bam/coverage", pattern = "*_sorted_coverage.txt", full.names = TRUE)
+# finds an extra ALE10 fine, but I don't think that is a big deal.
 
-############## start here ###################
 # need to figure out how I want to name all the files as I read them in. 
+# because I won't really be looking at the files, why not name them just the long string of things before _sorted_coverage?
+names <- substr(files_all, 40, 47)
 # then write my loop
 
-# make list of object names to use (doing this manually but could be automated with some substr code I bet)
-names_GS1 <- c("Phenology_1", "Plant_1", "Stratify_1", "Bolting_1", "PreVern_1", "Root_1")
 # run a loop to read in the files to the pre-determined names.
-for (i in c(1:length(names_GS1))){
-  assign(names_GS1[i], read_csv(files_GS1[i], show_col_types = FALSE))
+#for (i in c(1:length(names))){
+#  assign(names[i], read.delim(files_all[i]))
+#}
+# well this aborted my R studio sesison twice using an interactive HPCC session, so maybe don't do this.
+# even just reading in one file aborted the R studio interactive HPCC session with default memory (750MB) and requesting 5GB memory. Then just went to running
+# the session within MobaXterm and loading the R module
+
+# a final data frame I would want could look like:
+df <- data.frame("tot" = rep(NA, times = 63), "one" = rep(NA, times = 63), "per_1" = rep(NA, times = 63), "four" = rep(NA, times = 63), "per_4" = rep(NA, times = 63), "ten" = rep(NA, times = 63), "per_10" = rep(NA, times = 63), "avg_all" = rep(NA, times = 63), "med_all" = rep(NA, times = 63))
+rownames(df) <- names
+
+for (i in c(1:length(files_all))){
+  # track progress
+  print(names[i])
+  # read in the file
+  tmp_file <- read.delim(files_all[i], header = FALSE)
+  # and rename the columns on each one to be matching
+  colnames(tmp_file) <- c("Chr", "Pos", "Coverage")
+  
+  # do the 6 things with chloroplast and mitochondria
+  avg_all <- mean(tmp_file$Coverage)
+  med_all <- median(tmp_file$Coverage)
+  #how many rows?
+  tot <- nrow(tmp_file)
+  one <- nrow(tmp_file[tmp_file$Coverage >= 1, ])
+  four <- nrow(tmp_file[tmp_file$Coverage >= 4, ])
+  ten <- nrow(tmp_file[tmp_file$Coverage >= 10, ])
+  per_1 <- one / tot
+  per_4 <- four / tot
+  per_10 <- ten / tot
+  vals <- c(tot, one, per_1, four, per_4, ten, per_10, avg_all, med_all)
+  df[i, ] <- vals
+  
+  # remove file
+  rm(tmp_file)
+  # track progress
+  print("done")
 }
 
+# each one takes about 2 minutes, so I expect the full code to take about 2 hours on my local machine
+# it would probably be smart to submit this as a job so it actually finishes,
+# but I"m not feeling smart today and just started it locally at 3:27pm on 10/10/23
 
-PIN9 <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/FastQC/PIN9_CGAGGCTG-TAGATCGC_sorted_coverage.txt", header=FALSE)
-# and rename the columns on each one to be matching
-colnames(PIN9) <- c("Chr", "Pos", "Coverage")
-
-# now let's make an empty dataframe
-# a final data frame I would want could look like:
-df <- data.frame("tot" = NA, "one" = NA, "per_1" = NA, "four" = NA, "per_4" = NA, "ten" = NA, "per_10" = NA, "avg_all" = NA, "med_all" = NA)
-
-# do the 6 things with chloroplast and mitochondria
-avg_all <- mean(PIN9$Coverage)
-med_all <- median(PIN9$Coverage)
-#how many rows?
-tot <- nrow(PIN9)
-one <- nrow(PIN9[PIN9$Coverage >= 1, ])
-four <- nrow(PIN9[PIN9$Coverage >= 4, ])
-ten <- nrow(PIN9[PIN9$Coverage >= 10, ])
-
-# let's see the percentages
-# at least one
-per_1 <- one / tot
-#94.4
-
-# at least four
-per_4 <- four / tot
-# 89.2
-
-# at least ten
-per_10 <- ten / tot
-# 56.7
-
-# a final data frame I would want could look like:
-df <- data.frame(tot, one, four, ten, avg_all, med_all)
+# check out the output
+head(df)
+tail(df)
+# I want to save this dataframe! let's do a .csv instead of an R file
+write.csv(df, "/mnt/scratch/buysseso/BWA_bam/coverage/coverage_summary.csv", row.names = TRUE, quote = FALSE)
