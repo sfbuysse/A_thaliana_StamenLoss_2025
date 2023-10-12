@@ -654,36 +654,44 @@ gatk VariantsToTable    \
 -F CHROM -F POS -F ID -GF GQ -GF DP        \
 -O SampleInfo_all.unfiltered.GQ.DP
 
-# Then use R to look at it - I have reference code but can't really look at it until I know what my output looks like this time I think...
+# completed in 78.5 minutes
 
-module load R
+# Then use R to look at it - I have reference code but can't really look at it until I know what my output looks like this time I think...
+# each line of code take a long time b/c the data frame is HUGE
+module purge
+module load GCC/9.3.0  OpenMPI/4.0.3 R/4.0.3
 R
 
-dat <- read.delim('/mnt/scratch/buysseso/GVCF/SampleInfo_all.unfiltered.GQ.DP'
+dat <- read.delim('/mnt/scratch/buysseso/GVCF/SampleInfo_all.unfiltered.GQ.DP')
 dim(dat)
 head(dat)
-head(all.dat[ ,1:6])
-rownames(all.GQ.DP) <- paste0(all.GQ.DP$CHROM, ":", all.GQ.DP$POS)
-rownames(all.GQ.DP) <- paste0(all.GQ.DP$CHROM, ":", all.GQ.DP$POS)
-head(all.GQ.DP[ ,1:6])
-tmp <- as.data.frame(t(all.GQ.DP))
-# so now I don't actually need the first three rows b/c the two that matter are incorporated into the column name
-tmp <- tmp[4:length(rownames(tmp)), ]
+head(dat[ ,1:6])
+rownames(dat) <- paste0(dat$CHROM, ":", dat$POS)
+head(dat[ ,1:6])
+# so now I don't actually need the first three cols b/c the two that matter are incorporated into the column name
+dat2 <- dat[ , 4:ncol(dat)]
+# and rotate. wait why do I need to rotate? to use rowmeans? if cols, I could use use means of that column...
+dat3 <- as.data.frame(t(dat2))
 # add population row
-tmp$Population <- toupper(substr(rownames(tmp), start = 1, stop = 3))
-tmp$Population[tmp$Population == 'ARB'] <- "ARU"
-tmp$Population[tmp$Population == 'SPE'] <- "SAL"
-ncol(tmp)
+dat3$Population <- toupper(substr(rownames(dat3), start = 1, stop = 3))
+dat3$Population[dat3$Population == 'ARB'] <- "ARU"
+dat3$Population[dat3$Population == 'SPE'] <- "SAL"
+ncol(dat3)
+#83212226
 # change all to numeric besides last row
 factor_numeric <- function(x){
   as.numeric(as.character(x))
 }
-nrow(tmp)
-tmp2 <- apply(tmp[,-nrow(tmp)], 2, factor_numeric)
-# add back rownames
-rownames(tmp2) <- rownames(tmp)
+nrow(dat3)
+# 124
+dat4 <- apply(dat3[,-nrow(dat3)], 2, factor_numeric)
+# this line was taking forever so letting it sit overnight on 10/12/2023/ Will probably need to start over tomorrow
 
-Means <- data.frame(ID = rownames(tmp2), Mean = rowMeans(tmp2, na.rm = TRUE), count_na = rowSums(is.na(tmp2)), count_geno = rowSums(!(is.na(tmp2))), Population = tmp$Population)
+
+# add back rownames
+rownames(dat4) <- rownames(dat3)
+
+Means <- data.frame(ID = rownames(dat4), Mean = rowMeans(dat4, na.rm = TRUE), count_na = rowSums(is.na(dat4)), count_geno = rowSums(!(is.na(dat4))), Population = dat4$Population)
 save(Means, file = '/mnt/research/josephslab/Sophie/Athal_2/GVCF/GQ.DP.Means_unfiltered.ROBJ')
 
 # I think this is all I will want, and then I'll copy some info over and check if mean dp matches mean read depth I got from coverage.
