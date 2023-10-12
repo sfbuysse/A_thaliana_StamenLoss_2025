@@ -133,6 +133,7 @@ for (i in c(1:length(files_all))){
 # each one takes about 2 minutes, so I expect the full code to take about 2 hours on my local machine
 # it would probably be smart to submit this as a job so it actually finishes,
 # but I"m not feeling smart today and just started it locally at 3:27pm on 10/10/23
+# done at 5:30
 
 # check out the output
 head(df)
