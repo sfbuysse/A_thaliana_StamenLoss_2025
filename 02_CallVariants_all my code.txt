@@ -641,3 +641,50 @@ vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz --site-quality --out allsites_Po
 # I do want to note that this is the unfilitered file, and I should maybe repeat these vcftools code with the filtered file
 
 # but I thought vcf filtering was wrong, so maybe check if plink has a way to get these stats?
+# I think it does but I did not pursue it.
+
+# Genotype Quality
+# also got depth 
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+
+gatk VariantsToTable    \
+-V allsites_PostBQSR.raw.g.vcf.gz \
+-F CHROM -F POS -F ID -GF GQ -GF DP        \
+-O SampleInfo_all.unfiltered.GQ.DP
+
+# Then use R to look at it - I have reference code but can't really look at it until I know what my output looks like this time I think...
+
+module load R
+R
+
+dat <- read.delim('/mnt/scratch/buysseso/GVCF/SampleInfo_all.unfiltered.GQ.DP'
+dim(dat)
+head(dat)
+head(all.dat[ ,1:6])
+rownames(all.GQ.DP) <- paste0(all.GQ.DP$CHROM, ":", all.GQ.DP$POS)
+rownames(all.GQ.DP) <- paste0(all.GQ.DP$CHROM, ":", all.GQ.DP$POS)
+head(all.GQ.DP[ ,1:6])
+tmp <- as.data.frame(t(all.GQ.DP))
+# so now I don't actually need the first three rows b/c the two that matter are incorporated into the column name
+tmp <- tmp[4:length(rownames(tmp)), ]
+# add population row
+tmp$Population <- toupper(substr(rownames(tmp), start = 1, stop = 3))
+tmp$Population[tmp$Population == 'ARB'] <- "ARU"
+tmp$Population[tmp$Population == 'SPE'] <- "SAL"
+ncol(tmp)
+# change all to numeric besides last row
+factor_numeric <- function(x){
+  as.numeric(as.character(x))
+}
+nrow(tmp)
+tmp2 <- apply(tmp[,-nrow(tmp)], 2, factor_numeric)
+# add back rownames
+rownames(tmp2) <- rownames(tmp)
+
+Means <- data.frame(ID = rownames(tmp2), Mean = rowMeans(tmp2, na.rm = TRUE), count_na = rowSums(is.na(tmp2)), count_geno = rowSums(!(is.na(tmp2))), Population = tmp$Population)
+save(Means, file = '/mnt/research/josephslab/Sophie/Athal_2/GVCF/GQ.DP.Means_unfiltered.ROBJ')
+
+# I think this is all I will want, and then I'll copy some info over and check if mean dp matches mean read depth I got from coverage.
+
