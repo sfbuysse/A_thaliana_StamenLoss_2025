@@ -699,4 +699,31 @@ Means <- data.frame(ID = rownames(dat3), Mean = rowMeans(dat3, na.rm = TRUE), co
 save(Means, file = '/mnt/scratch/buysseso/GVCF/GQ.DP.Means_unfiltered.ROBJ')
 
 # I think this is all I will want, and then I'll copy some info over and check if mean dp matches mean read depth I got from coverage.
+# r script reads: GVCF/QualityRowMeans.R
+load('/mnt/scratch/buysseso/GVCF/GQ.DP_unfiltered_dat3.ROBJ')
+nrow(dat3)
+Means <- data.frame(ID = rownames(dat3), Mean = rowMeans(dat3, na.rm = TRUE), count_na = rowSums(is.na(dat3)), Population = dat3$Population)
+save(Means, file = '/mnt/scratch/buysseso/GVCF/GQ.DP.Means_unfiltered.ROBJ')
+print("End")
+
+# sbatch file reads:
+#!/bin/bash --login
+########## SBATCH Lines for Resource Request ##########
+#SBATCH --time=9:59:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem-per-cpu=80G
+#SBATCH --job-name QualityMeans
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=buysseso@msu.edu
+
+module purge
+module load GCC/9.3.0  OpenMPI/4.0.3 R/4.0.3
+Rscript /mnt/scratch/buysseso/GVCF/QualityRowMeans.R > /mnt/scratch/buysseso/GVCF/QualityRowMeans.Rout
+
+scontrol show job $SLURM_JOB_ID
+
+# submitted job 23862001 on 10/17 at 5:24pm
+
 
