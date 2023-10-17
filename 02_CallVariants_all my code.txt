@@ -690,10 +690,12 @@ dat4 <- apply(dat3[,-nrow(dat3)], 2, factor_numeric)
 # has killed at this code line twice. so will need to fix that.
 # 10/13 goal is just to get through dat3 saved as ROBJ so I don't need to redo the initial stuff every time.
 
-# add back rownames
-rownames(dat4) <- rownames(dat3)
+## picking this up on 10/17
+load('/mnt/scratch/buysseso/GVCF/GQ.DP_unfiltered_dat3.ROBJ')
+# so in this file (dat3), each row in an individual and each SNP is a column. looks like the class of each column is an integer which is good
+# this killed again. so I'm going to make a super short sbatch script to run this because I think I just need more time for it to complete
 
-Means <- data.frame(ID = rownames(dat4), Mean = rowMeans(dat4, na.rm = TRUE), count_na = rowSums(is.na(dat4)), count_geno = rowSums(!(is.na(dat4))), Population = dat4$Population)
+Means <- data.frame(ID = rownames(dat3), Mean = rowMeans(dat3, na.rm = TRUE), count_na = rowSums(is.na(dat3)), Population = dat3$Population)
 save(Means, file = '/mnt/scratch/buysseso/GVCF/GQ.DP.Means_unfiltered.ROBJ')
 
 # I think this is all I will want, and then I'll copy some info over and check if mean dp matches mean read depth I got from coverage.
