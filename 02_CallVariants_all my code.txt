@@ -713,7 +713,7 @@ print("End")
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
-#SBATCH --mem-per-cpu=80G
+#SBATCH --mem-per-cpu=180G
 #SBATCH --job-name QualityMeans
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=buysseso@msu.edu
@@ -725,5 +725,7 @@ Rscript /mnt/scratch/buysseso/GVCF/QualityRowMeans.R > /mnt/scratch/buysseso/GVC
 scontrol show job $SLURM_JOB_ID
 
 # submitted job 23862001 on 10/17 at 5:24pm
+# failed after 1hr36min due to out of memory (gave it 80G)! oh boy. Updated to 180GB and tried again
+# submitted again as job 23882918 on 10/18 at 8:46am
 
 
