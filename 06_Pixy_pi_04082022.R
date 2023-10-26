@@ -82,6 +82,8 @@ comp$Elev_c2 <- (comp$Elev_m - mean(comp$Elev_m))^2
 tmp4 <- lm(Full_PopFlwrMean ~ Elev_m + Elev_c2, data = comp)
 summary(tmp4)
 # yes, matches on 8/24/2023. need to determine if I want to center (and understand why) to decide which model to use
+# i do want this model! so need to change everytime I see m.ssn.elev to tmp4
+# how can I simulate this??
 
 # see what output poly() gives me
 # hmm. well this looks totally different in terms of estimates and the linear term p values
@@ -125,11 +127,12 @@ cor.test(comp$Full_PopFlwrMean, comp$Seq_PopFlwrMean, method = "pearson")
 
 ###### simulate data to draw lines on the plots where elevation is the predictor ######
 new_elev <- seq(55,1750, length = 2000)
-newdata <- data.frame(Elev_m = new_elev, Elev_m2 = new_elev**2)
+center_val <- mean(comp$Elev_m)
+newdata <- data.frame(Elev_m = new_elev, Elev_m2 = (new_elev**2), Elev_c2 = ((new_elev - center_val)**2))
 newdata2 <- data.frame(Mean.pi = seq(0.001,.0051, length = 2000))
 ### Now use predict to get the predictions
 ### can't use se.fit = T for mixed effects model? 
-m.ssn.elev.pred = predict(m.ssn.elev, newdata = newdata, se.fit = TRUE)
+m.ssn.elev.pred = predict(tmp4, newdata = newdata, se.fit = TRUE)
 m.pi.elev.pred = predict(m.pi.elev, newdata = newdata, se.fit = TRUE)
 m.pi.ssn.pred = predict(m.pi.ssn, newdata = newdata2, se.fit = TRUE)
 
@@ -180,9 +183,13 @@ ggplot(comp)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp/PiPerPop_topo.png",
-       height = 7, width = 9, device = "png", dpi = 500)
+
+# legend.position = "none", to remove the legend - keeping for now b/c of how I have adjusted the sizes of stuff
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_topo.png",
+       height = 7, width = 9, device = "png", dpi = 700)
 # can also give plot name (useful if making multipanel plots in r) and give dimensions in pixels
+# size in powerpoint making figures is 4x4 but that looks weird given some sizes I have right now if I save it like that. so maybe do all that
+# moving around once I know my final figures?
 
 #ggplot(comp)+
 #  geom_point(data=comp, aes(x=Elev_m, y=Mean.pi, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
@@ -255,7 +262,7 @@ ggplot(comp)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20))
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/MeanSSNByElev_topo.png",
-       height = 7, width = 9, device = "png", dpi = 500)
+       height = 7, width = 9, device = "png", dpi = 700)
 
 #ggplot(comp)+
 #  geom_point(data=comp, aes(x=Elev_m, y=Full_PopFlwrMean, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
@@ -665,13 +672,13 @@ sum.comparison <- data.frame('all' = sums$Mean.pi, 'noCent' = sums.c$Mean.pi.c, 
 cor.test(sum.comparison$all, sum.comparison$noCent, method = "pearson")
 # r = 0.9981 p < 0.001
 
-ggplot()+
-  geom_point()+
+ggplot(data = sum.comparison)+
+  geom_point(aes(x = all, y = noCent))+
   geom_abline(aes(intercept = 0, slope = 1))+
   theme_classic()
 
 # this section is a little out of order b/c I need the labels from comp2.c dataframe
-### something went wrong here and the coloring doesn't seem to  match up
+### something went wrong here and the coloring doesn't seem to  match up. probably because of the factor ordering I do for comp that I didn't do here.
 ggplot(sum.comparison)+
   geom_point(aes(x = all, y = noCent, shape = as.factor(pop.c), col= as.factor(pop.c)), size = 4, stroke = 1.25)+
   geom_abline(intercept = 0, slope = 1)+
@@ -779,7 +786,7 @@ ggplot(comp.c)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_NoCent_topo.png",
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/supp/ManuscriptFigs/PiPerPop_NoCent_topo.png",
        height = 7, width = 9, device = "png", dpi = 500)
 # can also give plot name (useful if making multipanel plots in r) and give dimensions in pixels
 
@@ -851,7 +858,7 @@ ggplot(comp.c)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_NoCent_topo.png",
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp/SSNbyPi_NoCent_topo.png",
        height = 7, width = 9, device = "png", dpi = 500)
 
 #ggplot(comp.c)+
@@ -952,6 +959,127 @@ ggsave("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalys
 
 
 ###### more complex model! ######
+### with cent ###
+# this was done 10/26 with the cent included files and a centered quadratic model to reduce collinearity.
+m.ssn.elev.pi.good <- lm(Seq_PopFlwrMean ~ Elev_m + Elev_c2 + Mean.pi, dat = comp)
+summary(m.ssn.elev.pi.good)
+# results in model results excel sheet
+# linear elevation is the only significant one.
+
+# quick check that standardizing doesn't change p values:
+tmp.standard2 <- lm(Seq_PopFlwrMean ~ scale(Elev_m) + scale(Elev_c2) + scale(Mean.pi), dat = comp)
+summary(tmp.standard2)
+# only p value that changes is the intercept
+
+# need to do a sequenced lines by elevation model to get the residuals from it. 
+tmp4_seq <- lm(Seq_PopFlwrMean ~ Elev_m + Elev_c2, data = comp)
+plot(residuals(tmp4_seq))
+# decently random when not coloring by anything
+summary(tmp4_seq)
+
+comp$Elev_residuals <- residuals(tmp4_seq) # index order matches row name order.
+plot(comp$Elev_residuals, comp$Elev_m)
+# okay good, still pretty random I thin - wait why do I want this to be random?
+
+# now need to use the residuals in a plot - quick plot to start
+plot(comp$Mean.pi, comp$Elev_residuals)
+# there is maybe a positive relationship here?
+# residuals range from -0.6 to 0.3
+m.resid.pi2 <- lm(Elev_residuals ~ Mean.pi, dat = comp)
+summary(m.resid.pi2)
+# mean.pi estimate = 46.8278, p value = 0.397, r squared = 0.05168 so this is a terrible fit.
+
+# then I want the inverse. so the residuals of ssn ~ mean.pi regressed with elevation
+# making new model b/c need order to match comp row order and I think it will but why not just do it again
+tmp.resid2 <- residuals(lm(Seq_PopFlwrMean ~ Mean.pi, data = comp))
+tmp.resid2
+plot(tmp.resid2)
+# look pretty random
+comp$Pi_residuals <- tmp.resid2
+plot(comp$Elev_m, comp$Pi_residuals)
+# not great, but doesn't include the quadratic term. Here I kinda see two curves
+m.resid.elev2 <- lm(Pi_residuals ~ Elev_m + Elev_c2, dat = comp)
+summary(m.resid.elev2)
+# Elev_m estimate = 3.169e-04, p value = 0.0613,
+# Elev_m2 estimate = -4.543e-07, p value = 0.1955
+# r squared = 0.2559 so this is not a great fit but is much better than the other residual plot!
+
+
+# use newdata (elevations) and newdata2 (pi with cent) from earlier
+
+### Now use predict to get the predictions
+newdata5 <- cbind(newdata, newdata2, Elev_residuals = seq(-0.7,0.4, length = 2000), Pi_residuals = seq(-0.8, 0.5, length = 2000) )
+#m.ssn.elev.pi.pred = predict(m.ssn.elev.pi, newdata = newdata5, se.fit = TRUE)
+m.resid.pi2.pred = predict(m.resid.pi2, newdata = newdata5, se.fit = TRUE)
+m.resid.elev2.pred = predict(m.resid.elev2, newdata = newdata5, se.fit = TRUE)
+forplot5 <- data.frame('Elev_m' = newdata$Elev_m,
+                       'Elev_m2' = newdata$Elev_m2,
+                       'newd2' = newdata2,
+                       'newd_res_elev' = newdata5$Elev_residuals,
+                       'pred.m.resid.pi' = m.resid.pi2.pred,
+                       'newd_res_pi' = newdata5$Pi_residuals,
+                       'pred.m.resid.elev' = m.resid.elev2.pred)
+
+## and plot
+# might not need this code if running everything in a line, but I did it a different day so needed to order again
+comp <- comp[order(comp$Elev_m),]
+comp$pop <- as.factor(comp$pop)
+comp$pop <- factor(comp$pop, levels = comp$pop[order(comp$Elev_m)])
+str(comp$pop)
+### this looks like the right order
+### key is that you need to order the whole sheet AND reorder the factor. BOTH, not just one.
+comp$labels <- paste0(comp$pop, " - ", comp$Elev_m, "m")
+
+
+ggplot(comp)+
+  geom_point(data=comp, aes(x=Mean.pi, y=Elev_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot5, aes(x = Mean.pi, y = pred.m.resid.pi.fit), linetype = "solid",
+            alpha = 0.7, linewidth = 1.25)+
+  geom_line(dat = forplot5, aes(x = Mean.pi, y = pred.m.resid.pi.fit+1.96*pred.m.resid.pi.se.fit), linetype = "solid",
+            alpha = 0.3, linewidth = 0.75)+
+  geom_line(dat = forplot5, aes(x = Mean.pi, y = pred.m.resid.pi.fit-1.96*pred.m.resid.pi.se.fit), linetype = "solid",
+            alpha = 0.5, linewidth = 0.75)+
+  labs(x= "Nucleotide Diversity", y= "Elevation Residuals", title = "long y title is Residuals of Seq_SSN ~ Elevation + centered(Elevation)^2")+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
+  scale_shape_manual(name = "Population",
+                     labels = comp$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 19.5),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNElevQuadResid_topo.png",
+       height = 7, width = 9, device = "png", dpi = 500)
+
+# pi residuals
+ggplot(comp)+
+  geom_point(data=comp, aes(x=Elev_m, y=Pi_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+  geom_line(dat = forplot5, aes(x = Elev_m, y = pred.m.resid.elev.fit), linetype = "solid",
+            alpha = 0.7, linewidth = 1.25)+
+  geom_line(dat = forplot5, aes(x = Elev_m, y = pred.m.resid.elev.fit+1.96*pred.m.resid.elev.se.fit), linetype = "solid",
+            alpha = 0.3, linewidth = 0.75)+
+  geom_line(dat = forplot5, aes(x = Elev_m, y = pred.m.resid.elev.fit-1.96*pred.m.resid.elev.se.fit), linetype = "solid",
+            alpha = 0.5, linewidth = 0.75)+
+  labs(y= "Nucleotide Diversity Residuals", x= "Elevation (m)", title = "long y title is Residuals of Seq_SSN ~ Mean.pi")+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
+  scale_shape_manual(name = "Population",
+                     labels = comp$label,
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    legend.title = element_text(color = "black", size = 20),
+    legend.text = element_text(color = "black", size = 20),
+    axis.title = element_text(color = "black", size = 20),
+    axis.text = element_text(color = "black", size = 20),
+    legend.spacing.y = unit(0.03, "cm"))
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNPiResid_topo.png",
+       height = 7, width = 9, device = "png", dpi = 500)
+
+### no cent ###
+
 # this is done with the no cent file pi values.
 comp.c$Elev_m2 <- (comp.c$Elev_m)^2
 m.ssn.elev.pi <- lm(Seq_PopFlwrMean ~ Elev_m + Elev_m2 + Mean.pi.c, dat = comp.c)
