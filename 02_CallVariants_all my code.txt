@@ -702,7 +702,12 @@ save(Means, file = '/mnt/scratch/buysseso/GVCF/GQ.DP.Means_unfiltered.ROBJ')
 # r script reads: GVCF/QualityRowMeans.R
 load('/mnt/scratch/buysseso/GVCF/GQ.DP_unfiltered_dat3.ROBJ')
 nrow(dat3)
-Means <- data.frame(ID = rownames(dat3), Mean = rowMeans(dat3, na.rm = TRUE), count_na = rowSums(is.na(dat3)), Population = dat3$Population)
+factor_numeric <- function(x){
+  as.numeric(as.character(x))
+}
+dat4 <- apply(dat3[,-nrow(dat3)], 2, factor_numeric)
+nrow(dat4)
+Means <- data.frame(ID = rownames(dat4), Mean = rowMeans(dat4, na.rm = TRUE), count_na = rowSums(is.na(dat4)), Population = dat4$Population)
 save(Means, file = '/mnt/scratch/buysseso/GVCF/GQ.DP.Means_unfiltered.ROBJ')
 print("End")
 
@@ -727,5 +732,10 @@ scontrol show job $SLURM_JOB_ID
 # submitted job 23862001 on 10/17 at 5:24pm
 # failed after 1hr36min due to out of memory (gave it 80G)! oh boy. Updated to 180GB and tried again
 # submitted again as job 23882918 on 10/18 at 8:46am
+# completed in 1hr, 32 minutes. but I can't find the output file?? hmm. Got an r error because x must be numeric, so I do need to get the numeric code to run successfully.
+# editing on 10/26/23 to make dat4 and submit it as a job to try again.
+# submitted as job 24503761 on 10/26 at 1:36pm
+# i am kinda expecting this to fail a little because I don't think dat4 will actually have a population line which might kill the means line.
+# but hopefully I will at the very least get a dat4 data frame.
 
 
