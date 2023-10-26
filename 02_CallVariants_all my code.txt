@@ -718,8 +718,8 @@ print("End")
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
-#SBATCH --mem-per-cpu=180G
-#SBATCH --job-name QualityMeans
+#SBATCH --mem-per-cpu=300G
+#SBATCH --job-name QualityMeans3
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=buysseso@msu.edu
 
@@ -737,5 +737,8 @@ scontrol show job $SLURM_JOB_ID
 # submitted as job 24503761 on 10/26 at 1:36pm
 # i am kinda expecting this to fail a little because I don't think dat4 will actually have a population line which might kill the means line.
 # but hopefully I will at the very least get a dat4 data frame.
+# failed b/c out of memory again... upped it to 300G? that seems like a lot but try it.
+# started job 24518333 10/26 at 5:05pm
+
 
 
