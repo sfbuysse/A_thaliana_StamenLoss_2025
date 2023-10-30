@@ -19,6 +19,7 @@
 library(sf)
 library(raster)
 library(tmap)
+library(grid)
 
 ## load and prep data:
 
@@ -64,7 +65,7 @@ outline <- tm_shape(spain) +
   tm_shape(pyrenees) +
   tm_borders("red", lwd = 1)
 outline
-tmap_save(outline, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/OutlineMap.png", dpi = 500)
+tmap_save(outline, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/OutlineMap.png", dpi = 1000)
 
 # Then, make the detailed map
 # Now crop elevation raster down to pyrenees region, with a little buffer for labels to fit
@@ -74,7 +75,7 @@ pyr_elev <- crop(elev_raster, as(extent(-0.50, 3.5, 41.00, 43.00), 'SpatialPolyg
 pop_loc2 <- data.frame(lon = c(metadata$Lon_DecDeg[1:6], metadata$Lon_DecDeg[7]-0.04, 
                                metadata$Lon_DecDeg[8:10], metadata$Lon_DecDeg[11]+0.04,
                                metadata$Lon_DecDeg[12:16]), 
-                       lat = c(metadata$Lat_DecDeg[1:6]+0.06, metadata$Lat_DecDeg[7]-0.06, 
+                       lat = c(metadata$Lat_DecDeg[1:5]+0.06, metadata$Lat_DecDeg[6]+0.05, metadata$Lat_DecDeg[7]-0.06, 
                                metadata$Lat_DecDeg[8]+0.06, metadata$Lat_DecDeg[9]-0.06,
                                metadata$Lat_DecDeg[10:16]+0.06), 
                        pop = metadata$PopCode) %>%
@@ -144,8 +145,9 @@ black <-  tm_shape(pyr_elev)+
     tm_symbols(col = "black", border.col = "black", shape = 21, 
                stretch.palette = TRUE, size = 0.25, 
                legend.col.show = FALSE, legend.shape.show =  FALSE)
+black
 tmap_save(black, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/BlackDotMap.png", 
-          dpi = 500,
+          dpi = 1000,
           outer.margins = c(0, 0, 0, 0),
           insets_tm = outline, 
           insets_vp = viewport(x = unit(0.15, "npc"),
