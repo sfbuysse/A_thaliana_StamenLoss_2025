@@ -702,12 +702,7 @@ save(Means, file = '/mnt/scratch/buysseso/GVCF/GQ.DP.Means_unfiltered.ROBJ')
 # r script reads: GVCF/QualityRowMeans.R
 load('/mnt/scratch/buysseso/GVCF/GQ.DP_unfiltered_dat3.ROBJ')
 nrow(dat3)
-factor_numeric <- function(x){
-  as.numeric(as.character(x))
-}
-dat4 <- apply(dat3[,-nrow(dat3)], 2, factor_numeric)
-nrow(dat4)
-Means <- data.frame(ID = rownames(dat4), Mean = rowMeans(dat4, na.rm = TRUE), count_na = rowSums(is.na(dat4)), Population = dat4$Population)
+Means <- data.frame(ID = rownames(dat3), Mean = rowMeans(dat3, na.rm = TRUE), count_na = rowSums(is.na(dat3)), Population = dat3$Population)
 save(Means, file = '/mnt/scratch/buysseso/GVCF/GQ.DP.Means_unfiltered.ROBJ')
 print("End")
 
@@ -718,8 +713,8 @@ print("End")
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
-#SBATCH --mem-per-cpu=300G
-#SBATCH --job-name QualityMeans3
+#SBATCH --mem-per-cpu=80G
+#SBATCH --job-name QualityMeans
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=buysseso@msu.edu
 
@@ -730,22 +725,5 @@ Rscript /mnt/scratch/buysseso/GVCF/QualityRowMeans.R > /mnt/scratch/buysseso/GVC
 scontrol show job $SLURM_JOB_ID
 
 # submitted job 23862001 on 10/17 at 5:24pm
-# failed after 1hr36min due to out of memory (gave it 80G)! oh boy. Updated to 180GB and tried again
-# submitted again as job 23882918 on 10/18 at 8:46am
-# completed in 1hr, 32 minutes. but I can't find the output file?? hmm. Got an r error because x must be numeric, so I do need to get the numeric code to run successfully.
-# editing on 10/26/23 to make dat4 and submit it as a job to try again.
-# submitted as job 24503761 on 10/26 at 1:36pm
-# i am kinda expecting this to fail a little because I don't think dat4 will actually have a population line which might kill the means line.
-# but hopefully I will at the very least get a dat4 data frame.
-# failed b/c out of memory again... upped it to 300G? that seems like a lot but try it.
-# started job 24518333 10/26 at 5:05pm
-# completed after 8.5 hours
-# did give me an error when trying to compute the row means b/c the pop column isn't numeric, but I was expecting that. Try to do the final calculation in hpcc r session
 
-load('/mnt/scratch/buysseso/GVCF/GQ.DP_unfiltered_dat4.ROBJ')
-# rownames don't exist...
-load('/mnt/scratch/buysseso/GVCF/GQ.DP_unfiltered_dat3.ROBJ')
-rownames(dat4) <- rownames(dat3)
-Means <- data.frame(ID = rownames(dat4), Mean = rowMeans(dat4, na.rm = TRUE), count_na = rowSums(is.na(dat4)))
-save(Means, file = '/mnt/scratch/buysseso/GVCF/GQ.DP.Means_unfiltered.ROBJ')
-# done and saved 10/30/2023. INfo copied over into SequencingInfo excel sheet same day.
+
