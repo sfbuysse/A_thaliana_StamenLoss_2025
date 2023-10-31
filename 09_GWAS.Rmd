@@ -836,6 +836,8 @@ Done 1/11/2023 at 11:11AM
 ### New Code In Jan 2023 ###
 Purpose of this code is to hopefully solve my weird significance line issue and to rely on plotting more within the qqman package to hopefully do this.
 
+This code was ran on 10/31/2023 to make files that were saved. Trying to make snp highlighted images on this day, but that will happen in the top SNPs section.
+
 ```{r}
 # load packages
 library(ggplot2)
@@ -903,6 +905,7 @@ gwas_plots <- function(type, identifier, sig.level = 0.05){
   #dev.off()
   #
 
+  ###### manual plot #####
   # prep to plot
   don <- forplot %>%
     # compute chromosome size in bp
@@ -964,7 +967,7 @@ gwas_plots <- function(type, identifier, sig.level = 0.05){
   mplot <- ggplot(don, aes(x=psCum, y=-log10(P))) +
     geom_point( aes(color=as.factor(CHR)), alpha=0.8, size=1.3)+
     geom_hline(yintercept = -log10(bonferroni_sig), color = "blue", linetype = "dashed")+
-    #geom_hline(yintercept = -log10(sig.level), color = "red", linetype = "dotdash")+
+    #geom_hline(yintercept = -log10(sig.level), color = "red", linetype = "dotdash")+ # I want this to draw an fdr line
     scale_color_manual(values = rep(c("grey", "black"), 22)) +
     scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
     #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + # might add this back in later for better comparison
@@ -981,7 +984,7 @@ gwas_plots <- function(type, identifier, sig.level = 0.05){
   print(paste0("Done making plots for: ", identifier))
 }
   
-  # need to figure out what the suggested lines are drawn at
+  # need to figure out what the suggested lines are drawn at in the qqman package
   # they are just hard coded to be drawn at certain places
   # suggestive lower is at e-5 and genome wise higher is at e-8
   # I can set them to be whatever I want, but then I need to do some work to figure out where a bonferroni line would be and I"m back to stage 1 with deciding where a fdr line should be
@@ -989,6 +992,11 @@ gwas_plots <- function(type, identifier, sig.level = 0.05){
   # so commented out that code and going back to my ggplot graphs cause theyjust honestly look better to me.
 
 # does the function work?? 
+
+#to draw the fdr line, these are my old notes:
+  # note: for allSNPs files, sig.level = 4.27e-08 works
+#       for NoCent files, sig.level = 6.1e-08 works
+# but that was before using plink filtering!
 
 ##### Raw Phenotypes #####
 gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_raw.c")
@@ -998,7 +1006,7 @@ gwas_plots(type = "NoCent", identifier = "NoCent.PlinkFiltering_raw.c")
 ##### Subset Raw Phenotypes #####
 # only include if less than 2 as mean short stamen number
 gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_raw_subset.c")
-gwas_plots(type = "All", identifier = "NoCent.PlinkFiltering_raw_subset.c")
+gwas_plots(type = "NoCent", identifier = "NoCent.PlinkFiltering_raw_subset.c")
 
 ##### Asin Phenotypes #####
 gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_Asin.c")
@@ -1135,7 +1143,7 @@ forplot1$bon <- p.adjust(forplot1$P, method = "bonferroni")
 takeaway: the plots look basicaly the same. So redo everything with a wald test.
 
 ### Archive code from fall 2022 ###
-```{r}
+```{r, eval = FALSE}
 # load packages
 library(ggplot2)
 library(dplyr)
@@ -1624,7 +1632,7 @@ for (i in 1:length(files)){
 
 On 5/16/2023 I started to update this section not realizing it wasn't my most updated section, so initially it ran in the Jan file but now it does read the April file. Still not the most updated thought because everything is written to the console.
 
-```{r}
+```{r, eval = FALSE}
 ##### testing 2 #####
 # okay, what I really wanted to do first is to do some sort of window analysis where I only get a list of SNPs that fall into the same windows (can do 100bp to start) but they also need to be relatively high hits I think
 

@@ -1,0 +1,145 @@
+---
+title: "09B_GWAS_HighlightedSnpsFigures"
+author: "Sophie Buysse"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load packages
+```{r}
+library(ggplot2)
+library(dplyr)
+library(qqman)
+library(ggpubr)
+
+rm(list = ls())
+```
+
+# read in necessary other objects
+```{r}
+# list of files to read in :
+files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c","NoCent.PlinkFiltering_raw.c_testing" )
+
+```
+
+# make plotting function
+```{r}
+# for testing
+#identifier <- "allSNPs.PlinkFiltering_raw.c"
+#sig.level <- 0.05
+
+manhattan_highlight <- function(identifier, sig.level = 0.05){
+  # add fdr.line as an object?
+  ##### Set filenames and read in file #####
+  
+  filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+  fig_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/", identifier)
+  
+  results <- read.delim(file= filename, header = T, stringsAsFactors = F)
+  
+  # reorganize dataframe
+  
+  forplot <- data.frame("BP" = results$ps, "CHR" = results$chr, "P" = results$p_wald, "SNP" = results$rs)
+  
+  forplot$fdr <- p.adjust(p= forplot$P, method = "fdr")
+  #for point color...
+  forplot$fdr_col <- forplot$CHR
+  forplot[forplot$fdr < 0.10, "fdr_col"] <- 6
+  # allSNPs raw: cutoff for this is between 9.651559e-02 (6) and 1.004850e-01 (1)
+  forplot[forplot$fdr < 0.05, "fdr_col"] <- 7
+  # allSNPs raw: cutoff for this is between 7.323552e-02 (6) and 4.269675e-03(7) 
+  forplot$fdr_col <- as.factor(forplot$fdr_col)
+  #make the shared hits a 0 or something??
+
+  forplot$bon <- p.adjust(forplot$P, method = "bonferroni")
+  
+  ###### manual plot #####
+  # prep to plot
+  don <- forplot %>%
+    # compute chromosome size in bp
+    group_by(CHR) %>%
+    summarize(chr_len=max(BP)) %>%
+    
+    #calculate cumulative position of each chromosome (again in bp)
+    mutate(tot=cumsum(chr_len)-chr_len) %>%
+    dplyr::select(-chr_len) %>%
+    
+    #add this info to the initial data set (so like adding new column and sorting by it)
+    left_join(forplot, ., by=c("CHR"="CHR")) %>%
+    
+    #add cum position of each SNP
+    arrange(CHR, BP) %>%
+    mutate( psCum=BP+tot)
+  
+  axisdf = don %>% group_by(CHR) %>% summarize(center=( max(psCum) + min(psCum) ) /2 )
+  
+  #sig.level is set in the function line. is 0.05 default but not expecting hits above that.
+  bonferroni_sig <- sig.level/length(forplot$P)
+  
+# and plot. should just make the 1 plot.
+  
+  m_plot <- ggplot(don, aes(x=psCum, y=-log10(P))) +
+    geom_point( aes(color=fdr_col), alpha=0.8, size=1.3)+
+    geom_hline(yintercept = -log10(bonferroni_sig), color = "blue", linetype = "dashed")+
+    #geom_hline(yintercept = -log10(fdr.line), color = "red", linetype = "dotdash")+
+    scale_color_manual(values = c("grey", "black", "grey", "black", "grey", "chartreuse", "darkorchid1"), 22) +
+    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
+    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + # might add this back in later for better comparison
+    labs(x="Chromosome", y= "-log10( wald P)")+
+    theme_bw() +
+    theme(
+      legend.position="none",
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+    )
+  
+ ## merge manhattan and qq into a single thing??
+  # this doesn't work as written because the ggplot is a grid object and the qqplot is not a grid object, so issues ensue.
+ #qqplot <- qqman::qq(forplot$P)
+ ## would need the package that let's me make multi facet figures
+ ## then set 2/3 or 3/4 spaces as mplot, and one as qq, then save the merged file
+ #final_fig <- ggarrange(m_plot, qqplot, nrow = 1, ncol = 2, widths = c(2,1))
+  
+ ##ggplot(forplot, aes(sample = P)+
+ ##geom_qq()+
+ ##geom_qq_line()+
+ ##  labs(x = "Expected", y = "Observed")+
+ ##  theme_bw()
+  
+  ggsave(paste0(fig_name,".png"), plot = m_plot, width = 7, height = 3, dpi = 700, units = "in")
+  
+  print(paste0("Done making plot for: ", identifier))
+}
+
+
+```
+
+and actual run the function
+```{r}
+##### Raw Phenotypes #####
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw.c")
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw.c")
+
+
+##### Subset Raw Phenotypes #####
+# only include if less than 2 as mean short stamen number
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw_subset.c")
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw_subset.c")
+
+##### Asin Phenotypes #####
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Asin.c")
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_Asin.c")
+
+##### Binary Phenotypes #####
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Binary.c")
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_Binary.c")
+
+##### Elevation! #####
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Elev.c")
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_Elev.c")
+```
