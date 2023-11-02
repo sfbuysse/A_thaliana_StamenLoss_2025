@@ -24,6 +24,31 @@ rm(list = ls())
 # list of files to read in :
 files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c","NoCent.PlinkFiltering_raw.c_testing" )
 
+# list of shared SNPs
+# I got a little lost with my old code and what I would all need to read in to find the shared SNPs and the whole cent/nc thing. So this is from the excel sheet to check the code, but I do need to still double check that this list is accurate.
+highlight_snps <- c("Chr1:14262517",
+                    "Chr3:2239234",
+                    "Chr3:2253161",
+                    "Chr3:2942726",
+                    "Chr5:4899729",
+                    "Chr5:4899733",
+                    "Chr5:4899789",
+                    "Chr5:4899798",
+                    "Chr5:4899803",
+                    "Chr5:4899865",
+                    "Chr5:4900275",
+                    "Chr5:4900560",
+                    "Chr5:4900628",
+                    "Chr5:4919727",
+                    "Chr5:4920179",
+                    "Chr5:4920289",
+                    "Chr5:4920304",
+                    "Chr5:4920731",
+                    "Chr5:10731997",
+                    "Chr5:13458838",
+                    "Chr5:19462189"
+                    )
+
 ```
 
 # make plotting function
@@ -57,6 +82,14 @@ manhattan_highlight <- function(identifier, sig.level = 0.05){
 
   forplot$bon <- p.adjust(forplot$P, method = "bonferroni")
   
+  # add row for outlining shared SNPs
+  forplot$shared <- "no"
+  forplot[forplot$SNP %in% highlight_snps, "shared"] <- "yes"
+  forplot$shared <- as.factor(forplot$shared)
+  
+  # might need to instead make this some kind of slightly more intense set up where the first fdr_col column is filled with the grey and black hex codes depending on chromosome, then fill the 0.10 and 0.05 cutoff ones with their respective hex code
+  # finally for the shared column, start as a copy of the color, then override the neccessary ones in white or whatever color I actually choose b/c I'm now realizing that white is a terrible choice because it will blend in to the background.
+  
   ###### manual plot #####
   # prep to plot
   don <- forplot %>%
@@ -82,14 +115,17 @@ manhattan_highlight <- function(identifier, sig.level = 0.05){
   
 # and plot. should just make the 1 plot.
   
+  # if I want to color by shared snps, I will likely need to first change the shape so it is the circle that accepts both color and fill, then make the current color column the fill column and make a new color column there is it maybe blank/transparent unless it is a shared snp? or just matches the fill value unless it is a shared SNP.
+  
   m_plot <- ggplot(don, aes(x=psCum, y=-log10(P))) +
-    geom_point( aes(color=fdr_col), alpha=0.8, size=1.3)+
-    geom_hline(yintercept = -log10(bonferroni_sig), color = "blue", linetype = "dashed")+
+    geom_point( aes(fill=fdr_col, color = shared), shape = 21, alpha=0.8, size=1.3)+
+    geom_hline(yintercept = -log10(bonferroni_sig), color = "#FFC107", linetype = "dashed", alpha = 0.6)+
     #geom_hline(yintercept = -log10(fdr.line), color = "red", linetype = "dotdash")+
-    scale_color_manual(values = c("grey", "black", "grey", "black", "grey", "chartreuse", "darkorchid1"), 22) +
+    scale_fill_manual(values = c("#ABABAB", "#000000", "#ABABAB", "#000000", "#ABABAB", "#1E88E5", "#D66C93")) +
+    scale_color_manual(values = c("#000000", "#FFFFFF"))+
     scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
     #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + # might add this back in later for better comparison
-    labs(x="Chromosome", y= "-log10( wald P)")+
+    labs(x="Chromosome", y= bquote(-log[10](p)))+
     theme_bw() +
     theme(
       legend.position="none",
