@@ -898,7 +898,7 @@ ggplot(data = eigenVectors_noBOS) +
       y = paste0("Principal component 2 (",pve_noBOS[2,1]," %)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_noBOS$label),
-                     values = rep(c(22, 21, 24, 23, 25), times = 4))+
+                     values = c(22,21,24,23,25,22,21,24,25,22,21,24,23,25,22,21,24,23,25))+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   theme_classic()+
   theme(
@@ -907,7 +907,7 @@ ggplot(data = eigenVectors_noBOS) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 7, width = 7, device = "png", dpi = 500)
 
 ## topo color PC3/PC4
 ggplot(data = eigenVectors_noBOS) +
@@ -939,7 +939,7 @@ ggplot(data = eigenVectors_noBOS) +
       y = paste0("Principal component 4 (",pve_noBOS[4,1]," %)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_noBOS$label),
-                     values = rep(c(22, 21, 24, 23, 25), times = 4))+
+                     values = c(22,21,24,23,25,22,21,24,25,22,21,24,23,25,22,21,24,23,25))+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   theme_classic()+
   theme(
@@ -948,7 +948,7 @@ ggplot(data = eigenVectors_noBOS) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 7, width = 7, device = "png", dpi = 500)
 
 # old plots
 ggplot(data = eigenVectors_noBOS) +
@@ -995,6 +995,31 @@ ggsave(filename = "plink_PC3PC4_PlinkFiltering_noBOS.png", path = "/mnt/scratch/
 # a bit more scatter, expecially where the most genotypes are. still a ARU right by the PAL genotypes. more scatter in the red, a PIN with the HOR (they are geographically right next to each other so geneflow might be possible)
 
 ```
+
+NoBOS Figure legend
+
+abandoned this code b/c I think I figured out the NOBOS stuff.
+```{r, eval = FALSE}
+ggplot(eigenVectors_noBOS)+
+  geom_point(data=eigenVectors_noBOS, aes(x=rep(1, times = 16), y=rev(c(1:16)), shape = Pop, fill= elev), col = "black", size = 6, stroke = 1.75, show.legend = TRUE)+
+  geom_text(aes(x=rep(1, times = 16), y=rev(c(1:16)), label = unique(eigenVectors_noBOS$label)), size = 20/.pt, hjust = -0.25)+
+  labs(x= "just one", y= "rank value", title = "")+
+  scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
+  scale_shape_manual(name = "Population",
+                     labels = unique(eigenVectors_noBOS$label),
+                     values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
+  theme_classic()+
+  theme(
+    axis.text.x=element_blank(), #remove x axis labels
+    axis.ticks.x=element_blank(), #remove x axis ticks
+    axis.text.y=element_blank(),  #remove y axis labels
+    axis.ticks.y=element_blank(),  #remove y axis ticks
+    axis.title = element_blank()
+    )
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/Legend.png",
+       height = 7, width = 9, device = "png", dpi = 500)
+```
+
 
 No Centromere
 ```{r}
@@ -1205,7 +1230,7 @@ ggplot(data = eigenVectors_noCent_noBOS) +
       y = paste0("Principal component 2 (",pve_noCent_noBOS[2,1]," %)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_noCent_noBOS$label),
-                     values = rep(c(22, 21, 24, 23, 25), times = 4))+
+                     values = c(22,21,24,23,25,22,21,24,25,22,21,24,23,25,22,21,24,23,25))+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   theme_classic()+
   theme(
@@ -1214,7 +1239,7 @@ ggplot(data = eigenVectors_noCent_noBOS) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 7, width = 7, device = "png", dpi = 500)
 
 ## topo color PC3/PC4
 ggplot(data = eigenVectors_noCent_noBOS) +
@@ -1246,7 +1271,7 @@ ggplot(data = eigenVectors_noCent_noBOS) +
       y = paste0("Principal component 4 (",pve_noCent_noBOS[4,1]," %)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_noCent_noBOS$label),
-                     values = rep(c(22, 21, 24, 23, 25), times = 4))+
+                     values = c(22,21,24,23,25,22,21,24,25,22,21,24,23,25,22,21,24,23,25))+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   theme_classic()+
   theme(
@@ -1255,7 +1280,7 @@ ggplot(data = eigenVectors_noCent_noBOS) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 7, width = 7, device = "png", dpi = 500)
 ```
 manually moved graphs to local computer either with filezilla or just within mobaxterm.
 
