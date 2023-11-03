@@ -73,9 +73,14 @@ manhattan_highlight <- function(identifier, sig.level = 0.05){
   forplot$fdr <- p.adjust(p= forplot$P, method = "fdr")
   #for point color...
   forplot$fdr_col <- forplot$CHR
-  forplot[forplot$fdr < 0.10, "fdr_col"] <- 6
+  forplot[forplot$fdr_col == 1, "fdr_col"] <- "#ABABAB"
+  forplot[forplot$fdr_col == 2, "fdr_col"] <- "#000000"
+  forplot[forplot$fdr_col == 3, "fdr_col"] <- "#ABABAB"
+  forplot[forplot$fdr_col == 4, "fdr_col"] <- "#000000"
+  forplot[forplot$fdr_col == 5, "fdr_col"] <- "#ABABAB"
+  forplot[forplot$fdr < 0.10, "fdr_col"] <- "#1E88E5"
   # allSNPs raw: cutoff for this is between 9.651559e-02 (6) and 1.004850e-01 (1)
-  forplot[forplot$fdr < 0.05, "fdr_col"] <- 7
+  forplot[forplot$fdr < 0.05, "fdr_col"] <- "#D66C93"
   # allSNPs raw: cutoff for this is between 7.323552e-02 (6) and 4.269675e-03(7) 
   forplot$fdr_col <- as.factor(forplot$fdr_col)
   #make the shared hits a 0 or something??
@@ -83,12 +88,9 @@ manhattan_highlight <- function(identifier, sig.level = 0.05){
   forplot$bon <- p.adjust(forplot$P, method = "bonferroni")
   
   # add row for outlining shared SNPs
-  forplot$shared <- "no"
-  forplot[forplot$SNP %in% highlight_snps, "shared"] <- "yes"
+  forplot$shared <- as.character(forplot$fdr_col)
+  forplot[forplot$SNP %in% highlight_snps, "shared"] <- "green"
   forplot$shared <- as.factor(forplot$shared)
-  
-  # might need to instead make this some kind of slightly more intense set up where the first fdr_col column is filled with the grey and black hex codes depending on chromosome, then fill the 0.10 and 0.05 cutoff ones with their respective hex code
-  # finally for the shared column, start as a copy of the color, then override the neccessary ones in white or whatever color I actually choose b/c I'm now realizing that white is a terrible choice because it will blend in to the background.
   
   ###### manual plot #####
   # prep to plot
@@ -121,8 +123,8 @@ manhattan_highlight <- function(identifier, sig.level = 0.05){
     geom_point( aes(fill=fdr_col, color = shared), shape = 21, alpha=0.8, size=1.3)+
     geom_hline(yintercept = -log10(bonferroni_sig), color = "#FFC107", linetype = "dashed", alpha = 0.6)+
     #geom_hline(yintercept = -log10(fdr.line), color = "red", linetype = "dotdash")+
-    scale_fill_manual(values = c("#ABABAB", "#000000", "#ABABAB", "#000000", "#ABABAB", "#1E88E5", "#D66C93")) +
-    scale_color_manual(values = c("#000000", "#FFFFFF"))+
+    scale_fill_manual(values = levels(don$fdr_col)) +
+    scale_color_manual(values = alpha(levels(don$shared), 0.8))+
     scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
     #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + # might add this back in later for better comparison
     labs(x="Chromosome", y= bquote(-log[10](p)))+
@@ -152,7 +154,9 @@ manhattan_highlight <- function(identifier, sig.level = 0.05){
   print(paste0("Done making plot for: ", identifier))
 }
 
+# going with this for now (11/3/2023) but I do think I could plot the shared ones as a second layer and then they would all be on the top rather than covered by some other points.
 
+# there might also be a slighly overlap between color and fill that is creating a dark outline because both are at least somewhat transparent. Maybe I need to decrease size so it isn't 1.3?
 ```
 
 and actual run the function
