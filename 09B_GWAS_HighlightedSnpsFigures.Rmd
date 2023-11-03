@@ -55,6 +55,7 @@ highlight_snps <- c("Chr1:14262517",
 ```{r}
 # for testing
 #identifier <- "allSNPs.PlinkFiltering_raw.c"
+#identifier <- "allSNPs.PlinkFiltering_Elev.c"
 #sig.level <- 0.05
 
 manhattan_highlight <- function(identifier, sig.level = 0.05){
