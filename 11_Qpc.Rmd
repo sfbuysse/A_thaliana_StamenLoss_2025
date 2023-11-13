@@ -1,0 +1,234 @@
+---
+title: "QPC"
+author: "Sophie Buysse"
+date: "`r Sys.Date()`"
+output: html_document
+---
+The goal of this Code is to use the R package Quaint to differentiation between direct selection and indirect selection on stamen loss in the pyrenees.
+
+# Document Set Up
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Install the Package
+only need to do this once. Copied directly from the Quaint Github page. (https://github.com/emjosephs/quaint/blob/master/install_quaint.R)
+
+This code currently doesn't work for me, so I'm going to try just coping Emily's functions instead?
+```{r, eval = FALSE}
+packages_needed <- c("devtools","roxygen2")
+
+for (i in 1:length(packages_needed)){
+  if(!(packages_needed[i] %in% installed.packages())){install.packages(packages_needed[i])}
+}
+
+for (i in 1:length(packages_needed)){
+  library( packages_needed[i], character.only = TRUE)
+}
+
+
+document(pkg = "../")
+setwd('../')
+install('quaint')
+```
+
+# Set up Quaint Functions
+
+calcQpc
+```{r}
+#' Calculate Qpc
+#'
+#' This function calculates Qpc given data about the relatedness matrix, and a set of trait values
+#' @param myZ vector of traits. Not normalized yet.
+#' @param myU matrix of eigenvectors of the kinship matrix (each column is an eigenvector)
+#' @param myLambdas vector of eigenvalues of the kinship matrix 
+#' @param myM the range of PCs you want to test for selection 
+#' @param myL the range of PCs used to estimate Va
+#' @export
+#' @examples
+#' calcQpc()
+
+calcQpc <- function(myZ, myU, myLambdas, myL, myM){
+  myZ = myZ[1:dim(myU)[1]] - mean(myZ) #mean center phenotypes
+  myCmM = (myZ %*% myU[,myM])/sqrt(myLambdas[myM]) #project + standardize by the eigenvalues for testing for selection
+  myCmL = (myZ %*% myU[,myL])/sqrt(myLambdas[myL]) #project + standardize by the eigenvalues for estimating Va
+  myQm = sapply(myM, function(n){var0(myCmM[n])/var0(myCmL) })  #test for selection
+  myPs = sapply(myM, function(x){pf(myQm[x], 1, length(myL), lower.tail=F)}) #get a pvalue
+  retdf = list(cm = myCmM, cml = myCmL, qm = myQm, pvals = myPs)
+  return(retdf)
+  }
+
+
+```
+
+condQpc
+```{r}
+#' Calculate conditional Qpc
+#'
+#' This function calculates Qpc given data about the relatedness matrix, and a set of trait values
+#' @param myZ two columned data frame containing vectors of two traits. Not normalized yet. The first trait is the one we're testing for selection on conditional on the second trait.
+#' @param myU matrix of eigenvectors of the kinship matrix (each column is an eigenvector)
+#' @param myLambdas vector of eigenvalues of the kinship matrix 
+#' @param myM the range of PCs you want to test for selection 
+#' @param myL the range of PCs used to estimate Va
+#' @export
+#' @examples
+#' calcQpc()
+
+condQpc <- function(myZ,myU, myLambdas, myM, myL){
+  
+  # get Xms for each PC (for Z1, the focal trait and Z2, the correlated trait) THESE ARE MEAN CENTERED
+  myX1centered = (myZ[-nrow(myZ),1]-mean(myZ[,1]))%*%myU/sqrt(myLambdas)
+  myX2centered = (myZ[-nrow(myZ),2]-mean(myZ[,2]))%*%myU/sqrt(myLambdas)
+  
+  #get mu' for each PC
+  Ca12 = sum(myX1centered[myL]*myX2centered[myL])/length(myL) #is this the right way to do this??
+  Va2 = (sum(myX2centered[myL]^2))/length(myL)
+  Va1 = sum(myX1centered[myL]^2)/length(myL)
+  mu1cond = mean(myZ[-nrow(myZ),1]) + (Ca12/Va2)*(myZ[-nrow(myZ),2] - mean(myZ[,2])) #one value for each individual
+  va1cond = Va1 - (Ca12^2)/Va2 
+  
+  #now test for selection
+  myQ = ((myZ[-nrow(myZ),1]-mu1cond)%*%myU[,myM])/sqrt(myLambdas[myM]*va1cond) #get a vector of the projections that we'll test
+  #under neutrality, my Q ~ N(0,1)
+  return(myQ)
+}
+
+```
+
+make_k
+```{r}
+#' Kinship matrix function for complete data using the estimated variance across all loci
+#'
+#' This function makes a kinship matrix using the cov function. It standardizes by the estimated genic variance across all loci, not each locus individually
+#' @param myG matrix where the rows are individuals/populations and the columns are loci and the values are the allele frequency (not the # of copies present in an individual!!!).
+#' @export
+
+
+make_k <- function (myG) 
+{
+  scaleFactor = sqrt(mean(colMeans(myG) * (1 - colMeans(myG))))
+    myM = dim(myG)[1]
+    myT = matrix(data = -1/myM, nrow = myM - 1, ncol = myM)
+    diag(myT) = (myM - 1)/myM
+    myGstand = (myT %*% myG)/scaleFactor
+    myK = cov(t(myGstand))
+    return(myK)
+}
+```
+
+var0
+
+```{r}
+#' Calculate variance where the mean is set to zero
+#'
+#' This function takes a string of numbers and calculates the variance of these numbers, assuming that the mean is 0.
+#' @param x a string of vectors
+#' @export
+
+
+var0 <- function(x){  #variance where mean is set to 0
+return(sum(x^2)/length(x))
+}
+```
+
+
+# load other packages
+```{r}
+library(viridis)
+#library(quaint)
+
+```
+
+# load data
+```{r}
+# start with example data?
+load("C:/Users/Sophie/Downloads/1001-matrix-50Ksamp.rda") # called myGt
+allData <- read.csv("C:/Users/Sophie/Downloads/1001genomes-FT10-FT16 and 1001genomes-accessions.csv", stringsAsFactors = F)
+# get rid of missing data
+allDataFT16 = dplyr::filter(allData, is.na(FT16_mean) == FALSE)
+
+# pull out genotype data fro individuals with phenotypes
+combinedData = dplyr::inner_join(allDataFT16, myGt, by='id')
+myG = combinedData[,-c(1:17)]
+myTraits = combinedData[,1:17]
+
+# load in my data - I think this is actually the wrong data. I want the numeric format data not the letter format data.
+# genotype Matrix of 50K randomly chosen sites (see 10_QpcPrep)
+load("data/GenotypeMatrix_Cent_50k_Aug2023.ROBJ") # called cent_sub
+load("data/RawPhenotypes_Aug2023.ROBJ") # called pheno2
+# don't have any missing phenotype data to get rid of
+# already know genotype info matches up with phenotype info
+
+# but I do want to transpose my genotype information so it is int he same format as the sample data provided as myG
+StamenG <- t(cent_sub)
+```
+
+# make a kinship matrix
+
+I got a kinship matrix from gemma. why am I not using that here? Shouldn't I be using whatever was input in to plink to do PCA initially?
+```{r}
+# example data
+myK <- make_k(as.matrix(myG))
+# do eigen decomposition
+myEig <- eigen(myK)
+
+# plot the first two PCs
+plot(myEig$vectors[,1], myEig$vectors[,2], bty="n", xlab = "PC1", ylab = "PC2", col = '#FF5300')
+
+# plot pve
+plot(myEig$values/sum(myEig$values)*100, col = "#43B629", bty="n", ylab = "% variation explained by each PC", xlab = "PC")
+
+```
+
+# Run Qpc
+
+myZ is a vector of trait values
+myU is the eigen vectors of the kinship matrix
+myLambdas is the eigen values of the kinship matrix
+myL is the range of PCs used to estimate Va
+myM is the range of PCs used to test for selection
+
+Questions: How do you choose the PCs to use to estimate Va and the PCs to use to test for selection? Emily chooses from the plots of the eigen values to decide which ones to test. Since I am interested in elevation, I should pick a PC that matches altitude (how do I do that??) and then use the bottom 50% to estimate Va
+
+```{r}
+# example data
+myQpc <- calcQpc(myZ = myTraits$FT16_mean,
+                 myU = myEig$vectors,
+                 myLambdas = myEig$values,
+                 myM = 1:10,
+                 myL = 485:969)
+```
+
+# look at the Qpc output
+```{r}
+# example data
+plot(-log10(myQpc$pvals), bty="n", xlab = "PCs", ylab = "-log10(p value)", col = "#1BB6AF", lwd=2, xaxt="n")
+abline(h = -log10(0.05/length(myQpc$pvals)), col = "#FF5300", lwd=2)
+axis(1, at = c(1:length(myQpc$pvals)))
+
+```
+
+plot of specific PCs colored by subpopulation. Confidence intervals are just for plotting b/c based on linear models but the actual test is not linear
+```{r}
+#estimate the confidence intervals
+myVaest = var0(myQpc$cml)
+myCI = 1.96*sqrt(myVaest*myEig$values)
+
+#plot
+palette(c('white','#999999', '#E69F00', '#56B4E9', "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", 'black', 'mediumpurple3'))
+par(mar = c(5,8,5,14), xpd=T)
+
+plot(myEig$vectors[,2], myTraits$FT16_mean[-nrow(myTraits)], bty="n", col = as.factor(myTraits$group), lwd=2, ylab = "", yaxt="n",xlab = "PC2", cex.lab=2, cex.axis=2, xaxt="n")
+axis(1, cex.axis=1.5, lwd=2)
+axis(2, las=2, cex.axis=1.5, lwd=2)
+mtext('Flowering time 16C',side=2, line=5, cex=2)
+legend(0.06, 130, levels(as.factor(myTraits$group)), pch=1, pt.lwd = 2,col = palette(), bty="n", text.width = 0.04)
+par(xpd=F)
+abline(lm(myTraits$FT16_mean[-nrow(myTraits)]~myEig$vectors[,2]), lwd=2, col = "#0072B2")
+abline(a=mean(myTraits$FT16_mean), b = myCI[2], lty=2, col='#56B4E9', lwd=2)
+abline(a=mean(myTraits$FT16_mean), b = -myCI[2], lty=2, col='#56B4E9', lwd=2)
+```
+
+Okay, but I don't know how to interpret any of this so I think I need to read Emily's paper?
