@@ -146,10 +146,10 @@ library(viridis)
 # start with example data?
 load("C:/Users/Sophie/Downloads/1001-matrix-50Ksamp.rda") # called myGt
 allData <- read.csv("C:/Users/Sophie/Downloads/1001genomes-FT10-FT16 and 1001genomes-accessions.csv", stringsAsFactors = F)
-# get rid of missing data
+# get rid of missing phenotype data
 allDataFT16 = dplyr::filter(allData, is.na(FT16_mean) == FALSE)
 
-# pull out genotype data fro individuals with phenotypes
+# pull out genotype data for individuals with phenotypes
 combinedData = dplyr::inner_join(allDataFT16, myGt, by='id')
 myG = combinedData[,-c(1:17)]
 myTraits = combinedData[,1:17]
@@ -167,7 +167,7 @@ StamenG <- t(cent_sub)
 
 # make a kinship matrix
 
-I got a kinship matrix from gemma. why am I not using that here? Shouldn't I be using whatever was input in to plink to do PCA initially?
+I got a kinship matrix from gemma. why am I not using that here? Shouldn't I be using whatever was input in to plink to do PCA initially? Yes I want the same input. Can't reuse anything because I need there to be no NAs and I need to make sure the standardization is done a certain way for the kinship matrix for the later Qpc math to work.
 ```{r}
 # example data
 myK <- make_k(as.matrix(myG))
