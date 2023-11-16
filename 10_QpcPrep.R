@@ -23,8 +23,18 @@ set.seed(803)
 SNPs_Cent <- read_plink("/mnt/scratch/buysseso/GVCF/allsites_filtered_plinkTest", verbose = TRUE)
 # I think X is what I want
 head(SNPs_Cent$X)[1:5, 1:5]
-# but I want it transposed
-Stamen_Gt <- t(SNPs_Cent$X)
+# check for SNPs with no missing data
+complete <- SNPs_Cent$X[complete.cases(SNPs_Cent$X), ]
+str(complete)
+# yay! 172591 of these exist!!!
+# if we don't do this subsetting way, I will need to do imputation
+
+# now transpose
+Stamen_Gt <- t(complete)
+head(Stamen_Gt)[1:5, 1:5]
+
+# and calculate into frequencies
+Stamen_Gt <- Stamen_Gt / 2
 head(Stamen_Gt)[1:5, 1:5]
 
 ## subset 50,000 randomly chosen SNPs ##
@@ -38,26 +48,22 @@ length(unique(cols_keep))
 # the individual ID is the rowname, and I need to make sure that stays.
 Stamen_Gt_sub <- Stamen_Gt[ , cols_keep]
 head(Stamen_Gt_sub)[1:5, 1:5]
-
 str(Stamen_Gt_sub)
 class(Stamen_Gt_sub)
-tmp <- Stamen_Gt_sub[!complete.cases(Stamen_Gt_sub), ]
-# hmm. these NAs will be a problem later on b/c make_k would make a matrix of all NA (even after dividing by 2).
-# so do I need to.... do what?
-# quaint documentation says to use random imputation to replace missing genotypes. how??
 
-# what if I subsample just the complete cases from the initial matrix? are there any?
-tmp2 <- Stamen_Gt[complete.cases(Stamen_Gt), ]
-# HA it is empty.
-# I think I need another program to do imputation, and that would happen before I even start the subsetting in R.
-# ok. well it looks like I"ll need to use BEAGLE to do this. and that requires data in a vcf format. and downloading another program and stuff
-# I don't have it in me to do that now.
+## wait do I need this structuring?? ugh. backtracking. I don't think I need it.
+## add ID as the first column
+#Stamen_Gt_sub <- as.data.frame(Stamen_Gt_sub)
+#Stamen_Gt_sub$id <- rownames(Stamen_Gt_sub)
+## and organize so it is the first column
+#Stamen_Gt_sub <- Stamen_Gt_sub[ ,c(50001, 1:50000)]
+#head(Stamen_Gt_sub)[1:5, 1:5]
+## ok, this should be what I want
+## I did this restructuring so it matches more exactly the input Emily used
+## because the make_k function depends on the first column being sample id
 
-
-
-#save(cent_sub, file = "/mnt/research/josephslab/Sophie/Qpc/GenotypeMatrix_Cent_50k_Aug2023.ROBJ")
-#write.csv(cent_sub, file = "/mnt/research/josephslab/Sophie/Qpc/GenotypeMatrix_Cent_50k_Aug2023.csv", row.names = FALSE)
-
+save(Stamen_Gt_sub, file = "/mnt/research/josephslab/Sophie/Qpc/GenotypeMatrix_Cent_50k_Nov2023.ROBJ")
+write.csv(Stamen_Gt_sub, file = "/mnt/research/josephslab/Sophie/Qpc/GenotypeMatrix_Cent_50k_Nov2023.csv", row.names = FALSE)
 
 ##### Phenotype Information #####
 # read in FAM... how have I done this before?
