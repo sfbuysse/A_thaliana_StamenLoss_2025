@@ -157,6 +157,7 @@ myTraits = combinedData[,1:17]
 # load in my data - I think this is actually the wrong data. I want the numeric format data not the letter format data.
 # genotype Matrix of 50K randomly chosen sites (see 10_QpcPrep)
 load("data/GenotypeMatrix_Cent_50k_Aug2023.ROBJ") # called cent_sub
+"/mnt/research/josephslab/Sophie/Qpc/GenotypeMatrix_Cent_50k_Nov2023.ROBJ"
 load("data/RawPhenotypes_Aug2023.ROBJ") # called pheno2
 # don't have any missing phenotype data to get rid of
 # already know genotype info matches up with phenotype info
