@@ -154,16 +154,28 @@ combinedData = dplyr::inner_join(allDataFT16, myGt, by='id')
 myG = combinedData[,-c(1:17)]
 myTraits = combinedData[,1:17]
 
+# need to replicate myG for the genotype matrix
+```
+
+```{r}
+# my data!
 # load in my data - I think this is actually the wrong data. I want the numeric format data not the letter format data.
 # genotype Matrix of 50K randomly chosen sites (see 10_QpcPrep)
-load("data/GenotypeMatrix_Cent_50k_Aug2023.ROBJ") # called cent_sub
-"/mnt/research/josephslab/Sophie/Qpc/GenotypeMatrix_Cent_50k_Nov2023.ROBJ"
+load("data/GenotypeMatrix_Cent_50k_Nov2023.ROBJ") # called Stamen_Gt_sub
 load("data/RawPhenotypes_Aug2023.ROBJ") # called pheno2
 # don't have any missing phenotype data to get rid of
-# already know genotype info matches up with phenotype info
 
-# but I do want to transpose my genotype information so it is int he same format as the sample data provided as myG
-StamenG <- t(cent_sub)
+# these are not in the same order... and the pheno id doesn't fully match the pheno id... 
+# get rid of the dash in some of them
+rownames(Stamen_Gt_sub) <- gsub(pattern = "-", replacement = "", rownames(Stamen_Gt_sub))
+# make all uppercase
+rownames(Stamen_Gt_sub) <- toupper(rownames(Stamen_Gt_sub))
+# ugh make it a dataframe to merge - so I guess I could have kept this in the prep file.
+Stamen_Gt_sub <- as.data.frame(Stamen_Gt_sub)
+Stamen_Gt_sub$LineID <- rownames(Stamen_Gt_sub)
+
+# let's join geno and pheno together quickly
+stamenCombined <- dplyr::inner_join(Stamen_Gt_sub, pheno2, by = 'LineID')
 ```
 
 # make a kinship matrix
@@ -180,6 +192,21 @@ plot(myEig$vectors[,1], myEig$vectors[,2], bty="n", xlab = "PC1", ylab = "PC2", 
 
 # plot pve
 plot(myEig$values/sum(myEig$values)*100, col = "#43B629", bty="n", ylab = "% variation explained by each PC", xlab = "PC")
+
+```
+
+```{r}
+# Stamen Data
+stamenK <- make_k(Stamen_Gt_sub)
+# do eigen decomposition
+stamenEig <- eigen(stamenK)
+
+# plot the first two PCs
+plot(stamenEig$vectors[,1], stamenEig$vectors[,2], bty="n", xlab = "PC1", ylab = "PC2", col = '#FF5300')
+# this looks different than the PCA I made with plink, likely just because the standardization is different??
+
+# plot pve
+plot(stamenEig$values/sum(stamenEig$values)*100, col = "#43B629", bty="n", ylab = "% variation explained by each PC", xlab = "PC")
 
 ```
 

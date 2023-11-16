@@ -43,7 +43,7 @@ head(Stamen_Gt)[1:5, 1:5]
 # SNPs are cols, so find n.cols
 ncol(Stamen_Gt)
 cols_keep <- runif(n = 50000, min = 1, max = ncol(Stamen_Gt))
-# double check no repeat numbers
+# double check no repeat numbers -- THIS DIDN"T WORK. START HERE 11/17.
 length(unique(cols_keep))
 # the individual ID is the rowname, and I need to make sure that stays.
 Stamen_Gt_sub <- Stamen_Gt[ , cols_keep]
