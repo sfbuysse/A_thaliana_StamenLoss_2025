@@ -142,7 +142,7 @@ library(viridis)
 ```
 
 # load data
-```{r}
+```{r, eval = FALSE}
 # start with example data?
 load("C:/Users/Sophie/Downloads/1001-matrix-50Ksamp.rda") # called myGt
 allData <- read.csv("C:/Users/Sophie/Downloads/1001genomes-FT10-FT16 and 1001genomes-accessions.csv", stringsAsFactors = F)
@@ -165,23 +165,20 @@ load("data/GenotypeMatrix_Cent_50k_Nov2023.ROBJ") # called Stamen_Gt_sub
 load("data/RawPhenotypes_Aug2023.ROBJ") # called pheno2
 # don't have any missing phenotype data to get rid of
 
-# these are not in the same order... and the pheno id doesn't fully match the pheno id... 
-# get rid of the dash in some of them
-rownames(Stamen_Gt_sub) <- gsub(pattern = "-", replacement = "", rownames(Stamen_Gt_sub))
-# make all uppercase
-rownames(Stamen_Gt_sub) <- toupper(rownames(Stamen_Gt_sub))
-# ugh make it a dataframe to merge - so I guess I could have kept this in the prep file.
-Stamen_Gt_sub <- as.data.frame(Stamen_Gt_sub)
-Stamen_Gt_sub$LineID <- rownames(Stamen_Gt_sub)
-
 # let's join geno and pheno together quickly
 stamenCombined <- dplyr::inner_join(Stamen_Gt_sub, pheno2, by = 'LineID')
+# make stamenG to use for make_k
+stamenG <- stamenCombined[ , c(2:50001)]
+# make list of phenotype, basically replicates pheno2 but this way I know the orders will be the same with the geno matrix
+stamenTrait <- stamenCombined[ , c(1, 50002)]
 ```
+
+Note: later on I think I might want to add elevation in to this too to use in a coloring scheme to make graphs, but let's skip that for now.
 
 # make a kinship matrix
 
-I got a kinship matrix from gemma. why am I not using that here? Shouldn't I be using whatever was input in to plink to do PCA initially? Yes I want the same input. Can't reuse anything because I need there to be no NAs and I need to make sure the standardization is done a certain way for the kinship matrix for the later Qpc math to work.
-```{r}
+I got a kinship matrix from gemma. why am I not using that here? Shouldn't I be using whatever was input in to plink to do PCA initially? Yes I want the same input. Can't reuse anything because I need there to be no NAs and I need to make sure the standardization is done a certain way for the kinship matrix for the later Qpc math to work. The input file I used in the Qpc prep Rscript is the same input file used for Fst, PCA, and GWAS so there is that consistency.
+```{r, eval = FALSE}
 # example data
 myK <- make_k(as.matrix(myG))
 # do eigen decomposition
@@ -197,7 +194,7 @@ plot(myEig$values/sum(myEig$values)*100, col = "#43B629", bty="n", ylab = "% var
 
 ```{r}
 # Stamen Data
-stamenK <- make_k(Stamen_Gt_sub)
+stamenK <- make_k(as.matrix(stamenG))
 # do eigen decomposition
 stamenEig <- eigen(stamenK)
 
@@ -210,6 +207,11 @@ plot(stamenEig$values/sum(stamenEig$values)*100, col = "#43B629", bty="n", ylab 
 
 ```
 
+Using the PVE plot, I am going to choose the first 4 PCs to use to look for a signal of selection. Emily suggested using the ones that are correlated with elevation so maybe this will change later on but starting with 4 becuase there is a break in the pve after  4.
+
+Then I use the bottom half of the PCs to estimate Va (additive variation) so that is PC 30-60 - estimates the drift part.
+
+
 # Run Qpc
 
 myZ is a vector of trait values
@@ -220,7 +222,7 @@ myM is the range of PCs used to test for selection
 
 Questions: How do you choose the PCs to use to estimate Va and the PCs to use to test for selection? Emily chooses from the plots of the eigen values to decide which ones to test. Since I am interested in elevation, I should pick a PC that matches altitude (how do I do that??) and then use the bottom 50% to estimate Va
 
-```{r}
+```{r, eval = FALSE}
 # example data
 myQpc <- calcQpc(myZ = myTraits$FT16_mean,
                  myU = myEig$vectors,
@@ -229,8 +231,19 @@ myQpc <- calcQpc(myZ = myTraits$FT16_mean,
                  myL = 485:969)
 ```
 
-# look at the Qpc output
 ```{r}
+# stamen data
+stamenQpc <- calcQpc(myZ = stamenTrait$Pheno,
+                 myU = stamenEig$vectors,
+                 myLambdas = stamenEig$values,
+                 myM = 1:4,
+                 myL = 30:60)
+```
+
+# look at the Qpc output
+
+These are the types of graphs Emily made. I might want to make more, and I might want to plot them with ggplot to be consistent with other graphs I've made previously.
+```{r, eval = FALSE}
 # example data
 plot(-log10(myQpc$pvals), bty="n", xlab = "PCs", ylab = "-log10(p value)", col = "#1BB6AF", lwd=2, xaxt="n")
 abline(h = -log10(0.05/length(myQpc$pvals)), col = "#FF5300", lwd=2)
@@ -238,8 +251,20 @@ axis(1, at = c(1:length(myQpc$pvals)))
 
 ```
 
-plot of specific PCs colored by subpopulation. Confidence intervals are just for plotting b/c based on linear models but the actual test is not linear
 ```{r}
+# stamen data
+plot(-log10(stamenQpc$pvals), bty="n", xlab = "PCs", ylab = "-log10(p value)", col = "#1BB6AF", lwd=2, xaxt="n")
+abline(h = -log10(0.05/length(stamenQpc$pvals)), col = "#FF5300", lwd=2)
+axis(1, at = c(1:length(stamenQpc$pvals)))
+
+```
+
+Okay, well this plot shows that the p values are all super low, so there wouldn't be selection on any of them. I think this then indicates that the signal of selection from the multiple regression we see is actually a signal of relatedness? I'm not totally sure what this means.
+
+
+plot of specific PCs colored by subpopulation. Confidence intervals are just for plotting b/c based on linear models but the actual test is not linear
+```{r, eval = FALSE}
+# example data
 #estimate the confidence intervals
 myVaest = var0(myQpc$cml)
 myCI = 1.96*sqrt(myVaest*myEig$values)
@@ -259,4 +284,24 @@ abline(a=mean(myTraits$FT16_mean), b = myCI[2], lty=2, col='#56B4E9', lwd=2)
 abline(a=mean(myTraits$FT16_mean), b = -myCI[2], lty=2, col='#56B4E9', lwd=2)
 ```
 
-Okay, but I don't know how to interpret any of this so I think I need to read Emily's paper?
+If dark line is outside confidence intervals (dashed line), then evidence of selection - PC2 in example data. If dark line is within confidence intervals, then fits with neutral expectation and drift - PC1 with example data.
+
+I didn't color these plots, but I can with the same scheme as the rest of my plots if I add in elevation to my traits dataframe.
+```{r}
+# stamen data
+#estimate the confidence intervals
+stamenVaest = var0(stamenQpc$cml)
+stamenCI = 1.96*sqrt(stamenVaest*stamenEig$values)
+
+#plot
+par(mar = c(5,8,5,14), xpd=T)
+
+plot(stamenEig$vectors[,1], stamenTrait$Pheno[-nrow(stamenTrait)], bty="n", lwd=2, ylab = "", yaxt="n",xlab = "PC1", cex.lab=2, cex.axis=2, xaxt="n")
+axis(1, cex.axis=1.5, lwd=2)
+axis(2, las=2, cex.axis=1.5, lwd=2)
+mtext('Stamen Number',side=2, line=5, cex=2)
+par(xpd=F)
+abline(lm(stamenTrait$Pheno[-nrow(stamenTrait)]~stamenEig$vectors[,2]), lwd=2, col = "#0072B2")
+abline(a=mean(stamenTrait$Pheno), b = stamenCI[2], lty=2, col='#56B4E9', lwd=2)
+abline(a=mean(stamenTrait$Pheno), b = -stamenCI[2], lty=2, col='#56B4E9', lwd=2)
+```

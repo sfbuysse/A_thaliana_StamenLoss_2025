@@ -42,25 +42,27 @@ head(Stamen_Gt)[1:5, 1:5]
 
 # SNPs are cols, so find n.cols
 ncol(Stamen_Gt)
-cols_keep <- runif(n = 50000, min = 1, max = ncol(Stamen_Gt))
-# double check no repeat numbers -- THIS DIDN"T WORK. START HERE 11/17.
+cols_keep <- sample(c(1:ncol(Stamen_Gt)), size = 50000, replace = FALSE, prob = NULL)
+# double check no repeat numbers
 length(unique(cols_keep))
 # the individual ID is the rowname, and I need to make sure that stays.
 Stamen_Gt_sub <- Stamen_Gt[ , cols_keep]
 head(Stamen_Gt_sub)[1:5, 1:5]
+length(unique(colnames(Stamen_Gt_sub)))
 str(Stamen_Gt_sub)
 class(Stamen_Gt_sub)
 
-## wait do I need this structuring?? ugh. backtracking. I don't think I need it.
-## add ID as the first column
-#Stamen_Gt_sub <- as.data.frame(Stamen_Gt_sub)
-#Stamen_Gt_sub$id <- rownames(Stamen_Gt_sub)
-## and organize so it is the first column
-#Stamen_Gt_sub <- Stamen_Gt_sub[ ,c(50001, 1:50000)]
-#head(Stamen_Gt_sub)[1:5, 1:5]
-## ok, this should be what I want
-## I did this restructuring so it matches more exactly the input Emily used
-## because the make_k function depends on the first column being sample id
+## change id structure so can merge with phenotype info later on
+# get rid of the dash in some of the rownames
+rownames(Stamen_Gt_sub) <- gsub(pattern = "-", replacement = "", rownames(Stamen_Gt_sub))
+# make all uppercase
+rownames(Stamen_Gt_sub) <- toupper(rownames(Stamen_Gt_sub))
+#make it a dataframe to merge
+Stamen_Gt_sub <- as.data.frame(Stamen_Gt_sub)
+Stamen_Gt_sub$LineID <- rownames(Stamen_Gt_sub)
+# and organize so it is the first column
+Stamen_Gt_sub <- Stamen_Gt_sub[ ,c(50001, 1:50000)]
+head(Stamen_Gt_sub)[1:5, 1:5]
 
 save(Stamen_Gt_sub, file = "/mnt/research/josephslab/Sophie/Qpc/GenotypeMatrix_Cent_50k_Nov2023.ROBJ")
 write.csv(Stamen_Gt_sub, file = "/mnt/research/josephslab/Sophie/Qpc/GenotypeMatrix_Cent_50k_Nov2023.csv", row.names = FALSE)
