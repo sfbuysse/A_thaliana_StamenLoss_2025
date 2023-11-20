@@ -400,7 +400,7 @@ ggplot(comp)+
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp/SSNbyPi_topo.png",
+ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNbyPi_topo.png",
        height = 7, width = 9, device = "png", dpi = 500)
 
 #ggplot(comp)+
