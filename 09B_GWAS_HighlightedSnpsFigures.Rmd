@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # load packages
-```{r}
+```{r, warning=FALSE}
 library(ggplot2)
 library(dplyr)
 library(qqman)
@@ -86,11 +86,12 @@ manhattan_highlight <- function(identifier, sig.level = 0.05){
   forplot$fdr_col <- as.factor(forplot$fdr_col)
   #make the shared hits a 0 or something??
 
+  # add bonferroni correction p value
   forplot$bon <- p.adjust(forplot$P, method = "bonferroni")
   
   # add row for outlining shared SNPs
-  forplot$shared <- as.character(forplot$fdr_col)
-  forplot[forplot$SNP %in% highlight_snps, "shared"] <- "green"
+  forplot$shared <- as.character(alpha(forplot$fdr_col, 0))
+  forplot[forplot$SNP %in% highlight_snps, "shared"] <- alpha("green", 1)
   forplot$shared <- as.factor(forplot$shared)
   
   ###### manual plot #####
@@ -118,16 +119,25 @@ manhattan_highlight <- function(identifier, sig.level = 0.05){
   
 # and plot. should just make the 1 plot.
   
-  # if I want to color by shared snps, I will likely need to first change the shape so it is the circle that accepts both color and fill, then make the current color column the fill column and make a new color column there is it maybe blank/transparent unless it is a shared snp? or just matches the fill value unless it is a shared SNP.
+  # split don into shared SNPs and not shared SNPs
+  #don_a <- don[don$shared == "#00FF00FF", ]
+  #don_b <- don[don$shared != "#00FF00FF", ]
+  # 11/21/2023 having issues with this double plotting. the blue ones from don_b are all ending up with green outlines even though they should not be. going back to just plotting with don for now because I think it is a levels issues but I can't put it together right now.
+  # OR I just sort the dataframe so that the green points are at the bottom... then they would be plotted last. I need to do this but I think I'm too tired today to do all the testing
+  # I think I could do the subsetting like I did for don_a and don_b but just use that to choose rows then put everything back together in single dataframe? idealling this would all be within subsetting code, not actually making don_a and don_b and merging them back together.
+  # other option is to use ddplyr arrange somehow
+  # wow I really spent way too much time on this when I just needed to sort. 
   
+  # start plot with don_b becuase that is most of what I'll need
   m_plot <- ggplot(don, aes(x=psCum, y=-log10(P))) +
-    geom_point( aes(fill=fdr_col, color = shared), shape = 21, alpha=0.8, size=1.3)+
+    geom_point(aes(fill = fdr_col, color = shared), shape = 21, size = 1.3)+
     geom_hline(yintercept = -log10(bonferroni_sig), color = "#FFC107", linetype = "dashed", alpha = 0.6)+
     #geom_hline(yintercept = -log10(fdr.line), color = "red", linetype = "dotdash")+
-    scale_fill_manual(values = levels(don$fdr_col)) +
-    scale_color_manual(values = alpha(levels(don$shared), 0.8))+
+    scale_fill_manual(values = alpha(levels(don$fdr_col),0.8)) + 
+    scale_color_manual(values = levels(don$shared))+ 
     scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
     #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + # might add this back in later for better comparison
+    #geom_point(data = don_a, aes(fill=fdr_col, color = shared), shape = 21, alpha=0.8, size=1.3)+
     labs(x="Chromosome", y= bquote(-log[10](p)))+
     theme_bw() +
     theme(
