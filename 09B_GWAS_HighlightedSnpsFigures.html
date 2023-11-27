@@ -11,7 +11,7 @@
 
 <meta name="author" content="Sophie Buysse" />
 
-<meta name="date" content="2023-11-22" />
+<meta name="date" content="2023-11-27" />
 
 <title>09B_GWAS_HighlightedSnpsFigures</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">09B_GWAS_HighlightedSnpsFigures</h1>
 <h4 class="author">Sophie Buysse</h4>
-<h4 class="date">2023-11-22</h4>
+<h4 class="date">2023-11-27</h4>
 
 </div>
 
@@ -385,26 +385,26 @@ rm(list = ls())</code></pre>
 <pre class="r"><code># list of files to read in :
 files &lt;- c(&quot;NoCent.PlinkFiltering_Binary.c&quot;, &quot;NoCent.PlinkFiltering_raw.c&quot;,  &quot;NoCent.PlinkFiltering_Asin.c&quot;, &quot;NoCent.PlinkFiltering_Elev.c&quot;, &quot;allSNPs.PlinkFiltering_Asin.c&quot;, &quot;allSNPs.PlinkFiltering_raw.c&quot;, &quot;allSNPs.PlinkFiltering_Elev.c&quot;, &quot;allSNPs.PlinkFiltering_Binary.c&quot;, &quot;allSNPs.PlinkFiltering_raw_subset.c&quot;, &quot;NoCent.PlinkFiltering_raw_subset.c&quot;,&quot;NoCent.PlinkFiltering_raw.c_testing&quot; )
 
-# list of shared SNPs
-# I got a little lost with my old code and what I would all need to read in to find the shared SNPs and the whole cent/nc thing. So this is from the excel sheet to check the code, but I do need to still double check that this list is accurate.
-highlight_snps &lt;- c(&quot;Chr1:14262517&quot;,
+# list of shared SNPs - there are two lists for hits shared between cent included analyses and between cent excluded analyses with no overlap of the SNPs that are a hit in cent and no cent for the same type of GWAS - there is 1 hit only in cent and a different one only in no cent but 8/9 are shared between the two
+# Cent only shared snps
+cent &lt;- c(&quot;Chr1:14262517&quot;,
                     &quot;Chr3:2239234&quot;,
                     &quot;Chr3:2253161&quot;,
                     &quot;Chr3:2942726&quot;,
-                    &quot;Chr5:4899729&quot;,
-                    &quot;Chr5:4899733&quot;,
-                    &quot;Chr5:4899789&quot;,
                     &quot;Chr5:4899798&quot;,
                     &quot;Chr5:4899803&quot;,
-                    &quot;Chr5:4899865&quot;,
-                    &quot;Chr5:4900275&quot;,
-                    &quot;Chr5:4900560&quot;,
-                    &quot;Chr5:4900628&quot;,
-                    &quot;Chr5:4919727&quot;,
                     &quot;Chr5:4920179&quot;,
-                    &quot;Chr5:4920289&quot;,
-                    &quot;Chr5:4920304&quot;,
-                    &quot;Chr5:4920731&quot;,
+                    &quot;Chr5:10731997&quot;,
+                    &quot;Chr5:13458838&quot;
+                    )
+
+# no cent only shared SNPs
+nocent &lt;- c(&quot;Chr3:2239234&quot;,
+                    &quot;Chr3:2253161&quot;,
+                    &quot;Chr3:2942726&quot;,
+                    &quot;Chr5:4899798&quot;,
+                    &quot;Chr5:4899803&quot;,
+                    &quot;Chr5:4920179&quot;,
                     &quot;Chr5:10731997&quot;,
                     &quot;Chr5:13458838&quot;,
                     &quot;Chr5:19462189&quot;
@@ -417,7 +417,7 @@ highlight_snps &lt;- c(&quot;Chr1:14262517&quot;,
 #identifier &lt;- &quot;allSNPs.PlinkFiltering_Elev.c&quot;
 #sig.level &lt;- 0.05
 
-manhattan_highlight &lt;- function(identifier, sig.level = 0.05){
+manhattan_highlight &lt;- function(identifier, sig.level = 0.05, type){
   # add fdr.line as an object?
   ##### Set filenames and read in file #####
   
@@ -450,7 +450,7 @@ manhattan_highlight &lt;- function(identifier, sig.level = 0.05){
   
   # add row for outlining shared SNPs
   forplot$shared &lt;- as.character(alpha(forplot$fdr_col, 0))
-  forplot[forplot$SNP %in% highlight_snps, &quot;shared&quot;] &lt;- alpha(&quot;green&quot;, 1)
+  forplot[forplot$SNP %in% type, &quot;shared&quot;] &lt;- alpha(&quot;green&quot;, 1)
   forplot$shared &lt;- as.factor(forplot$shared)
   
   ###### manual plot #####
@@ -523,30 +523,30 @@ manhattan_highlight &lt;- function(identifier, sig.level = 0.05){
 # there might also be a slighly overlap between color and fill that is creating a dark outline because both are at least somewhat transparent. Maybe I need to decrease size so it isn&#39;t 1.3?</code></pre>
 <p>and actual run the function</p>
 <pre class="r"><code>##### Raw Phenotypes #####
-manhattan_highlight(identifier = &quot;allSNPs.PlinkFiltering_raw.c&quot;)</code></pre>
+manhattan_highlight(identifier = &quot;allSNPs.PlinkFiltering_raw.c&quot;, type = cent)</code></pre>
 <pre><code>## [1] &quot;Done making plot for: allSNPs.PlinkFiltering_raw.c&quot;</code></pre>
-<pre class="r"><code>manhattan_highlight(identifier = &quot;NoCent.PlinkFiltering_raw.c&quot;)</code></pre>
+<pre class="r"><code>manhattan_highlight(identifier = &quot;NoCent.PlinkFiltering_raw.c&quot;, type = nocent)</code></pre>
 <pre><code>## [1] &quot;Done making plot for: NoCent.PlinkFiltering_raw.c&quot;</code></pre>
 <pre class="r"><code>##### Subset Raw Phenotypes #####
 # only include if less than 2 as mean short stamen number
-manhattan_highlight(identifier = &quot;allSNPs.PlinkFiltering_raw_subset.c&quot;)</code></pre>
+manhattan_highlight(identifier = &quot;allSNPs.PlinkFiltering_raw_subset.c&quot;, type = cent)</code></pre>
 <pre><code>## [1] &quot;Done making plot for: allSNPs.PlinkFiltering_raw_subset.c&quot;</code></pre>
-<pre class="r"><code>manhattan_highlight(identifier = &quot;NoCent.PlinkFiltering_raw_subset.c&quot;)</code></pre>
+<pre class="r"><code>manhattan_highlight(identifier = &quot;NoCent.PlinkFiltering_raw_subset.c&quot;, type = nocent)</code></pre>
 <pre><code>## [1] &quot;Done making plot for: NoCent.PlinkFiltering_raw_subset.c&quot;</code></pre>
 <pre class="r"><code>##### Asin Phenotypes #####
-manhattan_highlight(identifier = &quot;allSNPs.PlinkFiltering_Asin.c&quot;)</code></pre>
+manhattan_highlight(identifier = &quot;allSNPs.PlinkFiltering_Asin.c&quot;, type = cent)</code></pre>
 <pre><code>## [1] &quot;Done making plot for: allSNPs.PlinkFiltering_Asin.c&quot;</code></pre>
-<pre class="r"><code>manhattan_highlight(identifier = &quot;NoCent.PlinkFiltering_Asin.c&quot;)</code></pre>
+<pre class="r"><code>manhattan_highlight(identifier = &quot;NoCent.PlinkFiltering_Asin.c&quot;, type = nocent)</code></pre>
 <pre><code>## [1] &quot;Done making plot for: NoCent.PlinkFiltering_Asin.c&quot;</code></pre>
 <pre class="r"><code>##### Binary Phenotypes #####
-manhattan_highlight(identifier = &quot;allSNPs.PlinkFiltering_Binary.c&quot;)</code></pre>
+manhattan_highlight(identifier = &quot;allSNPs.PlinkFiltering_Binary.c&quot;, type = cent)</code></pre>
 <pre><code>## [1] &quot;Done making plot for: allSNPs.PlinkFiltering_Binary.c&quot;</code></pre>
-<pre class="r"><code>manhattan_highlight(identifier = &quot;NoCent.PlinkFiltering_Binary.c&quot;)</code></pre>
+<pre class="r"><code>manhattan_highlight(identifier = &quot;NoCent.PlinkFiltering_Binary.c&quot;, type = nocent)</code></pre>
 <pre><code>## [1] &quot;Done making plot for: NoCent.PlinkFiltering_Binary.c&quot;</code></pre>
 <pre class="r"><code>##### Elevation! #####
-manhattan_highlight(identifier = &quot;allSNPs.PlinkFiltering_Elev.c&quot;)</code></pre>
+manhattan_highlight(identifier = &quot;allSNPs.PlinkFiltering_Elev.c&quot;, type = cent)</code></pre>
 <pre><code>## [1] &quot;Done making plot for: allSNPs.PlinkFiltering_Elev.c&quot;</code></pre>
-<pre class="r"><code>manhattan_highlight(identifier = &quot;NoCent.PlinkFiltering_Elev.c&quot;)</code></pre>
+<pre class="r"><code>manhattan_highlight(identifier = &quot;NoCent.PlinkFiltering_Elev.c&quot;, type = nocent)</code></pre>
 <pre><code>## [1] &quot;Done making plot for: NoCent.PlinkFiltering_Elev.c&quot;</code></pre>
 </div>
 

@@ -24,26 +24,26 @@ rm(list = ls())
 # list of files to read in :
 files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c","NoCent.PlinkFiltering_raw.c_testing" )
 
-# list of shared SNPs
-# I got a little lost with my old code and what I would all need to read in to find the shared SNPs and the whole cent/nc thing. So this is from the excel sheet to check the code, but I do need to still double check that this list is accurate.
-highlight_snps <- c("Chr1:14262517",
+# list of shared SNPs - there are two lists for hits shared between cent included analyses and between cent excluded analyses with no overlap of the SNPs that are a hit in cent and no cent for the same type of GWAS - there is 1 hit only in cent and a different one only in no cent but 8/9 are shared between the two
+# Cent only shared snps
+cent <- c("Chr1:14262517",
                     "Chr3:2239234",
                     "Chr3:2253161",
                     "Chr3:2942726",
-                    "Chr5:4899729",
-                    "Chr5:4899733",
-                    "Chr5:4899789",
                     "Chr5:4899798",
                     "Chr5:4899803",
-                    "Chr5:4899865",
-                    "Chr5:4900275",
-                    "Chr5:4900560",
-                    "Chr5:4900628",
-                    "Chr5:4919727",
                     "Chr5:4920179",
-                    "Chr5:4920289",
-                    "Chr5:4920304",
-                    "Chr5:4920731",
+                    "Chr5:10731997",
+                    "Chr5:13458838"
+                    )
+
+# no cent only shared SNPs
+nocent <- c("Chr3:2239234",
+                    "Chr3:2253161",
+                    "Chr3:2942726",
+                    "Chr5:4899798",
+                    "Chr5:4899803",
+                    "Chr5:4920179",
                     "Chr5:10731997",
                     "Chr5:13458838",
                     "Chr5:19462189"
@@ -58,7 +58,7 @@ highlight_snps <- c("Chr1:14262517",
 #identifier <- "allSNPs.PlinkFiltering_Elev.c"
 #sig.level <- 0.05
 
-manhattan_highlight <- function(identifier, sig.level = 0.05){
+manhattan_highlight <- function(identifier, sig.level = 0.05, type){
   # add fdr.line as an object?
   ##### Set filenames and read in file #####
   
@@ -91,7 +91,7 @@ manhattan_highlight <- function(identifier, sig.level = 0.05){
   
   # add row for outlining shared SNPs
   forplot$shared <- as.character(alpha(forplot$fdr_col, 0))
-  forplot[forplot$SNP %in% highlight_snps, "shared"] <- alpha("green", 1)
+  forplot[forplot$SNP %in% type, "shared"] <- alpha("green", 1)
   forplot$shared <- as.factor(forplot$shared)
   
   ###### manual plot #####
@@ -167,24 +167,24 @@ manhattan_highlight <- function(identifier, sig.level = 0.05){
 and actual run the function
 ```{r}
 ##### Raw Phenotypes #####
-manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw.c")
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw.c")
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw.c", type = cent)
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw.c", type = nocent)
 
 
 ##### Subset Raw Phenotypes #####
 # only include if less than 2 as mean short stamen number
-manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw_subset.c")
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw_subset.c")
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw_subset.c", type = cent)
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw_subset.c", type = nocent)
 
 ##### Asin Phenotypes #####
-manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Asin.c")
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_Asin.c")
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Asin.c", type = cent)
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_Asin.c", type = nocent)
 
 ##### Binary Phenotypes #####
-manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Binary.c")
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_Binary.c")
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Binary.c", type = cent)
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_Binary.c", type = nocent)
 
 ##### Elevation! #####
-manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Elev.c")
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_Elev.c")
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Elev.c", type = cent)
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_Elev.c", type = nocent)
 ```
