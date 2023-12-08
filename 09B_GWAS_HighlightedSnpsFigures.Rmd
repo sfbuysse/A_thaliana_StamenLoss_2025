@@ -193,6 +193,10 @@ manhattan_highlight(identifier = "NoCent.PlinkFiltering_Elev.c", type = nocent)
 # QTL comparison
 Can I make a figure where I highlight the SNPs that are within the QTL region? With my current set up, I think the easiest way to do it would be to add a different color outer ring to those points. This would just be a 'for me' figure so I could make some conclusions, so I don't need to worry about picking a great color. Start with just the asin allSNPs becuase that might also be all I need.
 
+Need to read in list 'cent' from earlier in the code.
+
+Asin short stamen number
+
 ```{r}
 identifier <- "allSNPs.PlinkFiltering_asin.c"
 sig.level <- 0.05
@@ -288,5 +292,142 @@ forplot$shared <- as.factor(forplot$shared)
   
   ggsave(paste0(fig_name,".png"), plot = m_plot, width = 7, height = 3, dpi = 700, units = "in")
   
+
+```
+
+
+Elevation
+```{r}
+identifier <- "allSNPs.PlinkFiltering_elev.c"
+sig.level <- 0.05
+type <- cent
+
+filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+fig_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp/", identifier, "_QTLcomp")
+  
+results <- read.delim(file= filename, header = T, stringsAsFactors = F)
+  
+# reorganize dataframe
+  
+forplot <- data.frame("BP" = results$ps, "CHR" = results$chr, "P" = results$p_wald, "SNP" = results$rs)
+  
+forplot$fdr <- p.adjust(p= forplot$P, method = "fdr")
+#for point color...
+forplot$fdr_col <- forplot$CHR
+forplot[forplot$fdr_col == 1, "fdr_col"] <- "#ABABAB"
+forplot[forplot$fdr_col == 2, "fdr_col"] <- "#000000"
+forplot[forplot$fdr_col == 3, "fdr_col"] <- "#ABABAB"
+forplot[forplot$fdr_col == 4, "fdr_col"] <- "#000000"
+forplot[forplot$fdr_col == 5, "fdr_col"] <- "#ABABAB"
+forplot[forplot$fdr < 0.10, "fdr_col"] <- "#1E88E5"
+# allSNPs raw: cutoff for this is between 9.651559e-02 (6) and 1.004850e-01 (1)
+forplot[forplot$fdr < 0.05, "fdr_col"] <- "#D66C93"
+# allSNPs raw: cutoff for this is between 7.323552e-02 (6) and 4.269675e-03(7) 
+forplot$fdr_col <- as.factor(forplot$fdr_col)
+#make the shared hits a 0 or something??
+
+# add bonferroni correction p value
+forplot$bon <- p.adjust(forplot$P, method = "bonferroni")
+  
+# add row for outlining shared SNPs
+forplot$shared <- as.character(alpha(forplot$fdr_col, 0))
+forplot[forplot$SNP %in% type, "shared"] <- alpha("green", 1)
+# where are the QTL?
+# chr1: 21551000:30245000
+forplot[forplot$CHR == 1 & forplot$BP %in% c(21551000:30245000), "shared"] <- alpha("goldenrod", 1)
+# chr3: 7329000:8201000
+forplot[forplot$CHR == 3 & forplot$BP %in% c(7329000:8201000), "shared"] <- alpha("goldenrod", 1)
+# chr5: 2408000:2986000
+forplot[forplot$CHR == 5 & forplot$BP %in% c(2408000:2986000), "shared"] <- alpha("goldenrod", 1)
+
+forplot$shared <- as.factor(forplot$shared)
+  
+###### manual plot #####
+  # prep to plot
+  don <- forplot %>%
+    # compute chromosome size in bp
+    group_by(CHR) %>%
+    summarize(chr_len=max(BP)) %>%
+    
+    #calculate cumulative position of each chromosome (again in bp)
+    mutate(tot=cumsum(chr_len)-chr_len) %>%
+    dplyr::select(-chr_len) %>%
+    
+    #add this info to the initial data set (so like adding new column and sorting by it)
+    left_join(forplot, ., by=c("CHR"="CHR")) %>%
+    
+    #add cum position of each SNP
+    arrange(CHR, BP) %>%
+    mutate( psCum=BP+tot)
+  
+  axisdf = don %>% group_by(CHR) %>% summarize(center=( max(psCum) + min(psCum) ) /2 )
+  
+  #sig.level is set in the function line. is 0.05 default but not expecting hits above that.
+  bonferroni_sig <- sig.level/length(forplot$P)
+  
+# and plot. should just make the 1 plot.
+  
+  # split don into shared SNPs and not shared SNPs, then merging together so the shared snps are at the bottom of the dataframe and will be plotted on top of the other points.
+  # hopefully dn't need to also make QTL ones plotted near bottom...
+  don_a <- don[don$shared == "#00FF00FF", ]
+  don_b <- don[don$shared != "#00FF00FF", ]
+  don_c <- rbind(don_b, don_a)
+  
+  # start plot with don_b because that is most of what I'll need
+  m_plot <- ggplot(don_c, aes(x=psCum, y=-log10(P))) +
+    geom_point(aes(fill = fdr_col, color = shared), shape = 21, size = 1.3)+
+    geom_hline(yintercept = -log10(bonferroni_sig), color = "#FFC107", linetype = "dashed", alpha = 0.6)+
+    scale_fill_manual(values = alpha(levels(don_c$fdr_col),0.8)) + 
+    scale_color_manual(values = levels(don_c$shared))+ 
+    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
+    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + # might add this back in later for better comparison
+    labs(x="Chromosome", y= bquote(-log[10](p)))+
+    theme_bw() +
+    theme(
+      legend.position="none",
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+    )
+  
+  ggsave(paste0(fig_name,".png"), plot = m_plot, width = 7, height = 3, dpi = 700, units = "in")
+  
+
+```
+
+# Not figure
+
+but pull out the SNPs I want to look at next...
+
+```{r}
+# read is asin .assoc file Copy i made so I don't somehow mess up the other one
+dat <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/allSNPs.PlinkFiltering_Asin.c.assoc - Copy.txt")
+
+# just Chr1 in the region first
+qtl1 <- dat[dat$chr == 1 & dat$ps %in% c(21551000:30245000), ]
+# then find the highest SNPs in that region
+head(qtl1[order(qtl1$p_wald), ])
+# investigate top 4:
+#Chr1:22557999 - rare! allele frequency is 0.058 so most individuals have the same genotype but only a few are different. 
+#Chr1:29938307
+#Chr1:29078562 - not directly in gene
+#Chr1:28923210
+
+# chr5
+# this one is a little tricky because I want the peak before the chr5 QTL
+# only keep SNPs before the QTL starts
+qtl5 <- dat[dat$chr == 5 & dat$ps %in% c(1:2408000), ]
+# then look for max p val
+head(qtl5[order(qtl5$p_wald), ])
+# top 10?
+print(head(qtl5[order(qtl5$p_wald), "rs"], n=10))
+#""Chr5:1932376" "Chr5:1932393" "Chr5:1932397" "Chr5:1932399" "Chr5:2241213" "Chr5:2254579" "Chr5:2227731" "Chr5:2087122"
+# [9] "Chr5:2253107" "Chr5:2254361"
+
+# just in case chr3
+
+qtl3 <- dat[dat$chr == 3 & dat$ps %in% c(7329000:8201000), ]
+head(qtl3[order(qtl3$p_wald), ])
+print(head(qtl3[order(qtl3$p_wald), "rs"]))
 
 ```
