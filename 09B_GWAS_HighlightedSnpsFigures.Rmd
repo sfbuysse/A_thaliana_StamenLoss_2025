@@ -128,6 +128,9 @@ manhattan_highlight <- function(identifier, sig.level = 0.05, type){
   m_plot <- ggplot(don_c, aes(x=psCum, y=-log10(P))) +
     geom_point(aes(fill = fdr_col, color = shared), shape = 21, size = 1.3)+
     geom_hline(yintercept = -log10(bonferroni_sig), color = "#FFC107", linetype = "dashed", alpha = 0.6)+
+    geom_segment(aes(x = 21551000, y = -0.3, xend = 30245000, yend = -0.3), col = "black", lineend = "round")+
+    geom_segment(aes(x = (50122495+7329000), y = -0.3, xend = (50122495+ 8201000), yend = -0.3), col = "black", lineend = "round")+
+    geom_segment(aes(x =(92167091+2408000 ), y = -0.3, xend = (92167091+2986000 ), yend = -0.3), col = "black", lineend = "round")+
     scale_fill_manual(values = alpha(levels(don_c$fdr_col),0.8)) + 
     scale_color_manual(values = levels(don_c$shared))+ 
     scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
@@ -194,6 +197,10 @@ manhattan_highlight(identifier = "NoCent.PlinkFiltering_Elev.c", type = nocent)
 Can I make a figure where I highlight the SNPs that are within the QTL region? With my current set up, I think the easiest way to do it would be to add a different color outer ring to those points. This would just be a 'for me' figure so I could make some conclusions, so I don't need to worry about picking a great color. Start with just the asin allSNPs becuase that might also be all I need.
 
 Need to read in list 'cent' from earlier in the code.
+
+Now (12/11) changing this so instead of highlighting the SNPs in the QTL, I put a line under the pot were the QTL are.
+
+Then if this works well, I should just add the segments to the initial function so it is on all of the plots rather than just the 2 not supplemental ones because that isn't hard to do and might be helfpul.
 
 Asin short stamen number
 
@@ -277,6 +284,9 @@ forplot$shared <- as.factor(forplot$shared)
   m_plot <- ggplot(don_c, aes(x=psCum, y=-log10(P))) +
     geom_point(aes(fill = fdr_col, color = shared), shape = 21, size = 1.3)+
     geom_hline(yintercept = -log10(bonferroni_sig), color = "#FFC107", linetype = "dashed", alpha = 0.6)+
+    geom_segment(aes(x = 21551000, y = -0.3, xend = 30245000, yend = -0.3), col = "black", lineend = "round")+
+    geom_segment(aes(x = (50122495+7329000), y = -0.3, xend = (50122495+ 8201000), yend = -0.3), col = "black", lineend = "round")+
+    geom_segment(aes(x =(92167091+2408000 ), y = -0.3, xend = (92167091+2986000 ), yend = -0.3), col = "black", lineend = "round")+
     scale_fill_manual(values = alpha(levels(don_c$fdr_col),0.8)) + 
     scale_color_manual(values = levels(don_c$shared))+ 
     scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +

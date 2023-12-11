@@ -11,7 +11,7 @@
 
 <meta name="author" content="Sophie Buysse" />
 
-<meta name="date" content="2023-11-27" />
+<meta name="date" content="2023-12-11" />
 
 <title>09B_GWAS_HighlightedSnpsFigures</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">09B_GWAS_HighlightedSnpsFigures</h1>
 <h4 class="author">Sophie Buysse</h4>
-<h4 class="date">2023-11-27</h4>
+<h4 class="date">2023-12-11</h4>
 
 </div>
 
@@ -413,7 +413,7 @@ nocent &lt;- c(&quot;Chr3:2239234&quot;,
 <div id="make-plotting-function" class="section level1">
 <h1>make plotting function</h1>
 <pre class="r"><code># for testing
-#identifier &lt;- &quot;allSNPs.PlinkFiltering_raw.c&quot;
+#identifier &lt;- &quot;allSNPs.PlinkFiltering_asin.c&quot;
 #identifier &lt;- &quot;allSNPs.PlinkFiltering_Elev.c&quot;
 #sig.level &lt;- 0.05
 
@@ -487,6 +487,9 @@ manhattan_highlight &lt;- function(identifier, sig.level = 0.05, type){
   m_plot &lt;- ggplot(don_c, aes(x=psCum, y=-log10(P))) +
     geom_point(aes(fill = fdr_col, color = shared), shape = 21, size = 1.3)+
     geom_hline(yintercept = -log10(bonferroni_sig), color = &quot;#FFC107&quot;, linetype = &quot;dashed&quot;, alpha = 0.6)+
+    geom_segment(aes(x = 21551000, y = -0.3, xend = 30245000, yend = -0.3), col = &quot;black&quot;, lineend = &quot;round&quot;)+
+    geom_segment(aes(x = (50122495+7329000), y = -0.3, xend = (50122495+ 8201000), yend = -0.3), col = &quot;black&quot;, lineend = &quot;round&quot;)+
+    geom_segment(aes(x =(92167091+2408000 ), y = -0.3, xend = (92167091+2986000 ), yend = -0.3), col = &quot;black&quot;, lineend = &quot;round&quot;)+
     scale_fill_manual(values = alpha(levels(don_c$fdr_col),0.8)) + 
     scale_color_manual(values = levels(don_c$shared))+ 
     scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
@@ -548,6 +551,313 @@ manhattan_highlight(identifier = &quot;allSNPs.PlinkFiltering_Elev.c&quot;, type
 <pre><code>## [1] &quot;Done making plot for: allSNPs.PlinkFiltering_Elev.c&quot;</code></pre>
 <pre class="r"><code>manhattan_highlight(identifier = &quot;NoCent.PlinkFiltering_Elev.c&quot;, type = nocent)</code></pre>
 <pre><code>## [1] &quot;Done making plot for: NoCent.PlinkFiltering_Elev.c&quot;</code></pre>
+</div>
+<div id="qtl-comparison" class="section level1">
+<h1>QTL comparison</h1>
+<p>Can I make a figure where I highlight the SNPs that are within the
+QTL region? With my current set up, I think the easiest way to do it
+would be to add a different color outer ring to those points. This would
+just be a ‘for me’ figure so I could make some conclusions, so I don’t
+need to worry about picking a great color. Start with just the asin
+allSNPs becuase that might also be all I need.</p>
+<p>Need to read in list ‘cent’ from earlier in the code.</p>
+<p>Now (12/11) changing this so instead of highlighting the SNPs in the
+QTL, I put a line under the pot were the QTL are.</p>
+<p>Then if this works well, I should just add the segments to the
+initial function so it is on all of the plots rather than just the 2 not
+supplemental ones because that isn’t hard to do and might be
+helfpul.</p>
+<p>Asin short stamen number</p>
+<pre class="r"><code>identifier &lt;- &quot;allSNPs.PlinkFiltering_asin.c&quot;
+sig.level &lt;- 0.05
+type &lt;- cent
+
+filename = paste0(&quot;C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/&quot;, identifier, &quot;.assoc.txt&quot;)
+fig_name = paste0(&quot;C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp/&quot;, identifier, &quot;_QTLcomp&quot;)
+  
+results &lt;- read.delim(file= filename, header = T, stringsAsFactors = F)
+  
+# reorganize dataframe
+  
+forplot &lt;- data.frame(&quot;BP&quot; = results$ps, &quot;CHR&quot; = results$chr, &quot;P&quot; = results$p_wald, &quot;SNP&quot; = results$rs)
+  
+forplot$fdr &lt;- p.adjust(p= forplot$P, method = &quot;fdr&quot;)
+#for point color...
+forplot$fdr_col &lt;- forplot$CHR
+forplot[forplot$fdr_col == 1, &quot;fdr_col&quot;] &lt;- &quot;#ABABAB&quot;
+forplot[forplot$fdr_col == 2, &quot;fdr_col&quot;] &lt;- &quot;#000000&quot;
+forplot[forplot$fdr_col == 3, &quot;fdr_col&quot;] &lt;- &quot;#ABABAB&quot;
+forplot[forplot$fdr_col == 4, &quot;fdr_col&quot;] &lt;- &quot;#000000&quot;
+forplot[forplot$fdr_col == 5, &quot;fdr_col&quot;] &lt;- &quot;#ABABAB&quot;
+forplot[forplot$fdr &lt; 0.10, &quot;fdr_col&quot;] &lt;- &quot;#1E88E5&quot;
+# allSNPs raw: cutoff for this is between 9.651559e-02 (6) and 1.004850e-01 (1)
+forplot[forplot$fdr &lt; 0.05, &quot;fdr_col&quot;] &lt;- &quot;#D66C93&quot;
+# allSNPs raw: cutoff for this is between 7.323552e-02 (6) and 4.269675e-03(7) 
+forplot$fdr_col &lt;- as.factor(forplot$fdr_col)
+#make the shared hits a 0 or something??
+
+# add bonferroni correction p value
+forplot$bon &lt;- p.adjust(forplot$P, method = &quot;bonferroni&quot;)
+  
+# add row for outlining shared SNPs
+forplot$shared &lt;- as.character(alpha(forplot$fdr_col, 0))
+forplot[forplot$SNP %in% type, &quot;shared&quot;] &lt;- alpha(&quot;green&quot;, 1)
+# where are the QTL?
+# chr1: 21551000:30245000
+forplot[forplot$CHR == 1 &amp; forplot$BP %in% c(21551000:30245000), &quot;shared&quot;] &lt;- alpha(&quot;goldenrod&quot;, 1)
+# chr3: 7329000:8201000
+forplot[forplot$CHR == 3 &amp; forplot$BP %in% c(7329000:8201000), &quot;shared&quot;] &lt;- alpha(&quot;goldenrod&quot;, 1)
+# chr5: 2408000:2986000
+forplot[forplot$CHR == 5 &amp; forplot$BP %in% c(2408000:2986000), &quot;shared&quot;] &lt;- alpha(&quot;goldenrod&quot;, 1)
+
+forplot$shared &lt;- as.factor(forplot$shared)
+  
+###### manual plot #####
+  # prep to plot
+  don &lt;- forplot %&gt;%
+    # compute chromosome size in bp
+    group_by(CHR) %&gt;%
+    summarize(chr_len=max(BP)) %&gt;%
+    
+    #calculate cumulative position of each chromosome (again in bp)
+    mutate(tot=cumsum(chr_len)-chr_len) %&gt;%
+    dplyr::select(-chr_len) %&gt;%
+    
+    #add this info to the initial data set (so like adding new column and sorting by it)
+    left_join(forplot, ., by=c(&quot;CHR&quot;=&quot;CHR&quot;)) %&gt;%
+    
+    #add cum position of each SNP
+    arrange(CHR, BP) %&gt;%
+    mutate( psCum=BP+tot)
+  
+  axisdf = don %&gt;% group_by(CHR) %&gt;% summarize(center=( max(psCum) + min(psCum) ) /2 )
+  
+  #sig.level is set in the function line. is 0.05 default but not expecting hits above that.
+  bonferroni_sig &lt;- sig.level/length(forplot$P)
+  
+# and plot. should just make the 1 plot.
+  
+  # split don into shared SNPs and not shared SNPs, then merging together so the shared snps are at the bottom of the dataframe and will be plotted on top of the other points.
+  # hopefully dn&#39;t need to also make QTL ones plotted near bottom...
+  don_a &lt;- don[don$shared == &quot;#00FF00FF&quot;, ]
+  don_b &lt;- don[don$shared != &quot;#00FF00FF&quot;, ]
+  don_c &lt;- rbind(don_b, don_a)
+  
+  # start plot with don_b because that is most of what I&#39;ll need
+  m_plot &lt;- ggplot(don_c, aes(x=psCum, y=-log10(P))) +
+    geom_point(aes(fill = fdr_col, color = shared), shape = 21, size = 1.3)+
+    geom_hline(yintercept = -log10(bonferroni_sig), color = &quot;#FFC107&quot;, linetype = &quot;dashed&quot;, alpha = 0.6)+
+    geom_segment(aes(x = 21551000, y = -0.3, xend = 30245000, yend = -0.3), col = &quot;black&quot;, lineend = &quot;round&quot;)+
+    geom_segment(aes(x = (50122495+7329000), y = -0.3, xend = (50122495+ 8201000), yend = -0.3), col = &quot;black&quot;, lineend = &quot;round&quot;)+
+    geom_segment(aes(x =(92167091+2408000 ), y = -0.3, xend = (92167091+2986000 ), yend = -0.3), col = &quot;black&quot;, lineend = &quot;round&quot;)+
+    scale_fill_manual(values = alpha(levels(don_c$fdr_col),0.8)) + 
+    scale_color_manual(values = levels(don_c$shared))+ 
+    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
+    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + # might add this back in later for better comparison
+    labs(x=&quot;Chromosome&quot;, y= bquote(-log[10](p)))+
+    theme_bw() +
+    theme(
+      legend.position=&quot;none&quot;,
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+    )
+  
+  ggsave(paste0(fig_name,&quot;.png&quot;), plot = m_plot, width = 7, height = 3, dpi = 700, units = &quot;in&quot;)</code></pre>
+<p>Elevation</p>
+<pre class="r"><code>identifier &lt;- &quot;allSNPs.PlinkFiltering_elev.c&quot;
+sig.level &lt;- 0.05
+type &lt;- cent
+
+filename = paste0(&quot;C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/&quot;, identifier, &quot;.assoc.txt&quot;)
+fig_name = paste0(&quot;C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp/&quot;, identifier, &quot;_QTLcomp&quot;)
+  
+results &lt;- read.delim(file= filename, header = T, stringsAsFactors = F)
+  
+# reorganize dataframe
+  
+forplot &lt;- data.frame(&quot;BP&quot; = results$ps, &quot;CHR&quot; = results$chr, &quot;P&quot; = results$p_wald, &quot;SNP&quot; = results$rs)
+  
+forplot$fdr &lt;- p.adjust(p= forplot$P, method = &quot;fdr&quot;)
+#for point color...
+forplot$fdr_col &lt;- forplot$CHR
+forplot[forplot$fdr_col == 1, &quot;fdr_col&quot;] &lt;- &quot;#ABABAB&quot;
+forplot[forplot$fdr_col == 2, &quot;fdr_col&quot;] &lt;- &quot;#000000&quot;
+forplot[forplot$fdr_col == 3, &quot;fdr_col&quot;] &lt;- &quot;#ABABAB&quot;
+forplot[forplot$fdr_col == 4, &quot;fdr_col&quot;] &lt;- &quot;#000000&quot;
+forplot[forplot$fdr_col == 5, &quot;fdr_col&quot;] &lt;- &quot;#ABABAB&quot;
+forplot[forplot$fdr &lt; 0.10, &quot;fdr_col&quot;] &lt;- &quot;#1E88E5&quot;
+# allSNPs raw: cutoff for this is between 9.651559e-02 (6) and 1.004850e-01 (1)
+forplot[forplot$fdr &lt; 0.05, &quot;fdr_col&quot;] &lt;- &quot;#D66C93&quot;
+# allSNPs raw: cutoff for this is between 7.323552e-02 (6) and 4.269675e-03(7) 
+forplot$fdr_col &lt;- as.factor(forplot$fdr_col)
+#make the shared hits a 0 or something??
+
+# add bonferroni correction p value
+forplot$bon &lt;- p.adjust(forplot$P, method = &quot;bonferroni&quot;)
+  
+# add row for outlining shared SNPs
+forplot$shared &lt;- as.character(alpha(forplot$fdr_col, 0))
+forplot[forplot$SNP %in% type, &quot;shared&quot;] &lt;- alpha(&quot;green&quot;, 1)
+# where are the QTL?
+# chr1: 21551000:30245000
+forplot[forplot$CHR == 1 &amp; forplot$BP %in% c(21551000:30245000), &quot;shared&quot;] &lt;- alpha(&quot;goldenrod&quot;, 1)
+# chr3: 7329000:8201000
+forplot[forplot$CHR == 3 &amp; forplot$BP %in% c(7329000:8201000), &quot;shared&quot;] &lt;- alpha(&quot;goldenrod&quot;, 1)
+# chr5: 2408000:2986000
+forplot[forplot$CHR == 5 &amp; forplot$BP %in% c(2408000:2986000), &quot;shared&quot;] &lt;- alpha(&quot;goldenrod&quot;, 1)
+
+forplot$shared &lt;- as.factor(forplot$shared)
+  
+###### manual plot #####
+  # prep to plot
+  don &lt;- forplot %&gt;%
+    # compute chromosome size in bp
+    group_by(CHR) %&gt;%
+    summarize(chr_len=max(BP)) %&gt;%
+    
+    #calculate cumulative position of each chromosome (again in bp)
+    mutate(tot=cumsum(chr_len)-chr_len) %&gt;%
+    dplyr::select(-chr_len) %&gt;%
+    
+    #add this info to the initial data set (so like adding new column and sorting by it)
+    left_join(forplot, ., by=c(&quot;CHR&quot;=&quot;CHR&quot;)) %&gt;%
+    
+    #add cum position of each SNP
+    arrange(CHR, BP) %&gt;%
+    mutate( psCum=BP+tot)
+  
+  axisdf = don %&gt;% group_by(CHR) %&gt;% summarize(center=( max(psCum) + min(psCum) ) /2 )
+  
+  #sig.level is set in the function line. is 0.05 default but not expecting hits above that.
+  bonferroni_sig &lt;- sig.level/length(forplot$P)
+  
+# and plot. should just make the 1 plot.
+  
+  # split don into shared SNPs and not shared SNPs, then merging together so the shared snps are at the bottom of the dataframe and will be plotted on top of the other points.
+  # hopefully dn&#39;t need to also make QTL ones plotted near bottom...
+  don_a &lt;- don[don$shared == &quot;#00FF00FF&quot;, ]
+  don_b &lt;- don[don$shared != &quot;#00FF00FF&quot;, ]
+  don_c &lt;- rbind(don_b, don_a)
+  
+  # start plot with don_b because that is most of what I&#39;ll need
+  m_plot &lt;- ggplot(don_c, aes(x=psCum, y=-log10(P))) +
+    geom_point(aes(fill = fdr_col, color = shared), shape = 21, size = 1.3)+
+    geom_hline(yintercept = -log10(bonferroni_sig), color = &quot;#FFC107&quot;, linetype = &quot;dashed&quot;, alpha = 0.6)+
+    scale_fill_manual(values = alpha(levels(don_c$fdr_col),0.8)) + 
+    scale_color_manual(values = levels(don_c$shared))+ 
+    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
+    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + # might add this back in later for better comparison
+    labs(x=&quot;Chromosome&quot;, y= bquote(-log[10](p)))+
+    theme_bw() +
+    theme(
+      legend.position=&quot;none&quot;,
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+    )
+  
+  ggsave(paste0(fig_name,&quot;.png&quot;), plot = m_plot, width = 7, height = 3, dpi = 700, units = &quot;in&quot;)</code></pre>
+</div>
+<div id="not-figure" class="section level1">
+<h1>Not figure</h1>
+<p>but pull out the SNPs I want to look at next…</p>
+<pre class="r"><code># read is asin .assoc file Copy i made so I don&#39;t somehow mess up the other one
+dat &lt;- read.delim(&quot;C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/allSNPs.PlinkFiltering_Asin.c.assoc - Copy.txt&quot;)
+
+# just Chr1 in the region first
+qtl1 &lt;- dat[dat$chr == 1 &amp; dat$ps %in% c(21551000:30245000), ]
+# then find the highest SNPs in that region
+head(qtl1[order(qtl1$p_wald), ])</code></pre>
+<pre><code>##        chr            rs       ps n_miss allele1 allele0    af      beta
+## 356850   1 Chr1:22557999 22557999      9       T       A 0.058 0.2278733
+## 472783   1 Chr1:29938307 29938307      7       T       A 0.481 0.1731025
+## 466388   1 Chr1:29078562 29078562      5       C       T 0.482 0.1647901
+## 464891   1 Chr1:28923210 28923210      5       A       G 0.420 0.1643510
+## 464892   1 Chr1:28923228 28923228      4       T       C 0.412 0.1601609
+## 464893   1 Chr1:28923237 28923237      4       T       C 0.412 0.1601609
+##                se  logl_H1   l_remle        l_mle       p_wald        p_lrt
+## 356850 0.04493988 17.71737 24.213160 1.000000e+05 4.211047e-06 1.443262e-06
+## 472783 0.03618598 15.52598  3.021091 3.212823e+00 1.189984e-05 1.422018e-05
+## 466388 0.03495521 14.97385  2.599729 2.703091e+00 1.524686e-05 2.538981e-05
+## 464891 0.03511725 15.60980  4.231522 4.458184e+00 1.722332e-05 1.302385e-05
+## 464892 0.03587176 14.86435  4.261771 4.483571e+00 3.674635e-05 2.848845e-05
+## 464893 0.03587176 14.86435  4.261771 4.483571e+00 3.674635e-05 2.848845e-05
+##             p_score
+## 356850 0.0012194330
+## 472783 0.0002076982
+## 466388 0.0003698454
+## 464891 0.0001653916
+## 464892 0.0002619461
+## 464893 0.0002619461</code></pre>
+<pre class="r"><code># investigate top 4:
+#Chr1:22557999 - rare! allele frequency is 0.058 so most individuals have the same genotype but only a few are different. 
+#Chr1:29938307
+#Chr1:29078562 - not directly in gene
+#Chr1:28923210
+
+# chr5
+# this one is a little tricky because I want the peak before the chr5 QTL
+# only keep SNPs before the QTL starts
+qtl5 &lt;- dat[dat$chr == 5 &amp; dat$ps %in% c(1:2408000), ]
+# then look for max p val
+head(qtl5[order(qtl5$p_wald), ])</code></pre>
+<pre><code>##         chr           rs      ps n_miss allele1 allele0    af       beta
+## 1448508   5 Chr5:1932376 1932376      1       C       T 0.333 -0.1751447
+## 1448509   5 Chr5:1932393 1932393      1       T       A 0.333 -0.1751447
+## 1448510   5 Chr5:1932397 1932397      1       G       A 0.333 -0.1751447
+## 1448511   5 Chr5:1932399 1932399      1       T       A 0.333 -0.1751447
+## 1450937   5 Chr5:2241213 2241213      8       T       C 0.283 -0.1903373
+## 1451007   5 Chr5:2254579 2254579      1       T       G 0.267 -0.1748078
+##                 se  logl_H1  l_remle    l_mle       p_wald        p_lrt
+## 1448508 0.03825807 12.87363 1.489938 1.492883 2.471541e-05 0.0002341974
+## 1448509 0.03825807 12.87363 1.489938 1.492883 2.471541e-05 0.0002341974
+## 1448510 0.03825807 12.87363 1.489938 1.492883 2.471541e-05 0.0002341974
+## 1448511 0.03825807 12.87363 1.489938 1.492883 2.471541e-05 0.0002341974
+## 1450937 0.04349128 12.98570 1.907579 1.950146 4.994299e-05 0.0002078431
+## 1451007 0.04011345 13.15259 2.064412 2.144006 5.325951e-05 0.0001740283
+##             p_score
+## 1448508 0.002963871
+## 1448509 0.002963871
+## 1448510 0.002963871
+## 1448511 0.002963871
+## 1450937 0.001954520
+## 1451007 0.001554719</code></pre>
+<pre class="r"><code># top 10?
+print(head(qtl5[order(qtl5$p_wald), &quot;rs&quot;], n=10))</code></pre>
+<pre><code>##  [1] &quot;Chr5:1932376&quot; &quot;Chr5:1932393&quot; &quot;Chr5:1932397&quot; &quot;Chr5:1932399&quot; &quot;Chr5:2241213&quot;
+##  [6] &quot;Chr5:2254579&quot; &quot;Chr5:2227731&quot; &quot;Chr5:2087122&quot; &quot;Chr5:2253107&quot; &quot;Chr5:2254361&quot;</code></pre>
+<pre class="r"><code>#&quot;&quot;Chr5:1932376&quot; &quot;Chr5:1932393&quot; &quot;Chr5:1932397&quot; &quot;Chr5:1932399&quot; &quot;Chr5:2241213&quot; &quot;Chr5:2254579&quot; &quot;Chr5:2227731&quot; &quot;Chr5:2087122&quot;
+# [9] &quot;Chr5:2253107&quot; &quot;Chr5:2254361&quot;
+
+# just in case chr3
+
+qtl3 &lt;- dat[dat$chr == 3 &amp; dat$ps %in% c(7329000:8201000), ]
+head(qtl3[order(qtl3$p_wald), ])</code></pre>
+<pre><code>##        chr           rs      ps n_miss allele1 allele0    af       beta
+## 843103   3 Chr3:7397768 7397768      8       C       G 0.245 -0.1668917
+## 846551   3 Chr3:7739519 7739519      3       A       G 0.310  0.1334040
+## 843093   3 Chr3:7396895 7396895      2       G       A 0.246 -0.1320392
+## 846649   3 Chr3:7743330 7743330      3       C       G 0.379  0.1161151
+## 849036   3 Chr3:7906305 7906305      5       G       C 0.161 -0.1888760
+## 845736   3 Chr3:7659378 7659378      4       A       G 0.202  0.1514029
+##                se  logl_H1  l_remle    l_mle       p_wald        p_lrt
+## 843103 0.04011484 13.71453 3.787151 4.040933 0.0001045761 9.586381e-05
+## 846551 0.03765472 11.87582 4.283269 4.565501 0.0007811423 6.814966e-04
+## 843093 0.04101129 10.41401 2.940273 3.080349 0.0020886390 3.333270e-03
+## 846649 0.03612490 10.90496 4.237468 4.508632 0.0021217480 1.948600e-03
+## 849036 0.05880718 10.63010 3.386817 3.501593 0.0021373800 2.630396e-03
+## 845736 0.04744549 10.97432 5.751539 6.283977 0.0022719980 1.806896e-03
+##             p_score
+## 843103 0.0005791729
+## 846551 0.0020734010
+## 843093 0.0092718470
+## 846649 0.0044851040
+## 849036 0.0067090330
+## 845736 0.0039925690</code></pre>
+<pre class="r"><code>print(head(qtl3[order(qtl3$p_wald), &quot;rs&quot;]))</code></pre>
+<pre><code>## [1] &quot;Chr3:7397768&quot; &quot;Chr3:7739519&quot; &quot;Chr3:7396895&quot; &quot;Chr3:7743330&quot; &quot;Chr3:7906305&quot;
+## [6] &quot;Chr3:7659378&quot;</code></pre>
 </div>
 
 

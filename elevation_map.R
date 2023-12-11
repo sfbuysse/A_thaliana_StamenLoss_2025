@@ -17,7 +17,7 @@
 ##### Code #####
 ## load libraries:
 library(sf)
-library(raster)
+library(raster) # package retiring very soon...
 library(tmap)
 library(grid)
 
@@ -29,7 +29,8 @@ data("World")
 spain <- World[World$iso_a3 == "ESP", ]
 
 # load the population metadata for population locations
-metadata <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/pop_metadata.csv")
+metadata <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/SpanishMasterDataset_PopMetaData.csv")
+metadata <- metadata[1:16, ]
 
 # load the elevation raster, downloaded from WorldClim. Highest resolution is best because on small scale.
 elev_raster = raster("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/WorldClim/Elev/wc2.1_30s_elev.tif")
@@ -94,6 +95,7 @@ pop_loc$pop <- as.factor(pop_loc$pop)
 
 tm_shape(pyr_elev)+
   tm_raster(palette = terrain.colors(10), alpha = 0.6, title = "Elevation")+
+  tm_scale_bar(position = c("right", "bottom"))+
   tm_legend(legend.position = c("right", "bottom"))+
   tm_shape(pop_loc2)+
   tm_text('pop', col = 'black', auto.placement = FALSE)+
@@ -109,6 +111,7 @@ tm_shape(pyr_elev)+
 tmp_coc <- crop(elev_raster, as(extent(3.0, 3.5, 42.2, 42.4), 'SpatialPolygons'))
 tm_shape(tmp_coc)+
   tm_raster(palette = terrain.colors(10), alpha = 0.6, title = "Elevation")+
+  tm_scale_bar(position = c("right", "bottom"))+
   tm_legend(legend.position = c("right", "bottom"))+
   tm_shape(pop_loc2)+
   tm_text('pop', col = 'black', auto.placement = FALSE)+
@@ -125,8 +128,9 @@ pop_loc$for.shape <- as.factor(c(2,0,1,0,0,5,1,0,2,1,5,2,5,2,1,5))
 # as.factor is important.
 pop_loc$pop <- as.factor(pop_loc$pop)
 # try to color like background
-  tm_shape(pyr_elev)+
+tm_shape(pyr_elev)+
   tm_raster(palette = terrain.colors(16), alpha = 0.6, title = "Elevation")+
+  tm_scale_bar(position = c("right", "bottom"))+
   tm_legend(legend.position = c("right", "bottom"))+
   tm_shape(pop_loc2)+
   tm_text('pop', col = 'black', auto.placement = FALSE)+
@@ -138,6 +142,7 @@ pop_loc$pop <- as.factor(pop_loc$pop)
 # just make a black point 
 black <-  tm_shape(pyr_elev)+
     tm_raster(palette = terrain.colors(16), alpha = 0.8, title = "Elevation")+
+    tm_scale_bar(position = c("right", "bottom"))+
     tm_legend(scale = 0.4, legend.outside = FALSE, legend.position = c("right", "bottom"))+
     tm_shape(pop_loc2)+
     tm_text('pop', col = 'black', auto.placement = FALSE, size = 1)+
