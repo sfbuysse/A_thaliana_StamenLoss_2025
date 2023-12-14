@@ -1,4 +1,4 @@
-##### start of the Pipeline #####
+##### Start of the Pipeline #####
 ## The input is the fastq files from the sequencer ##
 ## the goal is to concatenate files together, trim the adapter sequences, and align with BWA 
 
@@ -11,11 +11,14 @@
 # run these lines in the directory with the files
 while IFS= read -r line; do for x in 1 2; do cat "$line"_L00"$x"_R1_00*.fastq > "$line"_L00"$x"_R1_comb.fastq; done; done < SeqID.txt
 while IFS= read -r line; do for x in 1 2; do cat "$line"_L00"$x"_R2_00*.fastq > "$line"_L00"$x"_R2_comb.fastq; done; done < SeqID.txt
+
 # now join the L001 and L002 together
 while IFS= read -r line; do cat "$line"_L001_R1_comb.fastq "$line"_L002_R1_comb.fastq > "$line"_R1_comb.fastq; done < SeqID.txt
 while IFS= read -r line; do cat "$line"_L001_R2_comb.fastq "$line"_L002_R2_comb.fastq > "$line"_R2_comb.fastq; done < SeqID.txt
+
 # and remove the intermediate files for space
 rm *_L00*_R*_comb.fastq
+
 # bgzip everyting for space
 for f in *.fastq; do bgzip "$f";done
 
@@ -26,7 +29,7 @@ module load MultiQC/1.7-Python-3.6.6
 # https://multiqc.info/docs/#running-multiqc
 # choosing to just do it on the forward reads at this point
 while IFS= read -r line; do fastqc "$line"_R1_comb.fastq & done < SeqID.txt
-#generate a single report form all the reports in the current directory
+#generate a single report from all the reports in the current directory
 multiqc . 
 
 ##### Step 3: Trim Adapter Sequences with TrimGalore#####
@@ -44,7 +47,7 @@ while IFS= read -r line; do trim_galore \
 -o /folder/location/TG_trimmed "$line"_R1_comb.fastq.gz "$line"_R2_comb.fastq.gz; done < SeqID.txt 
 
 ##### Step 4: Align to Reference Genome #####
-# this step can take a long time.
+# this step can take a long time. Mine took ~80 hours.
 module purge
 module load GCC/7.3.0-2.30  OpenMPI/3.1.1
 module load SAMtools
@@ -55,8 +58,8 @@ module load GATK/4.1.4.1-Python-3.6.6
 bwa index Athal.fasta Athal
 cd /folder/location/TG_trimmed
 
-# bwa mem with 4 cores
-while IFS= read -r line; do bwa mem -t 4 -M Athal.fasta \
+# bwa mem with 4 cores - need to request job with multiple cores as well
+while IFS= read -r line; do bwa mem -t 4 -M Athal \
 "$line"_R1_comb_val_1.fq.gz  "$line"_R2_comb_val_2.fq.gz \
 | samtools view - -bS -o /folder/location/BWA_bam/"$line"_bwa.bam; done < SeqID.txt
 
@@ -68,5 +71,15 @@ samtools sort "$line"_bwa.bam -o sorted_"$line"_bwa.bam
 samtools index sorted_"$line"_bwa.bam
 samtools view sorted_"$line"_bwa.bam | less -S
 samtools flagstat sorted_"$line"_bwa.bam > "$line"_alignment_metrics.txt; done < SeqID.txt
+
+##### Step 5: Calculate coverage statistics #####
+module purge
+module load GCC/11.3.0 BamTools/2.5.2
+
+cd /folder/location/BWA_bam
+
+while IFS= read -r line; do bamtools coverage -in sorted_"$line"_bwa.bam -out "$line"_sorted_coverage.txt; done < /file/location/SeqID.txt
+
+# the output of these files and coverage statistics were calculated with an Rscript (01B_CoverageStatistics.R)
 
 ## End of FastQ to Bam. Next step is to Call Variants ##
