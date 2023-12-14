@@ -1,0 +1,20 @@
+# This code uses pixy to calculated pi (nucleotide diveristy). The output is put into an R file to make individual and population summaries.
+
+# I did not use the NewNames file, but that is OK because this is a single analysis and not matched up with any other files.
+
+cd /file/location
+
+## Use pixy to calculate pi only
+
+module load Conda/3
+conda activate pixy
+pixy --stats pi \
+--n_cores 6 \
+--vcf /file/location/GVCF/all.filtered.vcf.gz \
+--chromosomes 'Chr1,Chr2,Chr3,Chr4,Chr5' \
+--window_size 50000 \
+--populations pixy.populations2.txt \
+--output_folder pixy.output \
+--output_prefix all_filtered.50k.out
+
+##### The output of this needs to be recalculated in R to have single values per population. ##### 

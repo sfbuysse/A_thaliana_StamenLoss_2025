@@ -22,8 +22,9 @@ while IFS= read -r line; do gatk --java-options "-Xmx4g" AddOrReplaceReadGroups 
 module purge
 module load GCC/7.3.0-2.30  OpenMPI/3.1.1
 module load GATK/4.1.4.1-Python-3.6.6
+
 gatk --java-options "-Xmx4g" CreateSequenceDictionary \
-	-R Athal.fasta \
+	-R /file/location/Athal.fasta \
 	-O Athal.dict
 
 ##### Step 3: Mark Duplicates #####
@@ -38,12 +39,12 @@ while IFS= read -r line; do gatk --java-options "-Xmx4g" MarkDuplicatesSpark \
              -M "$line"_dup_metrics.txt\
 				-conf 'spark.executor.cores=4'; done < /file/to/read/lines/from/SeqID.txt
 
-##### Step 4: Check Fast QC report again ####
+##### Step 4: Check Fast QC report ####
 module load GCC/7.3.0-2.30  OpenMPI/3.1.1
 module load FastQC
 module load MultiQC/1.7-Python-3.6.6
-while IFS= read -r line; do fastqc "${line}"_rg_rmdup.bam & done < /file/to/read/lines/from/SeqID.txt
-#generate a single report form all the reports in the current directory
+while IFS= read -r line; do fastqc "${line}"_rg_rmdup.bam & done < /file/location/SeqID.txt
+#generate a single report from all the reports in the current directory
 multiqc . 
 
 ##### Step 5: Base Quality Score Recalibration #####
@@ -182,14 +183,14 @@ gatk SelectVariants \
 -select-type SNP \
 -O all_raw_snps.vcf
 
-# mark with hard filtering. These are the recommendations from GATK for parameters
+# mark with hard filtering. These are the recommendations from GATK for parameters from best practices in Feb 2022
 gatk VariantFiltration \
         -R Athal.fasta \
         -V all_raw_snps.vcf \
         -O all_filtered_snps.vcf \
         --filter-name "QD_filter" -filter "QD < 2.0" \
         --filter-name "FS_filter" -filter "FS > 60.0" \
-        --filter-name "MQ_filter" -filter "MQ < 40.0" \ # Ref paper did MQ < 20. this is the root mean square of the mapping quality of reads across all samples (MQ). maybe split the difference and go 30?
+        --filter-name "MQ_filter" -filter "MQ < 40.0" \ 
         --filter-name "ReadPosRankSum_filter" -filter "ReadPosRankSum < -8.0" \
 		--filter-name "MQRankSum_filter" -filter "MQRankSum < -12.5"
 
@@ -198,7 +199,7 @@ gatk SelectVariants \
         --exclude-filtered \
         -V all_filtered_snps.vcf \
         -O all_bqsr_snps.vcf
-# note: all-bqsr_snps.vcf contails about 7/8 of all snps in my unfiltered file
+# note: all_bqsr_snps.vcf contails about 7/8 of all snps in my unfiltered file
 
 ### Step 5e: First Round of BQSR ###
 module purge
@@ -212,31 +213,31 @@ while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk BaseRecalibrator \
         -R Athal.fasta \
         -I ../BWA_bam/"${LINE}"_rg_rmdup.bam \
         --known-sites ../GVCF/all_bqsr_snps.vcf \
-        -O "${LINE}"_recal_1_data.table; done < file/location/SeqID_61.txt
+        -O "${LINE}"_recal_1_data.table; done < file/location/SeqID.txt
 # Apply BQSR
 while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk ApplyBQSR \
         -R Athal.fasta \
         -I ../BWA_bam/"${LINE}"_rg_rmdup.bam \
         -bqsr "${LINE}"_recal_1_data.table \
-        -O "${LINE}"_recal_1_reads.bam; done < file/location/SeqID_61.txt
+        -O "${LINE}"_recal_1_reads.bam; done < file/location/SeqID.txt
 # visualize results
 while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk BaseRecalibrator \
         -R Athal.fasta \
         -I "${LINE}"_recal_1_reads.bam \
         --known-sites ../GVCF/all_bqsr_snps.vcf \
-        -O "${LINE}"_post_recal_1_data.table; done < file/location/SeqID_61.txt
+        -O "${LINE}"_post_recal_1_data.table; done < file/location/SeqID.txt
 
 while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk AnalyzeCovariates \
--before "${LINE}"_recal_1_data.table \
--after "${LINE}"_post_recal_1_data.table \
--plots "${LINE}"_recalibration2_plots.pdf; done < file/location/SeqID_61.txt	
+		-before "${LINE}"_recal_1_data.table \
+		-after "${LINE}"_post_recal_1_data.table \
+		-plots "${LINE}"_recalibration2_plots.pdf; done < file/location/SeqID.txt	
 
 ##### Step 5f: FastQC on recalibrated Bam files #####
 module purge
 module load GCC/7.3.0-2.30  OpenMPI/3.1.1
 module load FastQC
 module load MultiQC/1.7-Python-3.6.6
-while IFS= read -r line; do fastqc "${line}"_recal_1_reads.bam & done < file/location/SeqID_61.txt
+while IFS= read -r line; do fastqc "${line}"_recal_1_reads.bam & done < file/location/SeqID.txt
 multiqc . 
 
 ##### Step 5g: A second round of BQSR #####
@@ -251,30 +252,30 @@ while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk BaseRecalibrator \
         -R Athal.fasta \
         -I "${LINE}"_recal_1_reads.bam \
         --known-sites ../GVCF/all_bqsr_snps.vcf \
-        -O "${LINE}"_recal_2_data.table; done < file/location/SeqID_61.txt
+        -O "${LINE}"_recal_2_data.table; done < file/location/SeqID.txt
 # Apply BQSR
 while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk ApplyBQSR \
         -R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
         -I /mnt/scratch/buysseso/BQSR/"${LINE}"_recal_1_reads.bam \
         -bqsr "${LINE}"_recal_2_data.table \
-        -O "${LINE}"_recal_2_reads.bam; done < file/location/SeqID_61.txt
+        -O "${LINE}"_recal_2_reads.bam; done < file/location/SeqID.txt
 # Visualize results
 while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk BaseRecalibrator \
         -R /mnt/research/josephslab/Sophie/Athal_2/refChromFiles/Athal.fasta \
         -I "${LINE}"_recal_2_reads.bam \
         --known-sites ../GVCF/all_bqsr_snps.vcf \
-        -O "${LINE}"_post_recal_2_data.table; done < file/location/SeqID_61.txt
+        -O "${LINE}"_post_recal_2_data.table; done < file/location/SeqID.txt
 while IFS='' read -r LINE || [ -n "${LINE}" ]; do gatk AnalyzeCovariates \
--before "${LINE}"_recal_2_data.table \
--after "${LINE}"_post_recal_2_data.table \
--plots "${LINE}"_recalibration3_plots.pdf; done < file/location/SeqID_61.txt
+		-before "${LINE}"_recal_2_data.table \
+		-after "${LINE}"_post_recal_2_data.table \
+		-plots "${LINE}"_recalibration3_plots.pdf; done < file/location/SeqID.txt
 
 ##### Step 5h: FastQC on output files #####
 module purge
 module load GCC/7.3.0-2.30  OpenMPI/3.1.1
 module load FastQC
 module load MultiQC/1.7-Python-3.6.6
-while IFS= read -r line; do fastqc "${line}"_recal_2_reads.bam & done < file/location/SeqID_61.txt
+while IFS= read -r line; do fastqc "${line}"_recal_2_reads.bam & done < file/location/SeqID.txt
 multiqc . 
 
 ##### Step 6: Call Haplotypes Post BQSR #####
@@ -384,5 +385,67 @@ gatk --java-options "-Xmx4g" GenotypeGVCFs \
 -V AllSamplesAllChrs_PostBQSR.g.vcf \
 -all-sites TRUE \
 -O allsites_PostBQSR.raw.g.vcf.gz
+
+##### Step 9: Genotypic Quality Information #####
+module purge
+module load GCC/6.4.0-2.28  OpenMPI/2.1.2  VCFtools/0.1.15-Perl-5.26.1
+
+# individuals stats
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz --missing-indv --out allsites_PostBQSR
+
+# SNP stats
+#expect output files with suffix .lmiss and .lqual
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz --missing-site --out allsites_PostBQSR
+vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz --site-quality --out allsites_PostBQSR
+
+# also pull out depth and quality from vcf heaader
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load GATK/4.1.4.1-Python-3.6.6
+
+gatk VariantsToTable    \
+-V allsites_PostBQSR.raw.g.vcf.gz \
+-F CHROM -F POS -F ID -GF GQ -GF DP        \
+-O SampleInfo_all.unfiltered.GQ.DP
+
+# use R to look at the results. I did in session but could submit a script.
+module purge
+module load GCC/9.3.0  OpenMPI/4.0.3 R/4.0.3
+R
+
+dat <- read.delim('/file/location/GVCF/SampleInfo_all.unfiltered.GQ.DP')
+dim(dat)
+head(dat)
+head(dat[ ,1:6])
+rownames(dat) <- paste0(dat$CHROM, ":", dat$POS)
+head(dat[ ,1:6])
+# so now I don't actually need the first three cols b/c the two that matter are incorporated into the column name
+dat2 <- dat[ , 4:ncol(dat)]
+# and rotate to use rowmeans function later
+dat3 <- as.data.frame(t(dat2))
+# add population row, correct labelling inconsistencies
+dat3$Population <- toupper(substr(rownames(dat3), start = 1, stop = 3))
+dat3$Population[dat3$Population == 'ARB'] <- "ARU"
+dat3$Population[dat3$Population == 'SPE'] <- "SAL"
+ncol(dat3)
+#83212226
+
+# save so don't need to redo the top part if I come back to this.
+save(dat3, file = '/file/location/GVCF/GQ.DP_unfiltered_dat3.ROBJ')
+
+nrow(dat3)
+
+# function to change all to numeric besides last row
+factor_numeric <- function(x){
+  as.numeric(as.character(x))
+}
+dat4 <- apply(dat3[,-nrow(dat3)], 2, factor_numeric)
+nrow(dat4)
+
+rownames(dat4) <- rownames(dat3)
+
+# calculate row means
+Means <- data.frame(ID = rownames(dat4), Mean = rowMeans(dat4, na.rm = TRUE), count_na = rowSums(is.na(dat4)))
+save(Means, file = '/file/location/GVCF/GQ.DP.Means_unfiltered.ROBJ')
 
 ## end of CallVariants. Next step is to FilterVariants ##

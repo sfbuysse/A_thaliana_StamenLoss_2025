@@ -21,6 +21,43 @@ pixy --stats pi fst \
 
 #!/bin/bash
 #SBATCH --job-name=pixy_pi
+#SBATCH -e pixy.pi.err
+#SBATCH -o pixy.pi.out
+#SBATCH --nodes=6
+#SBATCH --ntasks=6
+#SBATCH --cpus-per-task=4
+#SBATCH --mem-per-cpu=40gb
+#SBATCH -t 1:59:00
+#SBATCH --mail-user=buysseso@msu.edu
+#SBATCH --mail-type=FAIL,BEGIN,END
+
+
+# 50kb window size
+module load Conda/3
+conda activate pixy
+pixy --stats pi \
+--n_cores 6 \
+--vcf /mnt/scratch/buysseso/GVCF/all.filtered.vcf.gz \
+--chromosomes 'Chr1,Chr2,Chr3,Chr4,Chr5' \
+--window_size 50000 \
+--populations pixy.populations2.txt \
+--output_folder pixy.output \
+--output_prefix all_filtered.50k_pi_042022.out
+
+scontrol show job $SLURM_JOB_ID
+
+# Submitted batch job 50971883 on 4/8/2022 at 9:43am
+# done after 1:18 run time. so this time estimate must have been from including fst as well. I'm dropping it lower in the code.
+
+
+##### The output of this needs to be recalculated in R to have single values per population. ##### 
+
+
+####OLD CODE#####
+
+
+#!/bin/bash
+#SBATCH --job-name=pixy_pi
 #SBATCH -e pixy.err
 #SBATCH -o pixy.out
 #SBATCH --nodes=6
@@ -46,9 +83,3 @@ pixy --stats pi \
 --output_prefix all_filtered.50k.out
 
 scontrol show job $SLURM_JOB_ID
-
-# Submitted batch job 50971883 on 4/8/2022 at 9:43am
-# done after 1:18 run time. so this time estimate must have been from including fst as well. I'm dropping it lower in the code.
-
-
-##### The output of this needs to be recalculated in R to have single values per population. ##### 

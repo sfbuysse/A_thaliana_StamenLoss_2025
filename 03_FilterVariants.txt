@@ -1,10 +1,45 @@
 ########## Filter Variants ##########
 # this code filters variants for calculating population genetics statistics and for summarizing population structure and GWAS
 # modules loaded within each step.
-# just if I need it: module load GATK/4.1.4.1-Python-3.6.6
 
-## NOTE: the all_code file has more info, but I am summarizing down here to only include the code for the pixy files and for the plink filtered files.
-## will also need to use bgzip from samtools. I had my own version rather than loading a module
+##### Step 0: Try Multiple Filtering Parameters #####
+
+module purge
+module load GCC/7.3.0-2.30  OpenMPI/3.1.1
+module load tabix
+module load VCFtools/0.1.15-Perl-5.28.0
+module load Java/15.0.2
+
+cd /file/location/GVCF
+
+# quality gradient
+for x in 0 10 20 30 40 60; do zcat allsites_PostBQSR.raw.g.vcf.gz |vcftools --vcf - --out ../Filtering_test/allSNPs.noIndelsMafp05MaxMissp75BiallelicDp5Q"$x".vcf --min-meanDP 5 --minQ "$x" --maf 0.05 --remove-indels --max-missing 0.75 --min-alleles 2 --max-alleles 2 --remove-indv COC7_TCCTGAGC-TATCCTCT --recode; ~/Apps/bgzip ../Filtering_test/allSNPs.noIndelsMafp05MaxMissp75BiallelicDp5Q"$x".vcf.recode.vcf & done
+
+# Dp gradient
+for x in 0 1 2 3 5 10 20; do zcat allsites_PostBQSR.raw.g.vcf.gz | vcftools --vcf - --out ../Filtering_test/allSNPs.noIndelsMafp05MaxMissp75BiallelicDp"$x".vcf --min-meanDP "$x" --maf 0.05 --remove-indels --max-missing 0.75 --min-alleles 2 --max-alleles 2 --remove-indv COC7_TCCTGAGC-TATCCTCT --recode; ~/Apps/bgzip ../Filtering_test/allSNPs.noIndelsMafp05MaxMissp75BiallelicDp"$x".vcf.recode.vcf & done
+
+# maf gradient
+for x in 0 0.01 0.03 0.05 0.10 0.15 0.20; do zcat allsites_PostBQSR.raw.g.vcf.gz | vcftools --vcf - --out ../Filtering_test/allSNPs.noIndelsMafp"$x"MaxMissp75BiallelicDp5.vcf --min-meanDP 5 --maf "$x" --remove-indels --max-missing 0.75 --min-alleles 2 --max-alleles 2 --remove-indv COC7_TCCTGAGC-TATCCTCT --recode; ~/Apps/bgzip ../Filtering_test/allSNPs.noIndelsMafp"$x"MaxMissp75BiallelicDp5.vcf.recode.vcf & done
+
+# max-miss gradient
+for x in 0 0.25 0.50 0.70 0.75 0.80 0.85 0.95; do zcat allsites_PostBQSR.raw.g.vcf.gz | vcftools --vcf - --out ../Filtering_test/allSNPs.noIndelsMafp05MaxMissp"$x"BiallelicDp5.vcf --min-meanDP 5 --maf 0.05 --remove-indels --max-missing "$x" --min-alleles 2 --max-alleles 2 --remove-indv COC7_TCCTGAGC-TATCCTCT --recode; ~/Apps/bgzip ../Filtering_test/allSNPs.noIndelsMafp05MaxMissp"$x"BiallelicDp5.vcf.recode.vcf & done
+
+
+### snpeff
+cd /file/location/Filtering_test
+
+# quality gradient
+for x in 0 10 20 30 40 60; do zcat allSNPs.noIndelsMafp05MaxMissp75BiallelicDp5Q"$x".vcf.recode.vcf.gz |java -jar ~/Apps/snpEff/snpEff.jar -c ~/Apps/snpEff/snpEff.config Arabidopsis_thaliana - > Q"$x".annot.vcf; mkdir Q"$x" ; mv Q"$x".annot.vcf Q"$x"; mv snpEff_genes.txt Q"$x"; echo $x; awk 'BEGIN{getline;getline;for(x=1;x<=NF;x++){if($x=="variants_effect_missense_variant"){A=x};if($x=="variants_effect_synonymous_variant"){B=x}};L=0;M=0} {L=L+$A;M=M+$B} END{print "Missense: " L " Synon: " M }' ./Q"$x"/snpEff_genes.txt;~/Apps/bgzip Q"$x"/Q"$x".annot.vcf; done
+
+# Dp gradient
+for x in 0 1 2 3 5 10 20; do zcat allSNPs.noIndelsMafp05MaxMissp75BiallelicDp"$x".vcf.recode.vcf.gz |java -jar ~/Apps/snpEff/snpEff.jar -c ~/Apps/snpEff/snpEff.config Arabidopsis_thaliana - > DP"$x".annot.vcf; mkdir DP"$x" ; mv DP"$x".annot.vcf DP"$x"; mv snpEff_genes.txt DP"$x"; echo $x; awk 'BEGIN{getline;getline;for(x=1;x<=NF;x++){if($x=="variants_effect_missense_variant"){A=x};if($x=="variants_effect_synonymous_variant"){B=x}};L=0;M=0} {L=L+$A;M=M+$B} END{print "Missense: " L " Synon: " M }' ./DP"$x"/snpEff_genes.txt;~/Apps/bgzip DP"$x"/DP"$x".annot.vcf; done
+
+# maf gradient
+#for x in 0 0.01 0.03 0.05 0.10 0.15 0.20; do zcat allSNPs.noIndelsMafp"$x"MaxMissp75BiallelicDp5.vcf.recode.vcf.gz |java -jar ~/Apps/snpEff/snpEff.jar -c ~/Apps/snpEff/snpEff.config Arabidopsis_thaliana - > maf"$x".annot.vcf; mkdir maf"$x" ; mv maf"$x".annot.vcf maf"$x"; mv snpEff_genes.txt maf"$x"; echo $x; awk 'BEGIN{getline;getline;for(x=1;x<=NF;x++){if($x=="variants_effect_missense_variant"){A=x};if($x=="variants_effect_synonymous_variant"){B=x}};L=0;M=0} {L=L+$A;M=M+$B} END{print "Missense: " L " Synon: " M }' ./maf"$x"/snpEff_genes.txt;~/Apps/bgzip maf"$x"/maf"$x".annot.vcf; done
+
+# max-miss gradient
+#for x in 0 0.25 0.50 0.70 0.75 0.80 0.85 0.95; do zcat allSNPs.noIndelsMafp05MaxMissp"$x"BiallelicDp5.vcf.recode.vcf.gz |java -jar ~/Apps/snpEff/snpEff.jar -c ~/Apps/snpEff/snpEff.config Arabidopsis_thaliana - > MaxMiss"$x".annot.vcf; mkdir MaxMiss"$x" ; mv MaxMiss"$x".annot.vcf MaxMiss"$x"; mv snpEff_genes.txt MaxMiss"$x"; echo $x; awk 'BEGIN{getline;getline;for(x=1;x<=NF;x++){if($x=="variants_effect_missense_variant"){A=x};if($x=="variants_effect_synonymous_variant"){B=x}};L=0;M=0} {L=L+$A;M=M+$B} END{print "Missense: " L " Synon: " M }' ./MaxMiss"$x"/snpEff_genes.txt; ~/Apps/bgzip MaxMiss"$x"/MaxMiss"$x".annot.vcf; done
+
 
 ##### Step 1: Filtered All Sites #####
 ## The first filtered file we make will be for the population genetics statistics, so we will filter it less stringently
@@ -28,9 +63,7 @@ vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
 --remove-indv COC7_TCCTGAGC-TATCCTCT \
 --recode --stdout | ~/Apps/bgzip -c > invariant.vcf.gz
 
-
 # only variant sites file
-
 # keep these as only biallelic
 vcftools --gzvcf allsites_PostBQSR.raw.g.vcf.gz \
 --mac 1 \
@@ -57,18 +90,12 @@ module load tabix
 invariant.vcf.gz biallelic.variant.vcf.gz \
 -O z -o all.filtered.vcf.gz
 
-
+# index the file
 tabix all.filtered.vcf.gz
 
-##### Step 1B: Rename files #####
-# sample names are long. Rename the output files to have more concise names
-## things happened a bit out of order here.
-
-## allsites was filtered and then renamed. 
 ##### Step 2: Rename the samples #####
-#The sample names right now are long and not in a great order. rename the three output vcf files to have more concise names.
-# did for the allsites file I just created (all.filtered.vcf.gz) and the input file (allsites_PostBQSR.raw)
-
+#The sample names right now are long and not in a great order. rename the vcf files to have more concise names.
+# did for the allsites file I just created (all.filtered.vcf.gz) and the input file (allsites_PostBQSR.raw.g.vcf.gz)
 
 module purge
 module load GCC/6.4.0-2.28  OpenMPI/2.1.2 bcftools/1.9.64
@@ -78,25 +105,22 @@ cd /file/location
 # find what the same order and names currently are
 zcat allsites_PostBQSR.raw.g.vcf.gz |bcftools query -l 
 
-bcftools query -l /mnt/scratch/buysseso/GVCF/all.filtered.vcf.gz > /mnt/scratch/buysseso/GVCF/all.filtered_vcf_sampleOrder.txt
+bcftools query -l /file/location/GVCF/all.filtered.vcf.gz > /file/location/GVCF/all.filtered_vcf_sampleOrder.txt
 
 # both of them are in the same order, so I only need one file of the new order and names. 
-cp /mnt/scratch/buysseso/GVCF/all.filtered_vcf_sampleOrder.txt /mnt/scratch/buysseso/GVCF/VCF_simplified_sampleOrder.txt
+cp /file/location/GVCF/all.filtered_vcf_sampleOrder.txt /file/location/buysseso/GVCF/VCF_simplified_sampleOrder.txt
 nano VCF_simplified_sampleOrder.txt
 # edit to remove everything after the underscore
+# did need to add COC7 back to allsites_PostBQSR file - save with _62 after file name
 
 # and now actually change them
-zcat /mnt/scratch/buysseso/GVCF/allsites_PostBQSR.raw.g.vcf.gz |bcftools reheader --samples /mnt/scratch/buysseso/GVCF/VCF_simplified_sampleOrder_62.txt -o allsites_PostBQSR.raw.NewSampleName.g.vcf 
+zcat /file/location/GVCF/allsites_PostBQSR.raw.g.vcf.gz |bcftools reheader --samples /file/location/GVCF/VCF_simplified_sampleOrder_62.txt -o allsites_PostBQSR.raw.NewSampleName.g.vcf 
 bcftools query -l allsites_PostBQSR.raw.NewSampleName.g.vcf 
 
-zcat /mnt/scratch/buysseso/GVCF/all.filtered.vcf.gz |bcftools reheader --samples /mnt/scratch/buysseso/GVCF/VCF_simplified_sampleOrder.txt -o all.filtered.NewSampleName.vcf 
+zcat /file/location/GVCF/all.filtered.vcf.gz |bcftools reheader --samples /file/location/GVCF/VCF_simplified_sampleOrder.txt -o all.filtered.NewSampleName.vcf 
 bcftools query -l all.filtered.NewSampleName.vcf
 
-# do we want to remove any individuals?
-vcftools --vcf allSNPs.NewSampleName.vcf --missing-indv --out test.MissingIndv
-# I manually did this for each output file and decided not to remove any individuals.
-
-##### Step 2: Filtered Variant Sites #####
+##### Step 3: Filtered Variant Sites #####
 ## we then need a more strictly filtered file of ONLY the variant sites to use for the Fst, GWAS and PCA
 # this was done with plink as I was having issues with converting from a vcf to a binary plink file when I filtered with vcftools.
 
@@ -107,14 +131,16 @@ cd /file/location
 
 plink --vcf allsites_PostBQSR.raw.NewSampleName.g.vcf --remove COC7.txt --make-bed --double-id \
 --threads 4 --keep-allele-order --biallelic-only --vcf-min-qual 25 --vcf-require-gt \
---snps-only --geno 0.25 --maf 0.05 --allow-no-sex --set-missing-var-ids @:# --out SNPs_cent_filtered
+--snps-only --geno 0.25 --maf 0.05 --allow-no-sex --set-missing-var-ids @:# --out allsites_filtered_plinkTest
 
 # note there is no depth filter. min-meanDP 5 is recommended if the filtering had been done with vcftools
 
 # COC7.txt looks like this: 
 COC7 COC7
 
-##### Step 3: Repeat but exclude the centromere region first #####
+# bad naming alert: called this allsites but it is just SNPs
+
+##### Step 4: Repeat but exclude the centromere region #####
 ### exclude centromere region
 
 module purge
@@ -129,7 +155,7 @@ plink -bfile allsites_filtered_plinkTest --chr Chr1 \
 --threads 4 \
 --from-bp 13700000 \
 --to-bp 15900000 \
---write-snplist --out Chr1_CentSites_plink  this file contains the sites that are within the centromere, so these are the sites that should be excluded.
+--write-snplist --out Chr1_CentSites_plink  #this file contains the sites that are within the centromere, so these are the sites that should be excluded.
 # 39,408 sites
 
 # Chr 2
@@ -166,7 +192,7 @@ plink -bfile allsites_filtered_plinkTest --chr Chr5 \
 
 # now actually do the excluding
 
-# the -exclude flat accepts a text file with a list of variant IDs (one per line) and removes all listed variants.
+# the -exclude flag accepts a text file with a list of variant IDs (one per line) and removes all listed variants.
 plink -bfile allsites_filtered_plinkTest --chr Chr1 \
 --threads 4 \
 --exclude Chr1_CentSites_plink.snplist \
@@ -199,14 +225,14 @@ plink -bfile allsites_filtered_plinkTest --chr Chr5 \
 
 # total kept 1,507,328
 
-# merge files together into one
+# merge chromosome files together into one.
 plink --merge-list PlinkChrFiles.txt --make-bed -out allChrs_SNPs_NoCent
 # 1,507,328 variants pass.
 # matches expectation. I should have 436213 + 217934 + 279018 + 214611 + 359553 = 1,507,328
 
 ## At the end of this code file, I have now created 3 dataset files:
-1. all.filtered.vcf.gz -> vcf file format. Includes variant and nonvariants sites. Include centromeres. To be used to calculate pi.
+1. all.filtered.NewSampleName.vcf.gz -> vcf file format. Includes variant and nonvariants sites. Include centromeres. To be used to calculate pi.
 2. allsites_filtered_PlinkTest -> plink format files. Contains SNPs only, includes centromeres, filtered by plink
-3. allChrs_SNPs_NoCent -> plink format files. Contains SNPs only, excluding the centromere region, filtered before excluding regions.
+3. allChrs_SNPs_NoCent -> plink format files. Contains SNPs only, excluding the centromere region, filtered by plink before excluding regions.
 
 ##### End of File #####
