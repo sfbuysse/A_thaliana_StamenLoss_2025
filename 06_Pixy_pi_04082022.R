@@ -21,7 +21,7 @@ sums$Mean.pi <- sums$Sum.count.diff/sums$Sum.count.comp
 ###### add the other population information
 ###### Should have labels ARU and SAL
 ###### this has both the full and only the sequenced means.
-###load(file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/04_Elev_Means_Feb2022.ROBJ")
+###load(file = "C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/Elev_Means_Feb2022.ROBJ")
 ###### merge the info together
 ###comp <- merge(sums, Elev_Means, by.x = "pop", by.y = "Population")
 #### values are generally lower than what was calculated in february but not always consistently lower.
@@ -701,7 +701,7 @@ ggplot(sum.comparison)+
 # maybe more of a reduction in the pops with higher pi generally
 
 # add in elevation and stamen means
-#load(file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/04_Elev_Means_Feb2022.ROBJ")
+#load(file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/Elev_Means_Feb2022.ROBJ")
 
 #comp.c <- merge(sums.c, Elev_Means, by.x = "pop", by.y = "Population")
 

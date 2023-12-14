@@ -319,7 +319,7 @@ Fixed?
 
 ```{r}
 # let's also add elevation for plotting later on - just add this to stamenTrait
-load(file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/04_Elev_Means_Feb2022.ROBJ")
+load(file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/Elev_Means_Feb2022.ROBJ")
 # don't need the pop mean columns.
 Elev_Means <- Elev_Means[ , c('Population', 'Elev_m')]
 # make Pop column to merge by
