@@ -35,9 +35,9 @@ Full$Tube <- as.factor(Full$Tube)
 Full$Notes <- NULL
 str(Full)
 
-Sequenced <- Sequenced[,1:9]
 Sequenced$Population <- as.factor(Sequenced$Population)
 Sequenced$Line <- as.factor(Sequenced$Line)
+Sequenced$PlantingBlock <- as.factor(Sequenced$PlantingBlock)
 Sequenced$Rep <- as.factor(toupper(Sequenced$Rep))
 # Plant is equivalent to Rep 
 Sequenced$Tube <- as.factor(Sequenced$Tube)
@@ -70,11 +70,17 @@ F_m2 <- lmer(NumShortStamens ~ Population + (1|Matriline:Population) + (1|Plant:
 F_m3 <- lm(NumShortStamens ~ Population + Matriline + Plant + Tube, 
          data = Full)
 
+# add in planting block
+F_m4 <- lmer(NumShortStamens ~ Population + (1|Matriline:Population) + (1|Plant:Matriline:Population) + (1|Tube:Plant:Matriline:Population) + (1|PlantingBlock), 
+         data = Full)
+
 summary(F_m1)
 summary(F_m2)
+summary(F_m4)
 
 anova(F_m1)
 anova(F_m2)
+anova(F_m4)
 ```
 
 Now just the Sequenced Plants
@@ -100,11 +106,17 @@ S_m2 <- lmer(Short_Stamens ~ Population + (1|Line:Population) + (1|Rep:Line:Popu
 # full fixed model
 S_m3 <- lm(Short_Stamens ~ Population + Line + Rep + Tube, data = Sequenced)
 
+# add in planting block
+S_m4 <- lmer(Short_Stamens ~ Population + (1|Line:Population) + (1|Rep:Line:Population) + (1|Tube:Rep:Line:Population) + (1|PlantingBlock), 
+         data = Sequenced)
+
 summary(S_m1)
 summary(S_m2)
+summary(S_m4)
 
 anova(S_m1)
 anova(S_m2)
+anova(S_m4)
 ```
 
 # Try LSMs (estimated marginal means)
@@ -114,7 +126,22 @@ Can't use the fully random models here because the package doesn't like that. De
 ```{r}
 Full_LSM <- summary(emmeans(F_m2, spec = "Population"))
 
+# include block
+Full2_LSM <- summary(emmeans(F_m4, spec = "Population"))
+
+# quick check correlation
+cor(Full_LSM$emmean, Full2_LSM$emmean)
+# 0.9845071
+# yayayayayaya!!
+
 Seq_LSM <- summary(emmeans(S_m2, spec = "Population"))
+
+# include block
+Seq2_LSM <- summary(emmeans(S_m4, spec = "Population"))
+
+# quick check correlation
+cor(Seq_LSM$emmean, Seq2_LSM$emmean)
+# 0.967 so a bit lower but not bad by any means
 ```
 
 # Raw Means 
@@ -137,14 +164,20 @@ save(Elev_Means, file = "C:/Users/Sophie/Michigan State University/Conner, Jeffr
 
 Here is a comparison of the 4 different means calculated (LSMs and Raw means for both Sequenced and Full datasets)
 
+I added the block included full dataset values to this on 12/18/2023
+
 ```{r}
-LSMs <- data.frame("Population" = Full_LSM$Population, "Full_LSM" = Full_LSM$emmean, "Pop2" = Seq_LSM$Population, "Seq_LSM" = Seq_LSM$emmean)
+LSMs <- data.frame("Population" = Full_LSM$Population, "Full_LSM" = Full_LSM$emmean, "Full_Block" = Full2_LSM$emmean, "Pop2" = Seq_LSM$Population, "Seq_LSM" = Seq_LSM$emmean, "Seq_Block" = Seq2_LSM$emmean)
 Comp <- merge(Elev_Means, LSMs, by = "Population")
 
 # let's see some correlations
 cor.test(Comp$Full_PopFlwrMean, Comp$Full_LSM)
+cor.test(Comp$Full_PopFlwrMean, Comp$Full_Block)
+cor.test(Comp$Full_LSM, Comp$Full_Block)
+
 cor.test(Comp$Full_PopFlwrMean, Comp$Seq_PopFlwrMean)
 cor.test(Comp$Seq_PopFlwrMean, Comp$Seq_LSM)
+cor.test(Comp$Seq_PopFlwrMean, Comp$Seq_Block)
 
 # so all are highly correlated. Let's make a few plots just to visualize that
 plot(Comp$Full_PopFlwrMean ~ Comp$Full_LSM)
@@ -152,6 +185,8 @@ lines(x = c(0,1,2), y = c(0,1,2))
 plot(Comp$Full_PopFlwrMean ~ Comp$Seq_PopFlwrMean)
 lines(x = c(0,1,2), y = c(0,1,2))
 plot(Comp$Seq_PopFlwrMean ~ Comp$Seq_LSM)
+lines(x = c(0,1,2), y = c(0,1,2))
+plot(Comp$Seq_PopFlwrMean ~ Comp$Seq_Block)
 lines(x = c(0,1,2), y = c(0,1,2))
 
 ```
