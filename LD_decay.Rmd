@@ -1,0 +1,136 @@
+---
+title: "LD_Decay"
+author: "Sophie Buysse"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The goal of this script is to calculate LD decay in my samples. To do so, I need to first calculate LD using plink and then use r to creade a graph with the LD output. So, let's start with plink.
+
+This comes up in the GWAS section, so I want to use the same input file that I use for the raw GWAS probably? the phenotype doesn't really matter and the genotype information for all the GWAS types with the centromere included is all the same.
+
+```{bash, eval = FALSE}
+module load PLINK/1.9b_4.1-x86_64
+
+cd $SCRATCH/GWAS
+
+# do for a single chromosome at a time, round one
+plink --bfile allSNPs.PlinkFiltering_raw --threads 10 \
+--chr 1 --thin 0.5 \
+--r2 \
+--ld-window 100 \
+--ld-window-kb 1000 \
+--ld-window-r2 0.2 \
+--make-bed --allow-no-sex --out LD/allSNPs.PF.chr1
+
+# then changed to this following some online forum recommendations
+plink --bfile allSNPs.PlinkFiltering_raw --threads 10 \
+--chr 1 --thin 0.5 \
+--r2 \
+--ld-window 100 \
+--ld-window-kb 999999 \
+--ld-window-r2 0 \
+--allow-no-sex --out LD/allSNPs.PF.chr1
+
+# chr 2
+plink --bfile allSNPs.PlinkFiltering_raw --threads 10 \
+--chr 2 --thin 0.5 \
+--r2 \
+--ld-window 100 \
+--ld-window-kb 999999 \
+--ld-window-r2 0 \
+--allow-no-sex --out LD/allSNPs.PF.chr2
+
+# chr 3
+plink --bfile allSNPs.PlinkFiltering_raw --threads 10 \
+--chr 3 --thin 0.5 \
+--r2 \
+--ld-window 100 \
+--ld-window-kb 999999 \
+--ld-window-r2 0 \
+--allow-no-sex --out LD/allSNPs.PF.chr3
+
+# chr4
+plink --bfile allSNPs.PlinkFiltering_raw --threads 10 \
+--chr 4 --thin 0.5 \
+--r2 \
+--ld-window 100 \
+--ld-window-kb 999999 \
+--ld-window-r2 0 \
+--allow-no-sex --out LD/allSNPs.PF.chr4
+
+# chr5
+plink --bfile allSNPs.PlinkFiltering_raw --threads 10 \
+--chr 5 --thin 0.5 \
+--r2 \
+--ld-window 100 \
+--ld-window-kb 999999 \
+--ld-window-r2 0 \
+--allow-no-sex --out LD/allSNPs.PF.chr5
+
+# then get ready to visualize in R
+module load GCC/11.2.0  OpenMPI/4.1.1 R/4.2.2
+cd LD folder
+R
+
+```
+
+
+Then I just this script to plot the result (in R):
+```{r}
+library(dplyr)
+library(ggplot2)
+
+LD_1 <- read.table("allSNPs.PF.chr1.ld", header = T) ##read your .ld data
+LD_2 <- read.table("allSNPs.PF.chr2.ld", header = T)
+LD_3 <- read.table("allSNPs.PF.chr3.ld", header = T)
+LD_4 <- read.table("allSNPs.PF.chr4.ld", header = T)
+LD_5 <- read.table("allSNPs.PF.chr5.ld", header = T)
+LD <- rbind(LD_1, LD_2, LD_3, LD_4, LD_5)
+
+
+LD$distancekb <- (LD$BP_B-LD$BP_A)/1000 ## the distance between snp1 and snp2 in kb
+max(LD$distance)
+#chr 1 this is 317.348
+# same value when everything is together
+
+# plot all the points
+#plot(x = LD$distancekb, y = LD$R2)
+
+# but we want one with distance bins and an average LD in that bin
+# for this function, the second argument is the number of cuts to make, or can give it a vector of cut points
+cut_here <- c(seq(from = 0, to = 320, by = 10)) # every 10kb, need to change to part after I know max of everything
+LD$grp <- cut(LD$distancekb, cut_here) ## bin 10kb
+str(LD)
+
+decay <- LD %>% 
+  group_by(grp) %>%
+  summarize(r2_mean = mean(R2))
+
+plot(decay$grp, decay$r2_mean)
+# stopping at this point to make sure I am on the right track before I make a pretty plot
+
+# group it by chromosome 
+decay_chr <- LD %>% 
+  group_by(CHR_A) %>%
+  group_by(grp, .add = TRUE) %>%
+  summarize(r2_mean = mean(R2))
+
+ggplot(decay_chr) +
+  geom_point(aes(x = grp, y = r2_mean, col = as.factor(CHR_A)))+
+  labs(x = "Distance Between SNPs (kb)", y = "Average R2")+
+  theme_classic()
+
+# okay, this is as far as I went on 1/9/2024. There are a few outlier chromosomes so I think what I want to do for plotting is to make a more appealing plot and draw lines between the points for each chromosome so they are easier to follow. But, do this another day. image not saved but sent in slack to myself as snapshot
+
+
+## copied code I don't love
+#r2means <- with(LD, tapply(LD$R2, LD$grp, FUN = mean)) ##r2 mean every #10kb
+#
+#plot(r2means)
+## problem is that the x axis does not have a scale which I think I will want
+```
