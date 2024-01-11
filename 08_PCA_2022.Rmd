@@ -1288,6 +1288,36 @@ manually moved graphs to local computer either with filezilla or just within mob
 Check for correlations between PCs and geographic variables. Assumes you start this code with dplyr and the merged eigenVectors and metadata file that was used to make graphs.
 
 ```{r}
+# let's make a subset dataframe of the variables we are interested in
+cor_test <- eigenVectors_test[,c("PC1", "PC2", "PC3", "PC4", "elev", "lat", "lon", "Pop")]
+
+cor_noBOS <- eigenVectors_noBOS[,c("PC1", "PC2", "PC3", "PC4", "elev", "lat", "lon", "Pop")]
+
+cor_noCent <- eigenVectors_noCent[,c("PC1", "PC2", "PC3", "PC4", "elev", "lat", "lon", "Pop")]
+
+cor_noCent_noBOS <- eigenVectors_noCent_noBOS[,c("PC1", "PC2", "PC3", "PC4", "elev", "lat", "lon", "Pop")]
+
+# then, I want a summary table with mean PC values per population
+
+summary_test <- cor_test %>%
+  group_by(Pop) %>%
+  summarize("elev" = mean(elev), "lat" = mean(lat), "lon" = mean(lon), "PC1" = mean(PC1), "PC2" = mean(PC2), "PC3" = mean(PC3), "PC4" = mean(PC4))
+round(cor(summary_test[ ,2:8]), 2)
+# lat and long are highly correlated with PC2 but I don't know what that might biologically mean.
+
+cor.test(summary_test$elev, summary_test$PC1)
+# p = 0.0009217, cor = -0.745
+cor.test(summary_test$elev, summary_test$PC2)
+# p = 0.03083, cor = -0.5400
+cor.test(summary_test$elev, summary_test$PC3)
+# cor = -0.17, p = 0.5244
+cor.test(summary_test$elev, summary_test$PC4)
+# cor = -0.08, p = 0.7425
+```
+
+Old code that has psuedereplication because multiple PC values per population and only one elevation per population.
+
+```{r, eval = FALSE}
 # I think I should totally be able to do this in loops...
 
 # let's make a subset dataframe of the variables we are interested in
