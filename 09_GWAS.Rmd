@@ -1839,7 +1839,7 @@ library(praise)
 ##### do it time 3 #####
 # read in top hits file
 #top_hits_fdr_all <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv")
-top_hits_fdr_all <- read.csv("C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv")
+top_hits_fdr_all <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv")
 
 #make a 1000bp window centered on the SNP
 top_hits_fdr_all$min <- top_hits_fdr_all$ps - 500
@@ -1859,12 +1859,24 @@ th_noelev_nocent <- top_hits_fdr_all[, grep("all", colnames(th_fdr_noelev), valu
 # using the 'inverse of nocent' code so the first three columns are also kept
 th_noelev_all <- top_hits_fdr_all[, grep("nc", colnames(th_fdr_noelev), value = TRUE, invert = TRUE)]
 
+# adding elevation back in on 1/25/2024 because I need the overlap analysis to be consistent between everything.
+# using the "inverse of all' code so the first three columns are kept + min + max
+th_nocent <- top_hits_fdr_all[, grep("all", colnames(top_hits_fdr_all), value = TRUE, invert = TRUE)]
+# using the 'inverse of nocent' code so the first three columns are also kept
+th_all <- top_hits_fdr_all[, grep("nc", colnames(top_hits_fdr_all), value = TRUE, invert = TRUE)]
 
 # so count NAs, and  keep rows with fewer than 12 NAs (3 columns should have values for all rows)
 th_noelev_nocent <- th_noelev_nocent[rowSums(is.na(th_noelev_nocent)) < 12 , ] 
 # sample size went way down!
 th_noelev_all <- th_noelev_all[rowSums(is.na(th_noelev_all)) < 12 , ] 
 # sample size went way down! but is larger than no cent.
+
+# so count NAs, and  keep rows with fewer than 15 NAs (5 columns should have values for all rows)
+# expect this to reduce rows that were only in all or only in nocent now that I've split them up.
+th_nocent <- th_nocent[rowSums(is.na(th_nocent)) < 15 , ] 
+# sample size went down by ~2000
+th_all <- th_all[rowSums(is.na(th_all)) < 15 , ] 
+# sample size went down by ~3000
 
 ## trouble shooting note: 5:13458838 still exists in the dataset at this point in time. SO I do think the issue is in the id_snps function requires at least 2 overlapping SNPs.
 
@@ -1898,8 +1910,13 @@ id_snps <- function(input){
 # function to identify if any of the overlapping regions are between at least 2 GWAS types
 # issue with this function is that the columns to check will change depending on if it is an nc file or an all file
 # I think this function might actually need a bit more testing
-nc_p_cols <- c("p_binary_nc", "p_raw_nc", "p_asin_nc", "p_subset_nc")
-all_p_cols <- c("p_binary_all", "p_raw_all", "p_asin_all", "p_subset_all")
+#nc_p_cols <- c("p_binary_nc", "p_raw_nc", "p_asin_nc", "p_subset_nc")
+#all_p_cols <- c("p_binary_all", "p_raw_all", "p_asin_all", "p_subset_all")
+
+# include elev
+nc_p_cols <- c("p_binary_nc", "p_raw_nc", "p_asin_nc", "p_subset_nc", "p_elev_nc")
+all_p_cols <- c("p_binary_all", "p_raw_all", "p_asin_all", "p_subset_all", "p_elev_all")
+
 gwas_overlap <- function(input, keep_cols){
   cols_with_values <- c()
   for(d in c(1:length(input))){
@@ -1911,12 +1928,12 @@ gwas_overlap <- function(input, keep_cols){
 }
 
 ##testing further below, but it seems to work!
-#praise()
+praise()
 ```
 
 #### Chromosome 1
 
-```{r chr1}
+```{r chr1, eval = FALSE}
 #### chr 1 ####
 ##### no cent #####
 # only keep the p value columns
@@ -1968,6 +1985,7 @@ length(unique(chr1_overlap_all)) # only 133 are unique with 2+ SNPs, 285 are uni
 
 OverlapHits_chr1_all <- gwas_overlap(chr1_overlap_all, all_p_cols)
 
+# start shared snps list
 shared_snps <- unique(c(OverlapHits_chr1_all[[1]]$rs))
 ```
 
@@ -2028,11 +2046,40 @@ gwas_overlap(tmp_dfs, nc_p_cols)
 
 ```
 
+##### add elevation #####
+
+Chr 1 overlap analysis but includes elevation this time - done 1/25/2024
+
+```{r chr1_elev}
+##### no cent #####
+# only keep the p value columns
+hits_fdr_chr1 <- th_nocent[(th_nocent$chr == 1), c("chr", "rs", "ps", grep("p_", colnames(th_nocent), value = TRUE), "min", "max")]
+
+# run that function!
+chr1_overlap_nc <- id_snps(hits_fdr_chr1)
+#1823 elements
+length(unique(chr1_overlap_nc)) # 1184 unique
+
+# check for overlap between gwas types
+OverlapHits_chr1_nc <- gwas_overlap(chr1_overlap_nc, nc_p_cols)
+# list of 16
+
+##### all  #####
+# only keep the p value columns
+hits_fdr_chr1_a <- th_all[(th_all$chr == 1), c("chr", "rs", "ps", grep("p_", colnames(th_all), value = TRUE), "min", "max")]
+
+# fancy function I wrote
+chr1_overlap_all <- id_snps(hits_fdr_chr1_a) # 1676 elements
+length(unique(chr1_overlap_all)) # 1093 are unique
+# fancy function 2
+OverlapHits_chr1_all <- gwas_overlap(chr1_overlap_all, all_p_cols)
+# list of 14
+```
 
 
 #### Chromosome 2
 
-```{r chr2}
+```{r chr2, eval = FALSE}
 ##### no cent #####
 # only keep the p value columns
 hits_fdr_chr2 <- th_noelev_nocent[(th_noelev_nocent$chr == 2), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_nocent), value = TRUE), "min", "max")]
@@ -2060,9 +2107,37 @@ OverlapHits_chr2_all <- gwas_overlap(chr2_overlap_all, all_p_cols)
 
 No overlap when cutoff is fdr 0.10. This remains when looking at windows with only 1 SNP.
 
+##### add elevation #####
+
+```{r chr2_elev}
+##### no cent #####
+# only keep the p value columns
+hits_fdr_chr2 <- th_nocent[(th_nocent$chr == 2), c("chr", "rs", "ps", grep("p_", colnames(th_nocent), value = TRUE), "min", "max")]
+
+# run that function!
+chr2_overlap_nc <- id_snps(hits_fdr_chr2)
+#4301 elements
+length(unique(chr2_overlap_nc)) # 2580 unique
+
+# check for overlap between gwas types
+OverlapHits_chr2_nc <- gwas_overlap(chr2_overlap_nc, nc_p_cols)
+# list of 58
+
+##### all  #####
+# only keep the p value columns
+hits_fdr_chr2_a <- th_all[(th_all$chr == 2), c("chr", "rs", "ps", grep("p_", colnames(th_all), value = TRUE), "min", "max")]
+
+# fancy function I wrote
+chr2_overlap_all <- id_snps(hits_fdr_chr2_a) # 3124 elements
+length(unique(chr2_overlap_all)) # 1933 are unique
+# fancy function 2
+OverlapHits_chr2_all <- gwas_overlap(chr2_overlap_all, all_p_cols)
+# list of 44
+```
+
 #### Chromosome 3
 
-```{r chr3}
+```{r chr3, eval = FALSE}
 ##### no cent #####
 # only keep the p value columns
 hits_fdr_chr3 <- th_noelev_nocent[(th_noelev_nocent$chr == 3), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_nocent), value = TRUE), "min", "max")]
@@ -2087,15 +2162,44 @@ length(unique(chr3_overlap_all)) # 328 are unique, 581 unique when keeping 1 SNP
 OverlapHits_chr3_all <- gwas_overlap(chr3_overlap_all, all_p_cols)
 # list of 3, the same as the ones that show up with nc
 
+# add to shared snps list
 shared_snps <- append(shared_snps, unique(c(OverlapHits_chr3_all[[1]]$rs, OverlapHits_chr3_all[[2]]$rs, OverlapHits_chr3_all[[3]]$rs)))
 shared_snps
 ```
 
 3 SNPs overlap with fdr 0.10 cutoff. These are the same for both nc and all
 
+##### add elevation #####
+
+```{r chr3_elev}
+##### no cent #####
+# only keep the p value columns
+hits_fdr_chr3 <- th_nocent[(th_nocent$chr == 3), c("chr", "rs", "ps", grep("p_", colnames(th_nocent), value = TRUE), "min", "max")]
+
+# run that function!
+chr3_overlap_nc <- id_snps(hits_fdr_chr3)
+#2689 elements
+length(unique(chr3_overlap_nc)) # 1647 unique
+
+# check for overlap between gwas types
+OverlapHits_chr3_nc <- gwas_overlap(chr3_overlap_nc, nc_p_cols)
+# list of 101
+
+##### all  #####
+# only keep the p value columns
+hits_fdr_chr3_a <- th_all[(th_all$chr == 3), c("chr", "rs", "ps", grep("p_", colnames(th_all), value = TRUE), "min", "max")]
+
+# fancy function I wrote
+chr3_overlap_all <- id_snps(hits_fdr_chr3_a) # 2349 elements
+length(unique(chr3_overlap_all)) # 1453 are unique
+# fancy function 2
+OverlapHits_chr3_all <- gwas_overlap(chr3_overlap_all, all_p_cols)
+# list of 94
+```
+
 #### Chromosome 4
 
-```{r chr4}
+```{r chr4, eval = FALSE}
 ##### no cent #####
 # only keep the p value columns
 hits_fdr_chr4 <- th_noelev_nocent[(th_noelev_nocent$chr == 4), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_nocent), value = TRUE), "min", "max")]
@@ -2123,9 +2227,37 @@ OverlapHits_chr4_all <- gwas_overlap(chr4_overlap_all, all_p_cols)
 
 No overlap when cutoff is fdr 0.10 even when including 1 SNP windows.
 
+##### add elevation
+
+```{r chr4_elev}
+##### no cent #####
+# only keep the p value columns
+hits_fdr_chr4 <- th_nocent[(th_nocent$chr == 4), c("chr", "rs", "ps", grep("p_", colnames(th_nocent), value = TRUE), "min", "max")]
+
+# run that function!
+chr4_overlap_nc <- id_snps(hits_fdr_chr4)
+#1202 elements
+length(unique(chr4_overlap_nc)) # 761 unique
+
+# check for overlap between gwas types
+OverlapHits_chr4_nc <- gwas_overlap(chr4_overlap_nc, nc_p_cols)
+# list of 6
+
+##### all  #####
+# only keep the p value columns
+hits_fdr_chr4_a <- th_all[(th_all$chr == 4), c("chr", "rs", "ps", grep("p_", colnames(th_all), value = TRUE), "min", "max")]
+
+# fancy function I wrote
+chr4_overlap_all <- id_snps(hits_fdr_chr4_a) # 1344 elements
+length(unique(chr4_overlap_all)) # 938 are unique
+# fancy function 2
+OverlapHits_chr4_all <- gwas_overlap(chr4_overlap_all, all_p_cols)
+# list of 10
+```
+
 #### Chromosome 5
 
-```{r chr5}
+```{r chr5, eval = FALSE}
 ##### no cent #####
 # only keep the p value columns
 hits_fdr_chr5 <- th_noelev_nocent[(th_noelev_nocent$chr == 5), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_nocent), value = TRUE), "min", "max")]
@@ -2163,7 +2295,75 @@ Finally some overlap! Wow this is exciting! But, my time on this is up for today
 
 Picking it up on 5/23/2023 for a few minutes to figure out what these regions look like. All of the SNPs in NC are also in ALL which is a good sign, but a few of them are in the centromere (or lower significance in NC) which is not a great sign. What I do want to do is make a GWAS graph where these SNPs are highlighted in each of the analyses. I already have the code for this written below, I just need to fill it in with the SNPs I want. I did this
 
-#### highlight certain SNPs in the GWAS figures.
+1/25/2024: Important note!
+The shared_snps list is only for a comparison between the 4 short stamen number gwas types. This does not take into account the elevation hits at all. The shared_snps list of snps are the only ones that are highlighted on the manhattan plots right now. because there are so many snps identified when I added elevation in to the mix, I need to think about how I want to highlight them and genome browse them.
+
+##### add elevation
+
+```{r chr5_elev}
+##### no cent #####
+# only keep the p value columns
+hits_fdr_chr5 <- th_nocent[(th_nocent$chr == 5), c("chr", "rs", "ps", grep("p_", colnames(th_nocent), value = TRUE), "min", "max")]
+
+# run that function!
+chr5_overlap_nc <- id_snps(hits_fdr_chr5)
+#3437 elements
+length(unique(chr5_overlap_nc)) # 1950 unique
+
+# check for overlap between gwas types
+OverlapHits_chr5_nc <- gwas_overlap(chr5_overlap_nc, nc_p_cols)
+# list of 61
+
+##### all  #####
+# only keep the p value columns
+hits_fdr_chr5_a <- th_all[(th_all$chr == 5), c("chr", "rs", "ps", grep("p_", colnames(th_all), value = TRUE), "min", "max")]
+
+# fancy function I wrote
+chr5_overlap_all <- id_snps(hits_fdr_chr5_a) # 3569 elements
+length(unique(chr5_overlap_all)) # 2097 are unique
+# fancy function 2
+OverlapHits_chr5_all <- gwas_overlap(chr5_overlap_all, all_p_cols)
+# list of 77
+
+```
+
+### Join lists together
+take all the overlap lists I just made, and merge them together into one for no cent and one for all
+```{r}
+all_1 <- bind_rows(OverlapHits_chr1_all)
+all_2 <- bind_rows(OverlapHits_chr2_all)
+all_3 <- bind_rows(OverlapHits_chr3_all)
+all_4 <- bind_rows(OverlapHits_chr4_all)
+all_5 <- bind_rows(OverlapHits_chr5_all)
+
+overlap_all <- rbind(all_1, all_2, all_3, all_4, all_5)
+length(unique(overlap_all$rs))
+# hmm okay so this dataframe has 2386 observations but only 282 of them are actually unique rows and the rest are duplicates that are snps that show up in multiple windows....
+overlap_all2 <- distinct(overlap_all)
+
+write.csv(overlap_all2, file = "data/AllChrs_Overlap_20240125.csv", row.names = FALSE)
+```
+
+```{r}
+nc_1 <- bind_rows(OverlapHits_chr1_nc)
+nc_2 <- bind_rows(OverlapHits_chr2_nc)
+nc_3 <- bind_rows(OverlapHits_chr3_nc)
+nc_4 <- bind_rows(OverlapHits_chr4_nc)
+nc_5 <- bind_rows(OverlapHits_chr5_nc)
+
+overlap_nc <- rbind(nc_1, nc_2, nc_3, nc_4, nc_5)
+length(unique(overlap_nc$rs))
+# hmm okay so this dataframe has 2806 observations but only 289 of them are actually unique rows and the rest are duplicates that are snps that show up in multiple windows....
+overlap_nc2 <- distinct(overlap_nc)
+
+write.csv(overlap_nc2, file = "data/NoCent_Overlap_20240125.csv", row.names = FALSE)
+
+```
+
+#### old code: highlight certain SNPs in the GWAS figures.
+
+New code is in a separate file completely.
+
 ```{r}
 ##### let's visualize where the overlap is #####
 # chr5 only from the final analysis I was doing.
