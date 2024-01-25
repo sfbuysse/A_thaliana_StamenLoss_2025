@@ -2330,16 +2330,22 @@ OverlapHits_chr5_all <- gwas_overlap(chr5_overlap_all, all_p_cols)
 ### Join lists together
 take all the overlap lists I just made, and merge them together into one for no cent and one for all
 ```{r}
-all_1 <- bind_rows(OverlapHits_chr1_all)
-all_2 <- bind_rows(OverlapHits_chr2_all)
-all_3 <- bind_rows(OverlapHits_chr3_all)
-all_4 <- bind_rows(OverlapHits_chr4_all)
-all_5 <- bind_rows(OverlapHits_chr5_all)
+all_1 <- bind_rows(OverlapHits_chr1_all, .id = "window")
+# one window does not have elevation
+all_2 <- bind_rows(OverlapHits_chr2_all, .id = "window")
+# all windows include an elevation hit
+all_3 <- bind_rows(OverlapHits_chr3_all, .id = "window")
+all_4 <- bind_rows(OverlapHits_chr4_all, .id = "window")
+# all windows include an elevation hit
+all_5 <- bind_rows(OverlapHits_chr5_all, .id = "window")
+# not all windows include an elevation hit, but most do
+
+# add '.id = "window"' if I want to know which window each row came from.
 
 overlap_all <- rbind(all_1, all_2, all_3, all_4, all_5)
 length(unique(overlap_all$rs))
 # hmm okay so this dataframe has 2386 observations but only 282 of them are actually unique rows and the rest are duplicates that are snps that show up in multiple windows....
-overlap_all2 <- distinct(overlap_all)
+overlap_all2 <- distinct(overlap_all[2:11])
 
 write.csv(overlap_all2, file = "data/AllChrs_Overlap_20240125.csv", row.names = FALSE)
 ```
