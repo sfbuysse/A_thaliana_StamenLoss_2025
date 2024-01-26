@@ -1313,6 +1313,11 @@ cor.test(summary_test$elev, summary_test$PC3)
 # cor = -0.17, p = 0.5244
 cor.test(summary_test$elev, summary_test$PC4)
 # cor = -0.08, p = 0.7425
+
+cor.test(summary_test$elev, summary_test$lat)
+# cor = 0.58, p = 0.017
+cor.test(summary_test$elev, summary_test$lon)
+# cor = -0.83, p = 5.76e-5
 ```
 
 Old code that has psuedereplication because multiple PC values per population and only one elevation per population.
