@@ -1039,7 +1039,7 @@ ggplot(comp)+
             alpha = 0.3, linewidth = 0.75)+
   geom_line(dat = forplot5, aes(x = Mean.pi, y = pred.m.resid.pi.fit-1.96*pred.m.resid.pi.se.fit), linetype = "solid",
             alpha = 0.5, linewidth = 0.75)+
-  labs(x= "Nucleotide Diversity", y= "Elevation Residuals", title = "long y title is Residuals of Seq_SSN ~ Elevation + centered(Elevation)^2")+
+  labs(x= "Nucleotide Diversity", y= "Residual Short Stamen Number", title = "long y title is Residuals of Seq_SSN ~ Elevation + centered(Elevation)^2")+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   scale_shape_manual(name = "Population",
                      labels = comp$label,
@@ -1063,7 +1063,7 @@ ggplot(comp)+
             alpha = 0.3, linewidth = 0.75)+
   geom_line(dat = forplot5, aes(x = Elev_m, y = pred.m.resid.elev.fit-1.96*pred.m.resid.elev.se.fit), linetype = "solid",
             alpha = 0.5, linewidth = 0.75)+
-  labs(y= "Nucleotide Diversity Residuals", x= "Elevation (m)", title = "long y title is Residuals of Seq_SSN ~ Mean.pi")+
+  labs(y= "Residual Short Stamen Number", x= "Elevation (m)", title = "long y title is Residuals of Seq_SSN ~ Mean.pi")+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   scale_shape_manual(name = "Population",
                      labels = comp$label,
@@ -1079,6 +1079,7 @@ ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - So
        height = 7, width = 9, device = "png", dpi = 500)
 
 ### no cent ###
+# not updated with changed y axis labels.
 
 # this is done with the no cent file pi values.
 comp.c$Elev_m2 <- (comp.c$Elev_m)^2
