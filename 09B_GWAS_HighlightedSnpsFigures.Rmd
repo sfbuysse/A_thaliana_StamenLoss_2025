@@ -24,29 +24,49 @@ rm(list = ls())
 # list of files to read in :
 files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c","NoCent.PlinkFiltering_raw.c_testing" )
 
-# list of shared SNPs - there are two lists for hits shared between cent included analyses and between cent excluded analyses with no overlap of the SNPs that are a hit in cent and no cent for the same type of GWAS - there is 1 hit only in cent and a different one only in no cent but 8/9 are shared between the two
+# list of shared SNPs - there are two lists for hits shared between cent included analyses and between cent excluded analyses with no overlap of the SNPs that are a hit in cent and no cent for the same type of GWAS - there is 1 hit window only in cent and a different one only in no cent
 # Cent only shared snps
+
+# on 1/29/2024 I remade these figures because I had only been including SNPs where the exact SNP was >0.10 in both analyses and ignoring the whole windowed analysis thing that I did. So a few more SNPs to highlight!
 cent <- c("Chr1:14262517",
-                    "Chr3:2239234",
-                    "Chr3:2253161",
-                    "Chr3:2942726",
-                    "Chr5:4899798",
-                    "Chr5:4899803",
-                    "Chr5:4920179",
-                    "Chr5:10731997",
-                    "Chr5:13458838"
-                    )
+          "Chr3:2239234",
+          "Chr3:2253161",
+          "Chr3:2942726",
+          "Chr5:4899729",
+          "Chr5:4899733",
+          "Chr5:4899789",
+          "Chr5:4899798",
+          "Chr5:4899803",
+          "Chr5:4899865",
+          "Chr5:4900275",
+          "Chr5:4900560",
+          "Chr5:4900628",
+          "Chr5:4919727",
+          "Chr5:4920179",
+          "Chr5:4920289",
+          "Chr5:4920304",
+          "Chr5:4920731",
+          "Chr5:10731997",
+          "Chr5:13458838"
+          )
 
 # no cent only shared SNPs
 nocent <- c("Chr3:2239234",
-                    "Chr3:2253161",
-                    "Chr3:2942726",
-                    "Chr5:4899798",
-                    "Chr5:4899803",
-                    "Chr5:4920179",
-                    "Chr5:10731997",
-                    "Chr5:13458838",
-                    "Chr5:19462189"
+          "Chr3:2253161",
+          "Chr3:2942726",
+          "Chr5:4899789",
+          "Chr5:4899798",
+          "Chr5:4899803",
+          "Chr5:4900275",
+          "Chr5:4900560",
+          "Chr5:4919727",
+          "Chr5:4920179",
+          "Chr5:4920289",
+          "Chr5:4920304",
+          "Chr5:4920731",
+          "Chr5:10731997",
+          "Chr5:13458838",
+          "Chr5:19462189"
                     )
 
 ```
@@ -168,30 +188,99 @@ manhattan_highlight <- function(identifier, sig.level = 0.05, type){
 ```
 
 and actual run the function
+
+With centromere
 ```{r}
 ##### Raw Phenotypes #####
 manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw.c", type = cent)
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw.c", type = nocent)
-
 
 ##### Subset Raw Phenotypes #####
 # only include if less than 2 as mean short stamen number
 manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw_subset.c", type = cent)
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw_subset.c", type = nocent)
 
 ##### Asin Phenotypes #####
 manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Asin.c", type = cent)
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_Asin.c", type = nocent)
 
 ##### Binary Phenotypes #####
 manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Binary.c", type = cent)
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_Binary.c", type = nocent)
 
 ##### Elevation! #####
 manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Elev.c", type = cent)
+```
+
+
+without centromere
+```{r}
+##### Raw Phenotypes #####
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw.c", type = nocent)
+
+##### Subset Raw Phenotypes #####
+# only include if less than 2 as mean short stamen number
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw_subset.c", type = nocent)
+
+##### Asin Phenotypes #####
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_Asin.c", type = nocent)
+
+##### Binary Phenotypes #####
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_Binary.c", type = nocent)
+
+##### Elevation! #####
 manhattan_highlight(identifier = "NoCent.PlinkFiltering_Elev.c", type = nocent)
 ```
 
+# Elev + ssn overlap highlight
+I want to test highlighting all the SNPs that have overlap between short stamen number (any GWAS) and elevation
+```{r}
+# read in all file
+overlap_all <- read.csv("data/AllChrs_Overlap_20240125.csv")
+# make list of just the locations
+overlap_all <- c(overlap_all$rs)
+# remove the SNPs that are in the analysis because of only Short stamen number overlap
+
+remove_cent <- c("Chr1:14262517",
+          "Chr3:2239234",
+          "Chr3:2253161",
+          "Chr3:2942726",
+          "Chr5:4919727",
+          "Chr5:4920179",
+          "Chr5:4920289",
+          "Chr5:4920304",
+          "Chr5:4920731",
+          "Chr5:10731997",
+          "Chr5:13458838"
+          )
+
+cent <- overlap_all[!(overlap_all %in% remove_cent)]
+# run function - I manually renamed the one I made previously to conserve that
+##### Elevation! #####
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Elev.c", type = cent)
+
+```
+
+No Cent
+
+```{r}
+# read in all file
+overlap_nc <- read.csv("data/NoCent_Overlap_20240125.csv")
+# make list of just the locations
+overlap_nc <- c(overlap_nc$rs)
+# remove the SNPs that are in the analysis because of only Short stamen number overlap
+
+# no cent only shared SNPs
+remove_nocent <- c("Chr3:2239234",
+          "Chr3:2253161",
+          "Chr3:2942726",
+          "Chr5:4919727",
+          "Chr5:4920179",
+          "Chr5:4920289",
+          "Chr5:4920304",
+          "Chr5:4920731",
+          "Chr5:10731997",
+          "Chr5:13458838"
+                    )
+nocent <- overlap_nc[!(overlap_nc %in% remove_nocent)]
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_Elev.c", type = nocent)
+```
 
 # QTL comparison
 Can I make a figure where I highlight the SNPs that are within the QTL region? With my current set up, I think the easiest way to do it would be to add a different color outer ring to those points. This would just be a 'for me' figure so I could make some conclusions, so I don't need to worry about picking a great color. Start with just the asin allSNPs becuase that might also be all I need.
