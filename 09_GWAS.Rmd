@@ -288,6 +288,15 @@ write.table(new_fam, file = "C:/Users/Sophie/Michigan State University/Conner, J
 
 Super important note! This fam file is organized in alphabetical order. This might become a problem later on when the fam joins up with the bed and the bim, but I'm hoping not. Move this file onto the HPCC. I moved it with File zilla. The order was actually not important when using the --pheno tag in plink because it matches things up by ID instead of row order.
 
+```{r}
+# addition on 2/20/2024
+# I need to calculate shapiro wilks for the subset distribution
+# reading in an old fam file to do this becuase it is on my local machine; has correct means and 43 lines like the one made below
+subset <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/FamFiles/nonzero.fam", header=FALSE)
+shapiro.test(subset$V6)
+# W = 0.9316, p = 0.0132
+```
+
 # Step 2: Make plink format files
 
 Load a module and run some line code
