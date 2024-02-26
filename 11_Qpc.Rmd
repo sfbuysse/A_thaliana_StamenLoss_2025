@@ -211,7 +211,7 @@ stamenEig$values/sum(stamenEig$values)*100
 
 ```
 
-Using the PVE plot, I am going to choose the first 4 PCs to use to look for a signal of selection. Emily suggested using the ones that are correlated with elevation so maybe this will change later on but starting with 4 becuase there is a break in the pve after  4.
+Using the PVE plot, I am going to choose the first 4 PCs to use to look for a signal of selection. Emily suggested using the ones that are correlated with elevation so maybe this will change later on but starting with 4 because there is a break in the pve after  4.
 
 Then I use the bottom half of the PCs to estimate Va (additive variation) so that is PC 30-60 - estimates the drift part.
 
@@ -313,7 +313,7 @@ abline(a=mean(stamenTrait$Pheno), b = -stamenCI[1], lty=2, col='#56B4E9', lwd=2)
 # Plottin
 Let's make a fancy plot cause I like those and it'll fit with the rest of the manuscript figures.
 
-Set to not evaluate while I figure out some coloring stuff. The last population isnot included the y axis. why not? this plotting is kinda confusing to me. and it makes lining things up a bit confusing, but I suppose I can just use the same subsetting that Emily used to remove the last row?
+Set to not evaluate while I figure out some coloring stuff. The last population is not included the y axis. why not? this plotting is kinda confusing to me. and it makes lining things up a bit confusing, but I suppose I can just use the same subsetting that Emily used to remove the last row?
 
 Fixed?
 
@@ -340,18 +340,24 @@ forplot$Population <- factor(forplot$Population, levels = unique(forplot$Populat
 str(forplot$Population)
 ### key is that you need to order the whole sheet AND reorder the factor. BOTH, not just one.
 forplot$labels <- paste0(forplot$Population, " - ", forplot$Elev_m, "m")
+forplot$posCI <- sapply(forplot$eig_vec1, FUN = function(x){stamenCI[1]*x + mean(stamenTrait$Pheno)})
+forplot$negCI <- sapply(forplot$eig_vec1, FUN = function(x){-stamenCI[1]*x + mean(stamenTrait$Pheno)})
 
 # model to draw line from. 
 m2 <- lm(forplot$Pheno~ forplot$eig_vec1)
 
+# set.seed cause jitter is random
+set.seed(220)
+
 ggplot(forplot)+
-  geom_point(aes(x = eig_vec1 , y = Pheno, shape = as.factor(Population), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
-  #geom_smooth(aes(x = eig_vec1 , y = Pheno), method = "lm", se = TRUE, level = 0.95, fullrange = TRUE)+
-  geom_abline(intercept = m2$coefficients[1], slope = m2$coefficients[2], linetype = "solid", alpha = 0.7, linewidth = 1.25)+
-  geom_abline(intercept=mean(stamenTrait$Pheno), slope = stamenCI[1], linetype = "solid",
-            alpha = 0.3, linewidth = 0.75)+
-  geom_abline(intercept=mean(stamenTrait$Pheno), slope = -stamenCI[1], linetype = "solid",
-            alpha = 0.3, linewidth = 0.75)+
+  geom_ribbon(aes(eig_vec1, ymin = posCI, ymax = negCI), alpha = 0.25)+
+  #geom_line(aes(x=eig_vec1, y=posCI), linetype = "solid",
+  #          alpha = 0.3, linewidth = 0.75)+
+  #geom_line(aes(x=eig_vec1, y=negCI), linetype = "solid",
+  #          alpha = 0.3, linewidth = 0.75)+
+  
+  geom_abline(intercept = m2$coefficients[1], slope = m2$coefficients[2], linetype = "solid", alpha = 0.8, linewidth = 0.75)+
+  geom_jitter(aes(x = eig_vec1 , y = Pheno, shape = as.factor(Population), fill = Elev_m), width = 0.007, height = 0.1, col = "black", size = 1.3, stroke = 0.5, show.legend = FALSE)+
   labs(x = "PC1 (11.2%)", y = "Mean Short Stamen Number")+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   scale_shape_manual(name = "Population",
@@ -359,12 +365,14 @@ ggplot(forplot)+
                      values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title.y = element_text(color = "black", size = 10, hjust = 0.85),
+    axis.title.x = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 9),
     legend.spacing.y = unit(0.03, "cm"))
 
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/Qpc_1_topo.png",
-       height = 7, width = 9, device = "png", dpi = 700)
+       height = 2, width = 2, device = "png", dpi = 700)
+
 ```
