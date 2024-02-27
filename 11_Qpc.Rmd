@@ -358,7 +358,7 @@ ggplot(forplot)+
   
   geom_abline(intercept = m2$coefficients[1], slope = m2$coefficients[2], linetype = "solid", alpha = 0.8, linewidth = 0.75)+
   geom_jitter(aes(x = eig_vec1 , y = Pheno, shape = as.factor(Population), fill = Elev_m), width = 0.007, height = 0.1, col = "black", size = 1.3, stroke = 0.5, show.legend = FALSE)+
-  labs(x = "PC1 (11.2%)", y = "Mean Short Stamen Number")+
+  labs(x = "PC 1 (11.2%)", y = "Mean Short Stamen Number")+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   scale_shape_manual(name = "Population",
                      labels = unique(forplot$label),
@@ -369,10 +369,10 @@ ggplot(forplot)+
     legend.text = element_text(color = "black", size = 12),
     axis.title.y = element_text(color = "black", size = 10, hjust = 0.85),
     axis.title.x = element_text(color = "black", size = 10),
-    axis.text = element_text(color = "black", size = 9),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
 
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/Qpc_1_topo.png",
-       height = 2, width = 2, device = "png", dpi = 700)
+       height = 2.25, width = 2.25, device = "png", dpi = 700)
 
 ```

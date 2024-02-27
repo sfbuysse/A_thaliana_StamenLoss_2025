@@ -674,6 +674,8 @@ eigenVectors_noCent_noBOS$Pop <- factor(eigenVectors_noCent_noBOS$Pop, levels = 
 ### Make Plots ###
 Plink filtering, includes centromere
 ```{r}
+# set.seed for jitter
+set.seed(656)
 ##### plink filtering test #####
 # barplot of PVE 
 ggplot(pve_test)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
@@ -684,133 +686,133 @@ ggplot(pve_test)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
 # is using shape outline that is colored, don't use transparency at all. not actually sure I want it with fill either?
 # make all graphs as both color and fill (no transparency), then decide later I think is the move... so many graphs...
 
-## topo color PC1/PC2
+#### topo color PC1/PC2
+#ggplot(data = eigenVectors_test) +
+#  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, col = elev ), size = 3, stroke = 1.25, show.legend = FALSE ) + # was size = 3, #stroke = 1.25 alpha = 0.7,col = "black",
+#  geom_hline(yintercept = 0, linetype="dotted") +
+#  geom_vline(xintercept = 0, linetype="dotted") +
+#  labs(title = "PCA of Pyrenees Pops: Plink Filtering",
+#      x = paste0("Principal component 1 (",pve_test[1,1]," %)"),
+#      y = paste0("Principal component 2 (",pve_test[2,1]," %)")) +
+#  scale_shape_manual(name = "Population",
+#                     labels = unique(eigenVectors_test$label),
+#                     values = rep(c(0, 1, 2, 5, 6), times = 4))+ #c(22, 21, 24, 23, 25)
+#  scale_color_gradientn(name = "Elevation", colours = topo.colors(16))+
+#  theme_classic()+
+#  theme(
+#    legend.title = element_text(color = "black", size = 20),
+#    legend.text = element_text(color = "black", size = 20),
+#    axis.title = element_text(color = "black", size = 20),
+#    axis.text = element_text(color = "black", size = 20),
+#    legend.spacing.y = unit(0.03, "cm"))
+#ggsave(filename = "plink_PC1PC2_PlinkFiltering_topo_color.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - #SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
+# topo fill PC1/PC2
 ggplot(data = eigenVectors_test) +
-  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, col = elev ), size = 3, stroke = 1.25, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,col = "black",
+  geom_jitter(mapping = aes(x = -(PC1), y = PC2, shape = Pop, fill = elev ), col = "black", size = 1.3, stroke = 0.5, width = 0.025, height=0.025, show.legend = FALSE ) +
   geom_hline(yintercept = 0, linetype="dotted") +
   geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering",
-      x = paste0("Principal component 1 (",pve_test[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_test[2,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_test$label),
-                     values = rep(c(0, 1, 2, 5, 6), times = 4))+ #c(22, 21, 24, 23, 25)
-  scale_color_gradientn(name = "Elevation", colours = topo.colors(16))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_topo_color.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
-## topo fill PC1/PC2
-ggplot(data = eigenVectors_test) +
-  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering",
-      x = paste0("Principal component 1 (",pve_test[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_test[2,1]," %)")) +
+  labs(x = paste0("PC 1 (",sprintf(pve_test[1,1], fmt='%#.1f'),"%)"),
+      y = paste0("PC 2 (",sprintf(pve_test[2,1], fmt='%#.1f'),"%)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_test$label),
                      values = rep(c(22, 21, 24, 23, 25), times = 4))+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title.y = element_text(color = "black", size = 10),
+    axis.title.x = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 2.25, width = 2.25, device = "png", dpi = 700)
 
-## topo color PC3/PC4
-ggplot(data = eigenVectors_test) +
-  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, col = elev ), size = 3, stroke = 1.25, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,col = "black",
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering",
-      x = paste0("Principal component 3 (",pve_test[3,1]," %)"),
-      y = paste0("Principal component 4 (",pve_test[4,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_test$label),
-                     values = rep(c(0, 1, 2, 5, 6), times = 4))+ #c(22, 21, 24, 23, 25)
-  scale_color_gradientn(name = "Elevation", colours = topo.colors(16))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_topo_color.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
+### topo color PC3/PC4
+#ggplot(data = eigenVectors_test) +
+#  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, col = elev ), size = 3, stroke = 1.25, show.legend = FALSE ) + # was size = 3, #stroke = 1.25 alpha = 0.7,col = "black",
+#  geom_hline(yintercept = 0, linetype="dotted") +
+#  geom_vline(xintercept = 0, linetype="dotted") +
+#  labs(title = "PCA of Pyrenees Pops: Plink Filtering",
+#      x = paste0("Principal component 3 (",pve_test[3,1]," %)"),
+#      y = paste0("Principal component 4 (",pve_test[4,1]," %)")) +
+#  scale_shape_manual(name = "Population",
+#                     labels = unique(eigenVectors_test$label),
+#                     values = rep(c(0, 1, 2, 5, 6), times = 4))+ #c(22, 21, 24, 23, 25)
+#  scale_color_gradientn(name = "Elevation", colours = topo.colors(16))+
+#  theme_classic()+
+#  theme(
+#    legend.title = element_text(color = "black", size = 20),
+#    legend.text = element_text(color = "black", size = 20),
+#    axis.title = element_text(color = "black", size = 20),
+#    axis.text = element_text(color = "black", size = 20),
+#    legend.spacing.y = unit(0.03, "cm"))
+#ggsave(filename = "plink_PC3PC4_PlinkFiltering_topo_color.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - #SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
 ## topo fill PC3/PC4
 ggplot(data = eigenVectors_test) +
-  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
+  geom_jitter(mapping = aes(x = PC3, y = PC4, shape = Pop, fill = elev ), col = "black", size = 1.3, stroke = 0.5, height = 0.025, width=0.025, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
   geom_hline(yintercept = 0, linetype="dotted") +
   geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering",
-      x = paste0("Principal component 3 (",pve_test[3,1]," %)"),
-      y = paste0("Principal component 4 (",pve_test[4,1]," %)")) +
+  labs(x = paste0("PC 3 (",sprintf(pve_test[3,1], fmt='%#.1f'),"%)"),
+      y = paste0("PC 4 (",sprintf(pve_test[4,1], fmt='%#.1f'),"%)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_test$label),
                      values = rep(c(22, 21, 24, 23, 25), times = 4))+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 2.25, width = 2.25, device = "png", dpi = 700)
 
   
-#old plots
-ggplot(data = eigenVectors_test) +
-  geom_point(mapping = aes(x = PC1, y = PC2, color = Pop, shape = Pop ), size = 3, stroke = 1.25, show.legend = TRUE ) +
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering",
-      x = paste0("Principal component 1 (",pve_test[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_test[2,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_test$label),
-                     values = rep(c(0, 1, 2, 5), times = 4))+
-  scale_color_manual(name = "Population",
-                     labels = unique(eigenVectors_test$label),
-                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 12),
-    legend.text = element_text(color = "black", size = 10),
-    legend.spacing.y = unit(0.0001, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+##old plots
+#ggplot(data = eigenVectors_test) +
+#  geom_point(mapping = aes(x = PC1, y = PC2, color = Pop, shape = Pop ), size = 3, stroke = 1.25, show.legend = TRUE ) +
+#  geom_hline(yintercept = 0, linetype="dotted") +
+#  geom_vline(xintercept = 0, linetype="dotted") +
+#  labs(title = "PCA of Pyrenees Pops: Plink Filtering",
+#      x = paste0("Principal component 1 (",pve_test[1,1]," %)"),
+#      y = paste0("Principal component 2 (",pve_test[2,1]," %)")) +
+#  scale_shape_manual(name = "Population",
+#                     labels = unique(eigenVectors_test$label),
+#                     values = rep(c(0, 1, 2, 5), times = 4))+
+#  scale_color_manual(name = "Population",
+#                     labels = unique(eigenVectors_test$label),
+#                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+#  theme_classic()+
+#  theme(
+#    legend.title = element_text(color = "black", size = 12),
+#    legend.text = element_text(color = "black", size = 10),
+#    legend.spacing.y = unit(0.0001, "cm"))
+#ggsave(filename = "plink_PC1PC2_PlinkFiltering.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
+#
+#ggplot(data = eigenVectors_test) +
+#  geom_point(mapping = aes(x = PC3, y =PC4, col = Pop, shape = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
+#  geom_hline(yintercept = 0, linetype="dotted") +
+#  geom_vline(xintercept = 0, linetype="dotted") +
+#  labs(title = "PCA of Pyrenees Pops: Plink Filtering",
+#      x = paste0("Principal component 3 (",pve_test[3,1]," %)"),
+#      y = paste0("Principal component 4 (",pve_test[4,1]," %)")) +
+#  scale_shape_manual(name = "Population",
+#                     labels = unique(eigenVectors_test$label),
+#                     values = rep(c(0, 1, 2, 5), times = 4))+
+#  scale_color_manual(name = "Population",
+#                     labels = unique(eigenVectors_test$label),
+#                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
+#  theme_classic()+
+#  theme(
+#    legend.title = element_text(color = "black", size = 12),
+#    legend.text = element_text(color = "black", size = 10),
+#    legend.spacing.y = unit(0.0001, "cm"))
+#ggsave(filename = "plink_PC3PC4_PlinkFiltering.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
 
-ggplot(data = eigenVectors_test) +
-  geom_point(mapping = aes(x = PC3, y =PC4, col = Pop, shape = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering",
-      x = paste0("Principal component 3 (",pve_test[3,1]," %)"),
-      y = paste0("Principal component 4 (",pve_test[4,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_test$label),
-                     values = rep(c(0, 1, 2, 5), times = 4))+
-  scale_color_manual(name = "Population",
-                     labels = unique(eigenVectors_test$label),
-                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 12),
-    legend.text = element_text(color = "black", size = 10),
-    legend.spacing.y = unit(0.0001, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
 ```
 
 LD pruned, not making updated graphs b/c not currently on list to be used in manuscript anywhere.
-```{r}
+```{r, eval = FALSE}
 ##### all_pruned, filtered by plink #####
 # barplot of PVE 
 ggplot(pve_pruned)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
@@ -868,131 +870,46 @@ ggplot(pve_noBOS)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
 # looks decent, don't really know what to note.
 
 #topo plots
-## topo color PC1/PC2
-ggplot(data = eigenVectors_noBOS) +
-  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, col = elev ), size = 3, stroke = 1.25, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,col = "black",
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No BOS",
-      x = paste0("Principal component 1 (",pve_noBOS[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_noBOS[2,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_noBOS$label),
-                     values = rep(c(0, 1, 2, 5, 6), times = 4))+ #c(22, 21, 24, 23, 25)
-  scale_color_gradientn(name = "Elevation", colours = topo.colors(16))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noBOS_topo_color.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
+
 ## topo fill PC1/PC2
 ggplot(data = eigenVectors_noBOS) +
-  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
+  geom_jitter(mapping = aes(x = -PC1, y = PC2, shape = Pop, fill = elev ), col = "black", size = 1.3, stroke = 0.5, height = 0.025, width = 0.025, show.legend = FALSE ) +
   geom_hline(yintercept = 0, linetype="dotted") +
   geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No BOS",
-      x = paste0("Principal component 1 (",pve_noBOS[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_noBOS[2,1]," %)")) +
+  labs(x = paste0("PC 1 (",sprintf(pve_noBOS[1,1], fmt='%#.1f'),"%)"),
+      y = paste0("PC 2 (",sprintf(pve_noBOS[2,1], fmt='%#.1f'),"%)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_noBOS$label),
                      values = c(22,21,24,23,25,22,21,24,25,22,21,24,23,25,22,21,24,23,25))+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 2.25, width = 2.25, device = "png", dpi = 700)
 
-## topo color PC3/PC4
-ggplot(data = eigenVectors_noBOS) +
-  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, col = elev ), size = 3, stroke = 1.25, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,col = "black",
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No BOS",
-      x = paste0("Principal component 3 (",pve_noBOS[3,1]," %)"),
-      y = paste0("Principal component 4 (",pve_noBOS[4,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_noBOS$label),
-                     values = rep(c(0, 1, 2, 5, 6), times = 4))+ #c(22, 21, 24, 23, 25)
-  scale_color_gradientn(name = "Elevation", colours = topo.colors(16))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noBOS_topo_color.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
 ## topo fill PC3/PC4
 ggplot(data = eigenVectors_noBOS) +
-  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
+  geom_jitter(mapping = aes(x = PC3, y = PC4, shape = Pop, fill = elev ), col = "black", size = 1.3, stroke = 0.5, height = 0.025, width=0.025, show.legend = FALSE ) +
   geom_hline(yintercept = 0, linetype="dotted") +
   geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No BOS",
-      x = paste0("Principal component 3 (",pve_noBOS[3,1]," %)"),
-      y = paste0("Principal component 4 (",pve_noBOS[4,1]," %)")) +
+  labs(x = paste0("PC 3 (",sprintf(pve_noBOS[3,1], fmt='%#.1f'),"%)"),
+      y = paste0("PC 4 (",sprintf(pve_noBOS[4,1], fmt='%#.1f'),"%)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_noBOS$label),
                      values = c(22,21,24,23,25,22,21,24,25,22,21,24,23,25,22,21,24,23,25))+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 7, width = 7, device = "png", dpi = 500)
-
-# old plots
-ggplot(data = eigenVectors_noBOS) +
-  geom_point(mapping = aes(x = PC1, y = PC2, color = Pop, shape = Pop ), size = 3, stroke = 1.25, show.legend = TRUE ) +
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No BOS",
-      x = paste0("Principal component 1 (",pve_noBOS[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_noBOS[2,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_noBOS$label),
-                     values = c(0, 1, 2, 5, 0, 1, 2, 5, 1, 2, 5, 0, 1, 2, 5))+
-  scale_color_manual(name = "Population",
-                     labels = unique(eigenVectors_noBOS$label),
-                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,3,4)))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 12),
-    legend.text = element_text(color = "black", size = 10),
-    legend.spacing.y = unit(0.0001, "cm"))
-# hmm this does look different, still seems to be a elevational trend honestly, something weird happening in the ARU population that has it kinda spread out and is clustering with PAL, but it is not close to PAL, PAn and VIE (high elev pops) differentiate out. 
-# so there is some interesting stuff happening here.
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_NoBOS.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
-
-ggplot(data = eigenVectors_noBOS) +
-  geom_point(mapping = aes(x = PC3, y =PC4, col = Pop, shape = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No BOS",
-      x = paste0("Principal component 3 (",pve_noBOS[3,1]," %)"),
-      y = paste0("Principal component 4 (",pve_noBOS[4,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_noBOS$label),
-                     values = c(0, 1, 2, 5, 0, 1, 2, 5, 1, 2, 5, 0, 1, 2, 5))+
-  scale_color_manual(name = "Population",
-                     labels = unique(eigenVectors_noBOS$label),
-                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,3,4)))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 12),
-    legend.text = element_text(color = "black", size = 10),
-    legend.spacing.y = unit(0.0001, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noBOS.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
-# a bit more scatter, expecially where the most genotypes are. still a ARU right by the PAL genotypes. more scatter in the red, a PIN with the HOR (they are geographically right next to each other so geneflow might be possible)
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 2.25, width = 2.25, device = "png", dpi = 700)
 
 ```
 
@@ -1029,66 +946,25 @@ ggplot(pve_noCent)+ geom_bar(aes(y = V1,x = PC), stat = "identity")
 # nothing really notable.
 
 # topo plots
-ggplot(data = eigenVectors_noCent) +
-  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, col = elev ), size = 3, stroke = 1.25, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,col = "black",
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No Centromere",
-      x = paste0("Principal component 1 (",pve_noCent[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_noCent[2,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_noCent$label),
-                     values = rep(c(0, 1, 2, 5, 6), times = 4))+ #c(22, 21, 24, 23, 25)
-  scale_color_gradientn(name = "Elevation", colours = topo.colors(16))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_color.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
 ## topo fill PC1/PC2
 ggplot(data = eigenVectors_noCent) +
-  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
+  geom_jitter(mapping = aes(x = PC1, y = PC2, shape = Pop, fill = elev ), col = "black", size = 1.3, stroke = 0.5, height = 0.025, width = 0.025, show.legend = FALSE ) +
   geom_hline(yintercept = 0, linetype="dotted") +
   geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No Centromere",
-      x = paste0("Principal component 1 (",pve_noCent[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_noCent[2,1]," %)")) +
+  labs(x = paste0("PC 1 (",sprintf(pve_noCent[1,1], fmt='%#.f'),"%)"),
+      y = paste0("PC 2 (",sprintf(pve_noCent[2,1], fmt='%#.f'),"%)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_noCent$label),
                      values = rep(c(22, 21, 24, 23, 25), times = 4))+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
-
-## topo fill PC1/PC2 testing with size
-ggplot(data = eigenVectors_noCent) +
-  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, fill = elev ), col = "black", size = 1, stroke = 0.5, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No Centromere",
-      x = paste0("Principal component 1 (",pve_noCent[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_noCent[2,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_noCent$label),
-                     values = rep(c(22, 21, 24, 23, 25), times = 4))+
-  scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-#ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill_tmp.png", path = "/mnt/scratch/buysseso/PCA", height = 4, width = 4, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 2.25, width = 2.25, device = "png", dpi = 700)
 
 ## topo fill PC1/PC2 labelled points to check out ALe-4 and compare to heterozygosity
 ggplot(data = eigenVectors_noCent) +
@@ -1098,8 +974,8 @@ ggplot(data = eigenVectors_noCent) +
   geom_hline(yintercept = 0, linetype="dotted") +
   geom_vline(xintercept = 0, linetype="dotted") +
   labs(title = "PCA of Pyrenees Pops: Plink Filtering, No Centromere",
-      x = paste0("Principal component 1 (",pve_noCent[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_noCent[2,1]," %)")) +
+      x = paste0("PC 1 (",sprintf(pve_noCent[1,1], fmt='%#.f'),"%)"),
+      y = paste0("PC 2 (",sprintf(pve_noCent[2,1], fmt='%#.f'),"%)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_noCent$label),
                      values = rep(c(22, 21, 24, 23, 25), times = 4))+
@@ -1111,178 +987,76 @@ ggplot(data = eigenVectors_noCent) +
     axis.title = element_text(color = "black", size = 20),
     axis.text = element_text(color = "black", size = 20),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill_labels.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_topo_fill_labels.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures", height = 7, width = 7, device = "png", dpi = 500)
 
-## topo color PC3/PC4
-ggplot(data = eigenVectors_noCent) +
-  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, col = elev ), size = 3, stroke = 1.25, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,col = "black",
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No Centromere",
-      x = paste0("Principal component 3 (",pve_noCent[3,1]," %)"),
-      y = paste0("Principal component 4 (",pve_noCent[4,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_noCent$label),
-                     values = rep(c(0, 1, 2, 5, 6), times = 4))+ #c(22, 21, 24, 23, 25)
-  scale_color_gradientn(name = "Elevation", colours = topo.colors(16))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_topo_color.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
 ## topo fill PC3/PC4
 ggplot(data = eigenVectors_noCent) +
-  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
+  geom_jitter(mapping = aes(x = PC3, y = PC4, shape = Pop, fill = elev ), col = "black", size = 1.3, stroke = 0.5, height = 0.025, width = 0.025, show.legend = FALSE ) +
   #geom_text(aes(x = PC3, y = PC4, label = SeqID), nudge_x = 0, nudge_y = +0.02, col = "black")+
   geom_hline(yintercept = 0, linetype="dotted") +
   geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No Centromere",
-      x = paste0("Principal component 3 (",pve_noCent[3,1]," %)"),
-      y = paste0("Principal component 4 (",pve_noCent[4,1]," %)")) +
+  labs(x = paste0("PC 3 (",sprintf(pve_noCent[3,1], fmt='%#.1f')," %)"),
+      y = paste0("PC 4 (",sprintf(pve_noCent[4,1], fmt='%#.1f')," %)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_noCent$label),
                      values = rep(c(22, 21, 24, 23, 25), times = 4))+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 2.25, width = 2.25, device = "png", dpi = 700)
 
-# old plots
-ggplot(data = eigenVectors_noCent) +
-  geom_point(mapping = aes(x = PC1, y = PC2, color = Pop, shape = Pop ), size = 3, stroke = 1.25, show.legend = TRUE ) +
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, no centromere",
-      x = paste0("Principal component 1 (",pve_noCent[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_noCent[2,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_noCent$label),
-                     values = rep(c(0, 1, 2, 5), times = 4))+
-  scale_color_manual(name = "Population",
-                     labels = unique(eigenVectors_noCent$label),
-                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 12),
-    legend.text = element_text(color = "black", size = 10),
-    legend.spacing.y = unit(0.0001, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
-# rotated but looks like the with centromere results
-
-ggplot(data = eigenVectors_noCent) +
-  geom_point(mapping = aes(x = PC3, y =PC4, col = Pop, shape = Pop), size = 3, stroke = 1.25, show.legend = TRUE ) +
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, no centromere",
-      x = paste0("Principal component 3 (",pve_noCent[3,1]," %)"),
-      y = paste0("Principal component 4 (",pve_noCent[4,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_noCent$label),
-                     values = rep(c(0, 1, 2, 5), times = 4))+
-  scale_color_manual(name = "Population",
-                     labels = unique(eigenVectors_noCent$label),
-                     values = rep(c("red", "orange", "green", "blue"), times = c(4,4,4,4)))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 12),
-    legend.text = element_text(color = "black", size = 10),
-    legend.spacing.y = unit(0.0001, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 9)
 ```
 
 No Centromere, no BOS
 ```{r}
 ##### plink filtering, no centromere, no BOS #####
-ggplot(data = eigenVectors_noCent_noBOS) +
-  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, col = elev ), size = 3, stroke = 1.25, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,col = "black",
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No Centromere, No BOS",
-      x = paste0("Principal component 1 (",pve_noCent_noBOS[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_noCent_noBOS[2,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_noCent_noBOS$label),
-                     values = rep(c(0, 1, 2, 5, 6), times = 4))+ #c(22, 21, 24, 23, 25)
-  scale_color_gradientn(name = "Elevation", colours = topo.colors(16))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_noBOS_topo_color.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
+
 ## topo fill PC1/PC2
 ggplot(data = eigenVectors_noCent_noBOS) +
-  geom_point(mapping = aes(x = PC1, y = PC2, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
+  geom_jitter(mapping = aes(x = PC1, y = PC2, shape = Pop, fill = elev ), col = "black", size = 1.3, stroke = 0.5, height = 0.025, width = 0.025, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
   geom_hline(yintercept = 0, linetype="dotted") +
   geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No Centromere, No BOS",
-      x = paste0("Principal component 1 (",pve_noCent_noBOS[1,1]," %)"),
-      y = paste0("Principal component 2 (",pve_noCent_noBOS[2,1]," %)")) +
+  labs(x = paste0("PC 1 (",sprintf(pve_noCent_noBOS[1,1], fmt='%#.1f'),"%)"),
+      y = paste0("PC 2 (",sprintf(pve_noCent_noBOS[2,1], fmt='%#.1f'),"%)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_noCent_noBOS$label),
                      values = c(22,21,24,23,25,22,21,24,25,22,21,24,23,25,22,21,24,23,25))+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC1PC2_PlinkFiltering_noCent_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 2.25, width = 2.25, device = "png", dpi = 700)
 
-## topo color PC3/PC4
-ggplot(data = eigenVectors_noCent_noBOS) +
-  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, col = elev ), size = 3, stroke = 1.25, show.legend = FALSE ) + # alpha = 0.7,col = "black",
-  geom_hline(yintercept = 0, linetype="dotted") +
-  geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No Centromere, No BOS",
-      x = paste0("Principal component 3 (",pve_noCent_noBOS[3,1]," %)"),
-      y = paste0("Principal component 4 (",pve_noCent_noBOS[4,1]," %)")) +
-  scale_shape_manual(name = "Population",
-                     labels = unique(eigenVectors_noCent_noBOS$label),
-                     values = rep(c(0, 1, 2, 5, 6), times = 4))+ #c(22, 21, 24, 23, 25)
-  scale_color_gradientn(name = "Elevation", colours = topo.colors(16))+
-  theme_classic()+
-  theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
-    legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_noBOS_topo_color.png", path = "/mnt/scratch/buysseso/PCA", height = 7, width = 7, device = "png", dpi = 500)
 ## topo fill PC3/PC4
 ggplot(data = eigenVectors_noCent_noBOS) +
-  geom_point(mapping = aes(x = PC3, y = PC4, shape = Pop, fill = elev ), col = "black", size = 4, stroke = 1, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
+  geom_jitter(mapping = aes(x = PC3, y = PC4, shape = Pop, fill = elev ), col = "black", size = 1.3, stroke = 0.5, height = 0.025, width = 0.025, show.legend = FALSE ) + # was size = 3, stroke = 1.25 alpha = 0.7,
   geom_hline(yintercept = 0, linetype="dotted") +
   geom_vline(xintercept = 0, linetype="dotted") +
-  labs(title = "PCA of Pyrenees Pops: Plink Filtering, No Centromere, No BOS",
-      x = paste0("Principal component 3 (",pve_noCent_noBOS[3,1]," %)"),
-      y = paste0("Principal component 4 (",pve_noCent_noBOS[4,1]," %)")) +
+  labs(x = paste0("PC 3 (",sprintf(pve_noCent_noBOS[3,1], fmt='%#.1f'),"%)"),
+      y = paste0("PC 4 (",sprintf(pve_noCent_noBOS[4,1], fmt='%#.1f'),"%)")) +
   scale_shape_manual(name = "Population",
                      labels = unique(eigenVectors_noCent_noBOS$label),
                      values = c(22,21,24,23,25,22,21,24,25,22,21,24,23,25,22,21,24,23,25))+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
-ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "plink_PC3PC4_PlinkFiltering_noCent_noBOS_topo_fill.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 2.25, width = 2.25, device = "png", dpi = 700)
 ```
-manually moved graphs to local computer either with filezilla or just within mobaxterm.
+manually moved graphs to local computer either with filezilla or just within mobaxterm. But then realized I needed to use local machine to make high enough quality figures.
 
 ### Regressions with Geo Vars ###
 Check for correlations between PCs and geographic variables. Assumes you start this code with dplyr and the merged eigenVectors and metadata file that was used to make graphs.
@@ -1318,6 +1092,20 @@ cor.test(summary_test$elev, summary_test$lat)
 # cor = 0.58, p = 0.017
 cor.test(summary_test$elev, summary_test$lon)
 # cor = -0.83, p = 5.76e-5
+
+# then Jeff asked for a multiple regression of each PC on all three variables. I can easily do this, but I'm not sure about the application to be honest because it still isn't how you test for IBD because I am not using the geographic distance between each population.
+
+PC1_geo <- lm(PC1 ~ elev + lat + lon, data = summary_test)
+summary(PC1_geo)
+
+PC2_geo <- lm(PC2 ~ elev + lat + lon, data = summary_test)
+summary(PC2_geo)
+
+PC3_geo <- lm(PC3 ~ elev + lat + lon, data = summary_test)
+summary(PC3_geo)
+
+PC4_geo <- lm(PC4 ~ elev + lat + lon, data = summary_test)
+summary(PC4_geo)
 ```
 
 Old code that has psuedereplication because multiple PC values per population and only one elevation per population.
