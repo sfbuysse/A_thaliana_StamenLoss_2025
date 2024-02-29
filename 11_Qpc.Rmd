@@ -138,6 +138,7 @@ return(sum(x^2)/length(x))
 ```{r}
 library(viridis)
 library(ggplot2)
+library(ggpubr)
 ```
 
 # load data
@@ -349,7 +350,7 @@ m2 <- lm(forplot$Pheno~ forplot$eig_vec1)
 # set.seed cause jitter is random
 set.seed(220)
 
-ggplot(forplot)+
+plot_3c <- ggplot(forplot)+
   geom_ribbon(aes(eig_vec1, ymin = posCI, ymax = negCI), alpha = 0.25)+
   #geom_line(aes(x=eig_vec1, y=posCI), linetype = "solid",
   #          alpha = 0.3, linewidth = 0.75)+
@@ -367,10 +368,13 @@ ggplot(forplot)+
   theme(
     legend.title = element_text(color = "black", size = 12),
     legend.text = element_text(color = "black", size = 12),
-    axis.title.y = element_text(color = "black", size = 10, hjust = 0.85),
+    axis.title.y = element_text(color = "black", size = 10, hjust = 0.85, vjust = -0.5),
     axis.title.x = element_text(color = "black", size = 10),
     axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
+
+annotate_figure(plot_3c,
+                fig.lab = "C", fig.lab.face = "bold")
 
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/Qpc_1_topo.png",
        height = 2.25, width = 2.25, device = "png", dpi = 700)

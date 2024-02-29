@@ -42,6 +42,11 @@ summary(m.pi.elev)
 ### r2 = 0.6411. p val is significant (but from stats I recall I should not look at this)
 ### means that elevation does explain pi. 
 
+# adding this on later date. what about quadratic elevation predicting pi?
+m.pi.elev2 <- lm(Mean.pi ~ Elev_m + Elev_c2, data = comp)
+summary(m.pi.elev2)
+#slightly higher r2 than linear.
+
 ### SSN and Elevation ###
 ## Do this with the Full means because we want the best picture of each popualtion
 plot(Full_PopFlwrMean ~ Elev_m, data = comp)
@@ -120,6 +125,11 @@ summary(m.pi.ssn)
 
 ### So, both mean.pi and mean.ssn are decently correlated with elevation, but not with each other! 
 ### interesting.probably makes sense though because pi is genome wide
+
+# adding Jimmy's question of if quadratic nucleotide diveristy would get a better model
+comp$pi_c2 <- (comp$Mean.pi - mean(comp$Mean.pi))^2
+m.pi.ssn2 <- lm(Seq_PopFlwrMean ~ Mean.pi + pi_c2, dat = comp)
+summary(m.pi.ssn2)
 
 ### The two means ###
 cor.test(comp$Full_PopFlwrMean, comp$Seq_PopFlwrMean, method = "pearson")
@@ -958,13 +968,17 @@ ggsave("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalys
 # would want to use same spacing as the unremoved centromere if I am actually comparing the two though.
 
 
-###### more complex model! ######
+########## more complex model! ##########
 ### with cent ###
 # this was done 10/26 with the cent included files and a centered quadratic model to reduce collinearity.
 m.ssn.elev.pi.good <- lm(Seq_PopFlwrMean ~ Elev_m + Elev_c2 + Mean.pi, dat = comp)
 summary(m.ssn.elev.pi.good)
 # results in model results excel sheet
 # linear elevation is the only significant one.
+
+# adding squared pi
+m.ssn.elev.pi2 <- lm(Seq_PopFlwrMean ~ Elev_m + Elev_c2 + Mean.pi + pi_c2, dat = comp)
+summary(m.ssn.elev.pi2)
 
 # quick check that standardizing doesn't change p values:
 tmp.standard2 <- lm(Seq_PopFlwrMean ~ scale(Elev_m) + scale(Elev_c2) + scale(Mean.pi), dat = comp)
@@ -1339,3 +1353,16 @@ ggplot(comp.c)+
     )
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/Legend.png",
        height = 7, width = 9, device = "png", dpi = 500)
+
+########## AIC scores ##########
+AIC(m.pi.elev)
+AIC(m.pi.elev2)
+AIC(m.ssn.elev.linear)
+AIC(tmp4)
+AIC(m.pi.ssn)
+AIC(m.pi.ssn2)
+AIC(m.ssn.elev.pi.good)
+AIC(m.ssn.elev.pi2)
+AIC(tmp4_seq)
+AIC(m.resid.pi2)
+AIC(m.resid.elev2)
