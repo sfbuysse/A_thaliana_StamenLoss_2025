@@ -377,6 +377,6 @@ annotate_figure(plot_3c,
                 fig.lab = "C", fig.lab.face = "bold")
 
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/Qpc_1_topo.png",
-       height = 2.25, width = 2.25, device = "png", dpi = 700)
+       height = 3, width = 3, device = "png", dpi = 700)
 
 ```

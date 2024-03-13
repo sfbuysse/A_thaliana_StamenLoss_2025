@@ -43,6 +43,7 @@ summary(m.pi.elev)
 ### means that elevation does explain pi. 
 
 # adding this on later date. what about quadratic elevation predicting pi?
+comp$Elev_c2 <- (comp$Elev_m - mean(comp$Elev_m))^2
 m.pi.elev2 <- lm(Mean.pi ~ Elev_m + Elev_c2, data = comp)
 summary(m.pi.elev2)
 #slightly higher r2 than linear.
@@ -173,14 +174,24 @@ barplot(rep(1,10), col = topo.colors(10))
 barplot(rep(1,16), col = topo.colors(16))
 # choosing topo as the color scheme, so commenting out all the terrain plots.
 # with a linear fit line of elevation explaining mean pi
-ggplot(comp)+
-  geom_point(data=comp, aes(x=Elev_m, y=Mean.pi, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+fig2b <- ggplot(comp)+
+  geom_point(data=comp, aes(x=Elev_m, y=Mean.pi, shape = as.factor(pop), fill= Elev_m), col = "black", size = 3, stroke = 1, show.legend = FALSE)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit), linetype = "solid",
-            alpha = 0.7, linewidth = 1.25)+
+            alpha = 0.9, linewidth = 1.)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit+1.96*pred.pi.el.se.fit), linetype = "solid",
-            alpha = 0.3, linewidth = 0.75)+
+            alpha = 0.5, linewidth = 0.65)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit-1.96*pred.pi.el.se.fit), linetype = "solid",
-            alpha = 0.5, linewidth = 0.75)+
+            alpha = 0.5, linewidth = 0.65)+
+  #geom_text(aes( x=250, y=0.0005, label="beta = -1.81x10^-6~; p < 0.001"),
+  #          color="black", 
+  #          size=3, fontface = "bold")+
+  #geom_text(aes( x=250, y=0.0003, label="r = 0.64"),
+  #          color="black", 
+  #          size=3)+
+  annotate(geom = "text", x = -Inf, y = -Inf, label = " beta = -1.81x10^-6~; p < 0.001",
+           hjust = 0, vjust = -2, size = 3, fontface = "bold")+
+  annotate(geom = "text", x = -Inf, y = -Inf, label = " r = 0.64",
+           hjust = 0, vjust = -1, size = 3)+
   labs(x= "Elevation (m)", y= "Nucleotide Diversity", title = "")+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   scale_shape_manual(name = "Population",
@@ -188,15 +199,18 @@ ggplot(comp)+
                      values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
+
+annotate_figure(fig2b,
+                fig.lab = "B", fig.lab.face = "bold")
 
 # legend.position = "none", to remove the legend - keeping for now b/c of how I have adjusted the sizes of stuff
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_topo.png",
-       height = 7, width = 9, device = "png", dpi = 700)
+       height = 3, width = 3, device = "png", dpi = 700)
 # can also give plot name (useful if making multipanel plots in r) and give dimensions in pixels
 # size in powerpoint making figures is 4x4 but that looks weird given some sizes I have right now if I save it like that. so maybe do all that
 # moving around once I know my final figures?
