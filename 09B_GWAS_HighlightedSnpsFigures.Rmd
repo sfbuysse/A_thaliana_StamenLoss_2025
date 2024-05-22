@@ -24,6 +24,15 @@ rm(list = ls())
 # list of files to read in :
 files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "NoCent.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Elev.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c","NoCent.PlinkFiltering_raw.c_testing" )
 
+# list of plot labels
+mplot_label <- c("figs7c", "figs7a", "figs6a", "figx", "fig4a", "figs4a", "figxx", "figs4c", "figs4e", "figs7e", "figxxx")
+#qplot_label <- c("figs7e", "figs7b", "figs6b", "fig2x", "fig4b", "figs4b", "fig2xx", "figs4d", "figs4f", "figs7f", "fig2xxx")
+
+# list of label to write on plot
+mplot_letter <- c("B", "A", "A", "X", "A", "A", "X", "B", "C", "C", "X")
+#mplot_letter <- c("C", "A", "A", "X", "A", "A", "X", "C", "E", "E", "X")
+#qplot_letter <- c("D", "B", "B", "X", "B", "B", "X", "D", "F", "F", "X")
+
 # list of shared SNPs - there are two lists for hits shared between cent included analyses and between cent excluded analyses with no overlap of the SNPs that are a hit in cent and no cent for the same type of GWAS - there is 1 hit window only in cent and a different one only in no cent
 # Cent only shared snps
 
@@ -78,7 +87,7 @@ nocent <- c("Chr3:2239234",
 #identifier <- "allSNPs.PlinkFiltering_Elev.c"
 #sig.level <- 0.05
 
-manhattan_highlight <- function(identifier, sig.level = 0.05, type){
+manhattan_highlight <- function(identifier, sig.level = 0.05, type, i){
   # add fdr.line as an object?
   ##### Set filenames and read in file #####
   
@@ -145,7 +154,7 @@ manhattan_highlight <- function(identifier, sig.level = 0.05, type){
   don_c <- rbind(don_b, don_a)
   
   # start plot with don_b becuase that is most of what I'll need
-  m_plot <- ggplot(don_c, aes(x=psCum, y=-log10(P))) +
+  mplot <- ggplot(don_c, aes(x=psCum, y=-log10(P))) +
     geom_point(aes(fill = fdr_col, color = shared), shape = 21, size = 1.3)+
     geom_hline(yintercept = -log10(bonferroni_sig), color = "#FFC107", linetype = "dashed", alpha = 0.6)+
     geom_segment(aes(x = 21551000, y = -0.3, xend = 30245000, yend = -0.3), col = "black", lineend = "round")+
@@ -177,7 +186,12 @@ manhattan_highlight <- function(identifier, sig.level = 0.05, type){
  ##  labs(x = "Expected", y = "Observed")+
  ##  theme_bw()
   
-  ggsave(paste0(fig_name,".png"), plot = m_plot, width = 7, height = 3, dpi = 700, units = "in")
+  mplot <- annotate_figure(mplot,
+                fig.lab = mplot_letter[i], fig.lab.face = "bold")
+  #annotate_figure(qplot_label[i],
+  #              fig.lab = qplot_letter[i], fig.lab.face = "bold")
+  
+  ggsave(paste0(fig_name,".png"), plot = mplot, width = 7, height = 3, dpi = 700, units = "in")
   
   print(paste0("Done making plot for: ", identifier))
 }
@@ -192,40 +206,40 @@ and actual run the function
 With centromere
 ```{r}
 ##### Raw Phenotypes #####
-manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw.c", type = cent)
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw.c", type = cent, i=6)
 
 ##### Subset Raw Phenotypes #####
 # only include if less than 2 as mean short stamen number
-manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw_subset.c", type = cent)
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw_subset.c", type = cent, i=9)
 
 ##### Asin Phenotypes #####
-manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Asin.c", type = cent)
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Asin.c", type = cent, i=5)
 
 ##### Binary Phenotypes #####
-manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Binary.c", type = cent)
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Binary.c", type = cent, i=8)
 
 ##### Elevation! #####
-manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Elev.c", type = cent)
+manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Elev.c", type = cent, i=7)
 ```
 
 
 without centromere
 ```{r}
 ##### Raw Phenotypes #####
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw.c", type = nocent)
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw.c", type = nocent, i=2)
 
 ##### Subset Raw Phenotypes #####
 # only include if less than 2 as mean short stamen number
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw_subset.c", type = nocent)
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_raw_subset.c", type = nocent, i=10)
 
 ##### Asin Phenotypes #####
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_Asin.c", type = nocent)
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_Asin.c", type = nocent, i=3)
 
 ##### Binary Phenotypes #####
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_Binary.c", type = nocent)
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_Binary.c", type = nocent, i=1)
 
 ##### Elevation! #####
-manhattan_highlight(identifier = "NoCent.PlinkFiltering_Elev.c", type = nocent)
+manhattan_highlight(identifier = "NoCent.PlinkFiltering_Elev.c", type = nocent, i=4)
 ```
 
 # Elev + ssn overlap highlight

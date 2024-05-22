@@ -3,9 +3,9 @@ library(dplyr)
 library(ggplot2)
 library(ggpubr)
 ####Need to read in the results
-dat <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/pixy_042022/all_filtered.50k_pi_042022.out_pi.txt", header=TRUE)
-head(dat)
-tail(dat)
+#dat <- read.delim("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/pixy_042022/all_filtered.50k_pi_042022.out_pi.txt", header=TRUE)
+#head(dat)
+#tail(dat)
 
 ########## with Centromeres ##########
 #most of this just goes in the supplement.
@@ -15,8 +15,8 @@ tail(dat)
 ###dat$pop <- as.factor(dat$pop)
 #### calculate the aggregated value
 #### (window 1 count_diffs + window 2 count_diffs) / (window 1 comparisons + window 2 comparisons)
-sums <- dat %>% group_by(pop) %>% summarize(Sum.count.diff = sum(count_diffs, na.rm = T), Sum.count.comp = sum(count_comparisons, na.rm = T))
-sums$Mean.pi <- sums$Sum.count.diff/sums$Sum.count.comp
+#sums <- dat %>% group_by(pop) %>% summarize(Sum.count.diff = sum(count_diffs, na.rm = T), Sum.count.comp = sum(count_comparisons, na.rm = T))
+#sums$Mean.pi <- sums$Sum.count.diff/sums$Sum.count.comp
 ####### this should be right following the pixy documentation
 ###### add the other population information
 ###### Should have labels ARU and SAL
@@ -43,6 +43,7 @@ summary(m.pi.elev)
 ### means that elevation does explain pi. 
 
 # adding this on later date. what about quadratic elevation predicting pi?
+comp$Elev_c2 <- (comp$Elev_m - mean(comp$Elev_m))^2
 m.pi.elev2 <- lm(Mean.pi ~ Elev_m + Elev_c2, data = comp)
 summary(m.pi.elev2)
 #slightly higher r2 than linear.
@@ -173,14 +174,18 @@ barplot(rep(1,10), col = topo.colors(10))
 barplot(rep(1,16), col = topo.colors(16))
 # choosing topo as the color scheme, so commenting out all the terrain plots.
 # with a linear fit line of elevation explaining mean pi
-ggplot(comp)+
-  geom_point(data=comp, aes(x=Elev_m, y=Mean.pi, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+fig2b <- ggplot(comp)+
+  geom_point(data=comp, aes(x=Elev_m, y=Mean.pi, shape = as.factor(pop), fill= Elev_m), col = "black", size = 3, stroke = 1, show.legend = FALSE)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit), linetype = "solid",
-            alpha = 0.7, linewidth = 1.25)+
+            alpha = 0.9, linewidth = 1.)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit+1.96*pred.pi.el.se.fit), linetype = "solid",
-            alpha = 0.3, linewidth = 0.75)+
+            alpha = 0.5, linewidth = 0.65)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.pi.el.fit-1.96*pred.pi.el.se.fit), linetype = "solid",
-            alpha = 0.5, linewidth = 0.75)+
+            alpha = 0.5, linewidth = 0.65)+
+  annotate(geom = "text", x = -Inf, y = -Inf, label = "~beta==-1.81e10^-6 *';' ~italic(p)~ bold(' < 0.001')", parse = TRUE,
+           hjust = -.01, vjust = -1.5, size = 3, fontface = "bold")+
+  annotate(geom = "text", x = -Inf, y = -Inf, label = "~italic(r)^2 == '0.64'", parse = TRUE,
+           hjust = -.01, vjust = -0.5, size = 3)+
   labs(x= "Elevation (m)", y= "Nucleotide Diversity", title = "")+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   scale_shape_manual(name = "Population",
@@ -188,15 +193,18 @@ ggplot(comp)+
                      values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
+
+fig2b <- annotate_figure(fig2b,
+                fig.lab = "B", fig.lab.face = "bold")
 
 # legend.position = "none", to remove the legend - keeping for now b/c of how I have adjusted the sizes of stuff
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/PiPerPop_topo.png",
-       height = 7, width = 9, device = "png", dpi = 700)
+       height = 3, width = 3, device = "png", dpi = 700)
 # can also give plot name (useful if making multipanel plots in r) and give dimensions in pixels
 # size in powerpoint making figures is 4x4 but that looks weird given some sizes I have right now if I save it like that. so maybe do all that
 # moving around once I know my final figures?
@@ -251,14 +259,20 @@ ggplot(comp)+
 ggsave(filename ="C:/Users/Sophia/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/PiPerPop_pixy_04082022.png", height = 7, width = 9)
 
 ### ssn by elevation
-ggplot(comp)+
-  geom_point(data=comp, aes(x=Elev_m, y=Full_PopFlwrMean, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
+fig2a <- ggplot(comp)+
+  geom_point(data=comp, aes(x=Elev_m, y=Full_PopFlwrMean, shape = as.factor(pop), fill = Elev_m), col = "black", size = 3, stroke = 1, show.legend = FALSE)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit), linetype = "solid",
-            alpha = 0.7, linewidth = 1.25)+
+            alpha = 0.9, linewidth = 1)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit+1.96*pred.ssn.el.se.fit), linetype = "solid",
-            alpha = 0.3, linewidth = 0.75)+
+            alpha = 0.5, linewidth = 0.65)+
   geom_line(dat = forplot2, aes(x = newd1, y = pred.ssn.el.fit-1.96*pred.ssn.el.se.fit), linetype = "solid",
-            alpha = 0.5, linewidth = 0.75)+
+            alpha = 0.5, linewidth = 0.65)+
+  annotate(geom = "text", x = -Inf, y = -Inf, label = "~beta==4.82e10^-4 *';' ~italic(p)~ bold(' = 0.004')", parse = TRUE,
+           hjust = -0.6, vjust = -2.5, size = 3, fontface = "bold")+
+  annotate(geom = "text", x = -Inf, y = -Inf, label = "gamma==-4.73e10^-7 *';' ~italic(p)~ ' = 0.137'", parse = TRUE,
+           hjust = -0.6, vjust = -1.3, size = 3)+
+  annotate(geom = "text", x = -Inf, y = -Inf, label = "italic(r)^2 == '0.48'", parse = TRUE,
+           hjust = -1.95, vjust = -0.5, size = 3)+
   labs(x= "Elevation (m)", y= "Mean Short Stamen Number", title = "")+ # - Full Phenotype Set
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(10))+
   scale_shape_manual(name = "Population",
@@ -266,13 +280,15 @@ ggplot(comp)+
                      values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
     legend.spacing.y = unit(0.03, "cm"),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20))
+    axis.title = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10))
+fig2a <- annotate_figure(fig2a,
+                         fig.lab = "A", fig.lab.face = "bold")
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/MeanSSNByElev_topo.png",
-       height = 7, width = 9, device = "png", dpi = 700)
+       height = 3, width = 3, device = "png", dpi = 700)
 
 #ggplot(comp)+
 #  geom_point(data=comp, aes(x=Elev_m, y=Full_PopFlwrMean, shape = as.factor(pop), fill = Elev_m), col = "black", size = 5, stroke = 1.75)+
@@ -1045,52 +1061,62 @@ str(comp$pop)
 comp$labels <- paste0(comp$pop, " - ", comp$Elev_m, "m")
 
 
-ggplot(comp)+
-  geom_point(data=comp, aes(x=Mean.pi, y=Elev_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+fig2d <- ggplot(comp)+
+  geom_point(data=comp, aes(x=Mean.pi, y=Elev_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 3, stroke = 1, show.legend = FALSE)+
   geom_line(dat = forplot5, aes(x = Mean.pi, y = pred.m.resid.pi.fit), linetype = "solid",
-            alpha = 0.7, linewidth = 1.25)+
+            alpha = 0.9, linewidth = 1)+
   geom_line(dat = forplot5, aes(x = Mean.pi, y = pred.m.resid.pi.fit+1.96*pred.m.resid.pi.se.fit), linetype = "solid",
-            alpha = 0.3, linewidth = 0.75)+
+            alpha = 0.5, linewidth = 0.65)+
   geom_line(dat = forplot5, aes(x = Mean.pi, y = pred.m.resid.pi.fit-1.96*pred.m.resid.pi.se.fit), linetype = "solid",
-            alpha = 0.5, linewidth = 0.75)+
-  labs(x= "Nucleotide Diversity", y= "Residual Short Stamen Number", title = "long y title is Residuals of Seq_SSN ~ Elevation + centered(Elevation)^2")+
+            alpha = 0.5, linewidth = 0.65)+
+  labs(x= "Nucleotide Diversity", y= "Residual Short Stamen Number")+
+  annotate(geom = "text", x = -Inf, y = -Inf, label = "~beta==138.5 *';' ~italic(p)~ ' = 0.167'", parse = TRUE,
+           hjust = -0.025, vjust = -0.5, size = 3, fontface = "bold")+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   scale_shape_manual(name = "Population",
                      labels = comp$label,
                      values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 19.5),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
+fig2d <- annotate_figure(fig2d,
+                         fig.lab = "D", fig.lab.face = "bold")
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNElevQuadResid_topo.png",
-       height = 7, width = 9, device = "png", dpi = 500)
+       height = 3, width = 3, device = "png", dpi = 700)
 
 # pi residuals
-ggplot(comp)+
-  geom_point(data=comp, aes(x=Elev_m, y=Pi_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 5, stroke = 1.75)+
+fig2c <- ggplot(comp)+
+  geom_point(data=comp, aes(x=Elev_m, y=Pi_residuals, shape = as.factor(pop), fill= Elev_m), col = "black", size = 3, stroke = 1, show.legend = FALSE)+
   geom_line(dat = forplot5, aes(x = Elev_m, y = pred.m.resid.elev.fit), linetype = "solid",
-            alpha = 0.7, linewidth = 1.25)+
+            alpha = 0.9, linewidth = 1.)+
   geom_line(dat = forplot5, aes(x = Elev_m, y = pred.m.resid.elev.fit+1.96*pred.m.resid.elev.se.fit), linetype = "solid",
-            alpha = 0.3, linewidth = 0.75)+
+            alpha = 0.5, linewidth = 0.65)+
   geom_line(dat = forplot5, aes(x = Elev_m, y = pred.m.resid.elev.fit-1.96*pred.m.resid.elev.se.fit), linetype = "solid",
-            alpha = 0.5, linewidth = 0.75)+
-  labs(y= "Residual Short Stamen Number", x= "Elevation (m)", title = "long y title is Residuals of Seq_SSN ~ Mean.pi")+
+            alpha = 0.5, linewidth = 0.65)+
+  labs(y= "Residual Short Stamen Number", x= "Elevation (m)")+
+  annotate(geom = "text", x = -Inf, y = -Inf, label = "~beta==6.47e10^-4 *';' ~italic(p)~ bold(' = 0.009')", parse = TRUE,
+           hjust = -0.6, vjust = -1.7, size = 3, fontface = "bold")+
+  annotate(geom = "text", x = -Inf, y = -Inf, label = "gamma==-2.99e10^-7 *';' ~italic(p)~ ' = 0.345'", parse = TRUE,
+           hjust = -0.6, vjust = -.5, size = 3)+
   scale_fill_gradientn(name = "Elevation", colours = topo.colors(16))+
   scale_shape_manual(name = "Population",
                      labels = comp$label,
                      values = c(rep(c(22, 21, 24, 23, 25), times = 4)))+
   theme_classic()+
   theme(
-    legend.title = element_text(color = "black", size = 20),
-    legend.text = element_text(color = "black", size = 20),
-    axis.title = element_text(color = "black", size = 20),
-    axis.text = element_text(color = "black", size = 20),
+    legend.title = element_text(color = "black", size = 12),
+    legend.text = element_text(color = "black", size = 12),
+    axis.title = element_text(color = "black", size = 10),
+    axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
+fig2c <- annotate_figure(fig2c,
+                         fig.lab = "C", fig.lab.face = "bold")
 ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/SSNPiResid_topo.png",
-       height = 7, width = 9, device = "png", dpi = 500)
+       height = 3, width = 3, device = "png", dpi = 700)
 
 ### no cent ###
 # not updated with changed y axis labels.
