@@ -368,7 +368,7 @@ plot_3c <- ggplot(forplot)+
   theme(
     legend.title = element_text(color = "black", size = 12),
     legend.text = element_text(color = "black", size = 12),
-    axis.title.y = element_text(color = "black", size = 10, hjust = 0.85, vjust = -0.5),
+    axis.title.y = element_text(color = "black", size = 10), #hjust = 0.85, vjust = -0.5),
     axis.title.x = element_text(color = "black", size = 10),
     axis.text = element_text(color = "black", size = 10),
     legend.spacing.y = unit(0.03, "cm"))
