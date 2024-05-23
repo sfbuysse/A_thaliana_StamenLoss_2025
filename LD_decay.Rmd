@@ -9,9 +9,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-The goal of this script is to calculate LD decay in my samples. To do so, I need to first calculate LD using plink and then use r to creade a graph with the LD output. So, let's start with plink.
+The goal of this script is to calculate LD decay in my samples. To do so, I need to first calculate LD using plink and then use r to create a graph with the LD output. So, let's start with plink.
 
-This comes up in the GWAS section, so I want to use the same input file that I use for the raw GWAS probably? the phenotype doesn't really matter and the genotype information for all the GWAS types with the centromere included is all the same.
+This comes up in the GWAS section, so I want to use the same input file that I use for the raw GWAS. the phenotype doesn't really matter and the genotype information for all the GWAS types with the centromere included is all the same.
 
 ```{bash, eval = FALSE}
 module load PLINK/1.9b_4.1-x86_64
@@ -19,15 +19,6 @@ module load PLINK/1.9b_4.1-x86_64
 cd $SCRATCH/GWAS
 
 # do for a single chromosome at a time, round one
-plink --bfile allSNPs.PlinkFiltering_raw --threads 10 \
---chr 1 --thin 0.5 \
---r2 \
---ld-window 100 \
---ld-window-kb 1000 \
---ld-window-r2 0.2 \
---make-bed --allow-no-sex --out LD/allSNPs.PF.chr1
-
-# then changed to this following some online forum recommendations
 plink --bfile allSNPs.PlinkFiltering_raw --threads 10 \
 --chr 1 --thin 0.5 \
 --r2 \
@@ -80,7 +71,7 @@ R
 ```
 
 
-Then I just this script to plot the result (in R):
+Then run this script to plot the result (in R):
 ```{r}
 library(dplyr)
 library(ggplot2)
@@ -112,7 +103,6 @@ decay <- LD %>%
   summarize(r2_mean = mean(R2))
 
 plot(decay$grp, decay$r2_mean)
-# stopping at this point to make sure I am on the right track before I make a pretty plot
 
 # group it by chromosome 
 decay_chr <- LD %>% 
@@ -124,7 +114,7 @@ save(decay_chr, file = "/mnt/gs21/scratch/buysseso/GWAS/LD/decay_chr.ROBJ")
 
 ```
 
-At this point, moved to decay_chr to local machine so I could make higher quality images.
+At this point, moved decay_chr to local machine so I could make higher quality images.
 
 ```{r}
 library(dplyr)
@@ -142,6 +132,6 @@ ggplot(decay_chr) +
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
 
-ggsave(filename = "LD_decay_chr.png", path = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/supp", height = 7, width = 7, device = "png", dpi = 500)
+ggsave(filename = "LD_decay_chr.png", path = "~/Figures/ManuscriptFigs/supp", height = 7, width = 7, device = "png", dpi = 500)
 
 ```

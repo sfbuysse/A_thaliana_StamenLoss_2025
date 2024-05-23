@@ -17,8 +17,11 @@ The sequence information will be publically available. Phenotypic information is
 - 08_PCA_2022: runs PCA and makes figures for cent and no cent for first 4 PCs. Also does regressions of PCs with elevation.
 - 09_GWAS: makes all the GWAS manhattan and qqplots for each of the 4 types of GWAS with and without the centromere. Also does the shared SNP analysis.
 - 09B_GWAS_HighlightedSnpsFigures: makes some fancy figures and pulls out SNPs near the Royer et al. 2016 QTL.
+  - NOTE: this is the only code file that is not cleaned yet.
 - 10_QpcPrep: prepped the files
 - 11_Qpc: runs the Qpc and makes figures
 - PhenotypingInfo: calculates stats for methods paragraphs about sample size
 - elevation_map: code that makes fig1 map. Some packages now out of date.
 - LD decay: added analysis to calculate LD decay to estimate windows of LD when looking for genes that may be in LD with GWAS hits
+
+last updated: 5/23/2024

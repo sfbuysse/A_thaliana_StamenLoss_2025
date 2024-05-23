@@ -4,7 +4,7 @@ author: "Sophie Buysse"
 date: "`r Sys.Date()`"
 output: html_document
 ---
-The goal of this Code is to use the R package Quaint to differentiation between direct selection and indirect selection on stamen loss in the pyrenees.
+The goal of this Code is to use the R package Quaint to differentiation between direct selection and indirect selection on stamen loss in the pyrenees. All analysis sections have sample code from the package information to ensure the package is working as expected and then are run on stamen loss data.
 
 # Document Set Up
 
@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # Install the Package
 only need to do this once. Copied directly from the Quaint Github page. (https://github.com/emjosephs/quaint/blob/master/install_quaint.R)
 
-This code currently doesn't work for me, so I'm going to try just coping Emily's functions instead?
+This code currently doesn't work for me, so I'm going to try just coping the functions instead?
 ```{r, eval = FALSE}
 packages_needed <- c("devtools","roxygen2")
 
@@ -159,13 +159,12 @@ myTraits = combinedData[,1:17]
 
 ```{r}
 # my data!
-# load in my data - I think this is actually the wrong data. I want the numeric format data not the letter format data.
 # genotype Matrix of 50K randomly chosen sites (see 10_QpcPrep)
 load("data/GenotypeMatrix_Cent_50k_Nov2023.ROBJ") # called Stamen_Gt_sub
 load("data/RawPhenotypes_Aug2023.ROBJ") # called pheno2
 # don't have any missing phenotype data to get rid of
 
-# let's join geno and pheno together quickly
+# let's join geno and pheno together
 stamenCombined <- dplyr::inner_join(Stamen_Gt_sub, pheno2, by = 'LineID')
 # make stamenG to use for make_k
 stamenG <- stamenCombined[ , c(2:50001)]
@@ -174,12 +173,11 @@ stamenTrait <- stamenCombined[ , c(1, 50002)]
 
 ```
 
-Note: later on I think I might want to add elevation in to this too to use in a coloring scheme to make graphs, but let's skip that for now.
-Adding that in on 11/20/2023
 
 # make a kinship matrix
 
-I got a kinship matrix from gemma. why am I not using that here? Shouldn't I be using whatever was input in to plink to do PCA initially? Yes I want the same input. Can't reuse anything because I need there to be no NAs and I need to make sure the standardization is done a certain way for the kinship matrix for the later Qpc math to work. The input file I used in the Qpc prep Rscript is the same input file used for Fst, PCA, and GWAS so there is that consistency.
+I got a kinship matrix from gemma. why am I not using that here? Shouldn't I be using whatever was input in to plink to do PCA initially? Can't reuse anything because I need there to be no NAs and I need to make sure the standardization is done a certain way for the kinship matrix for the later Qpc math to work. The input file I used in the Qpc prep Rscript is the same input file used for Fst, PCA, and GWAS so there is that consistency.
+
 ```{r, eval = FALSE}
 # example data
 myK <- make_k(as.matrix(myG))
@@ -212,10 +210,9 @@ stamenEig$values/sum(stamenEig$values)*100
 
 ```
 
-Using the PVE plot, I am going to choose the first 4 PCs to use to look for a signal of selection. Emily suggested using the ones that are correlated with elevation so maybe this will change later on but starting with 4 because there is a break in the pve after  4.
+Using the PVE plot, I am going to choose the first 4 PCs to use to look for a signal of selection because there is a break in the pve after  4. Emily also suggested using the ones that are correlated with elevation.
 
 Then I use the bottom half of the PCs to estimate Va (additive variation) so that is PC 30-60 - estimates the drift part.
-
 
 # Run Qpc
 
@@ -224,8 +221,6 @@ myU is the eigen vectors of the kinship matrix
 myLambdas is the eigen values of the kinship matrix
 myL is the range of PCs used to estimate Va
 myM is the range of PCs used to test for selection
-
-Questions: How do you choose the PCs to use to estimate Va and the PCs to use to test for selection? Emily chooses from the plots of the eigen values to decide which ones to test. Since I am interested in elevation, I should pick a PC that matches altitude (how do I do that??) and then use the bottom 50% to estimate Va
 
 ```{r, eval = FALSE}
 # example data
@@ -247,13 +242,12 @@ stamenQpc <- calcQpc(myZ = stamenTrait$Pheno,
 
 # look at the Qpc output
 
-These are the types of graphs Emily made. I might want to make more, and I might want to plot them with ggplot to be consistent with other graphs I've made previously.
 ```{r, eval = FALSE}
 # example data
 plot(-log10(myQpc$pvals), bty="n", xlab = "PCs", ylab = "-log10(p value)", col = "#1BB6AF", lwd=2, xaxt="n")
 abline(h = -log10(0.05/length(myQpc$pvals)), col = "#FF5300", lwd=2)
 axis(1, at = c(1:length(myQpc$pvals)))
-
+# replicates example data result
 ```
 
 ```{r}
@@ -264,34 +258,8 @@ axis(1, at = c(1:length(stamenQpc$pvals)))
 
 ```
 
-Okay, well this plot shows that the p values are all super low, so there wouldn't be selection on any of them. I think this then indicates that the signal of selection from the multiple regression we see is actually a signal of relatedness? I'm not totally sure what this means.
-
-
-plot of specific PCs colored by subpopulation. Confidence intervals are just for plotting b/c based on linear models but the actual test is not linear
-```{r, eval = FALSE}
-# example data
-#estimate the confidence intervals
-myVaest = var0(myQpc$cml)
-myCI = 1.96*sqrt(myVaest*myEig$values)
-
-#plot
-palette(c('white','#999999', '#E69F00', '#56B4E9', "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", 'black', 'mediumpurple3'))
-par(mar = c(5,8,5,14), xpd=T)
-
-plot(myEig$vectors[,2], myTraits$FT16_mean[-nrow(myTraits)], bty="n", col = as.factor(myTraits$group), lwd=2, ylab = "", yaxt="n",xlab = "PC2", cex.lab=2, cex.axis=2, xaxt="n")
-axis(1, cex.axis=1.5, lwd=2)
-axis(2, las=2, cex.axis=1.5, lwd=2)
-mtext('Flowering time 16C',side=2, line=5, cex=2)
-legend(0.06, 130, levels(as.factor(myTraits$group)), pch=1, pt.lwd = 2,col = palette(), bty="n", text.width = 0.04)
-par(xpd=F)
-abline(lm(myTraits$FT16_mean[-nrow(myTraits)]~myEig$vectors[,2]), lwd=2, col = "#0072B2")
-abline(a=mean(myTraits$FT16_mean), b = myCI[2], lty=2, col='#56B4E9', lwd=2)
-abline(a=mean(myTraits$FT16_mean), b = -myCI[2], lty=2, col='#56B4E9', lwd=2)
-```
-
 If dark line is outside confidence intervals (dashed line), then evidence of selection - PC2 in example data. If dark line is within confidence intervals, then fits with neutral expectation and drift - PC1 with example data.
 
-I didn't color these plots, but I can with the same scheme as the rest of my plots if I add in elevation to my traits dataframe.
 ```{r}
 # stamen data
 #estimate the confidence intervals
@@ -312,15 +280,10 @@ abline(a=mean(stamenTrait$Pheno), b = -stamenCI[1], lty=2, col='#56B4E9', lwd=2)
 ```
 
 # Plottin
-Let's make a fancy plot cause I like those and it'll fit with the rest of the manuscript figures.
-
-Set to not evaluate while I figure out some coloring stuff. The last population is not included the y axis. why not? this plotting is kinda confusing to me. and it makes lining things up a bit confusing, but I suppose I can just use the same subsetting that Emily used to remove the last row?
-
-Fixed?
 
 ```{r}
 # let's also add elevation for plotting later on - just add this to stamenTrait
-load(file = "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/R_script/StamenLossPipeline/Elev_Means_Feb2022.ROBJ")
+load(file = "~/R_script/StamenLossPipeline/Elev_Means_Feb2022.ROBJ")
 # don't need the pop mean columns.
 Elev_Means <- Elev_Means[ , c('Population', 'Elev_m')]
 # make Pop column to merge by
@@ -352,11 +315,6 @@ set.seed(220)
 
 plot_3c <- ggplot(forplot)+
   geom_ribbon(aes(eig_vec1, ymin = posCI, ymax = negCI), alpha = 0.25)+
-  #geom_line(aes(x=eig_vec1, y=posCI), linetype = "solid",
-  #          alpha = 0.3, linewidth = 0.75)+
-  #geom_line(aes(x=eig_vec1, y=negCI), linetype = "solid",
-  #          alpha = 0.3, linewidth = 0.75)+
-  
   geom_abline(intercept = m2$coefficients[1], slope = m2$coefficients[2], linetype = "solid", alpha = 0.8, linewidth = 0.75)+
   geom_jitter(aes(x = eig_vec1 , y = Pheno, shape = as.factor(Population), fill = Elev_m), width = 0.007, height = 0.1, col = "black", size = 1.3, stroke = 0.5, show.legend = FALSE)+
   labs(x = "PC 1 (11.2%)", y = "Mean Short Stamen Number")+
@@ -376,7 +334,7 @@ plot_3c <- ggplot(forplot)+
 annotate_figure(plot_3c,
                 fig.lab = "C", fig.lab.face = "bold")
 
-ggsave(filename ="C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/Qpc_1_topo.png",
+ggsave(filename ="~/Figures/ManuscriptFigs/Qpc_1_topo.png",
        height = 3, width = 3, device = "png", dpi = 700)
 
 ```

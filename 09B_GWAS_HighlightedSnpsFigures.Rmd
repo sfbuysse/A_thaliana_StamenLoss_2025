@@ -243,7 +243,8 @@ manhattan_highlight(identifier = "NoCent.PlinkFiltering_Elev.c", type = nocent, 
 ```
 
 # Elev + ssn overlap highlight
-I want to test highlighting all the SNPs that have overlap between short stamen number (any GWAS) and elevation
+
+Elevation GWAS was cur from analysis so this code section not used. I want to test highlighting all the SNPs that have overlap between short stamen number (any GWAS) and elevation
 ```{r}
 # read in all file
 overlap_all <- read.csv("data/AllChrs_Overlap_20240125.csv")

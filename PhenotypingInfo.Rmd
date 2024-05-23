@@ -17,8 +17,8 @@ library(dplyr)
 
 Read in the data and reformat
 ```{r}
-ByFlwr <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/SpanishMasterDataset_ByFlwr.csv")
-# Reminder! Tube is equivalent to the time point, so 1 is the first 10 ish flowers, 2 is from around the 20th flower produced, and 3 is around the 30th flower produced and that is why there are multiples form tube b/c multiple flowers collected at each time point
+ByFlwr <- read.csv("~/SpanishMasterDataset_ByFlwr.csv")
+# Tube is equivalent to the time point, so 1 is the first 10 ish flowers, 2 is from around the 20th flower produced, and 3 is around the 30th flower produced and that is why there are multiples from tube b/c multiple flowers collected at each time point
 
 ByFlwr$Population <- as.factor(substr(ByFlwr$Population, start = 1, stop = 3))
 ByFlwr$Matriline <- as.factor(ByFlwr$Matriline)
@@ -78,7 +78,7 @@ median(PerLine$NumPlants)
 # 2
 
 min(PerLine$NumFlwr)
-# 1 -- this is worrying to me... only 1 flower for 1 plant for this line?
+# 1 -- only 1 flower for 1 plant for this line
 # this is true for POB-10 and POB-19. both of them are also sequenced
 max(PerLine$NumFlwr)
 # 36 -- this represents 9 flowers per plant for 4 plants per line
@@ -104,8 +104,8 @@ median(PerPlant$NumFlwr)
 # Summarize info from Sequenced Plants
 
 ```{r}
-Seq <- read.csv("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/SpanishMasterDataset_Sequenced.csv")
-# Reminder! Tube is equivalent to the time point, so 1 is the first 10 ish flowers, 2 is from around the 20th flower produced, and 3 is around the 30th flower produced and that is why there are multiples form tube b/c multiple flowers collected at each time point
+Seq <- read.csv("~/SpanishMasterDataset_Sequenced.csv")
+# Reminder! Tube is equivalent to the time point, so 1 is the first 10 ish flowers, 2 is from around the 20th flower produced, and 3 is around the 30th flower produced and that is why there are multiples from tube b/c multiple flowers collected at each time point
 
 # here Rep is equivalent to what Plant was in the all dataset
 
@@ -165,8 +165,7 @@ median(PerLine$NumPlants)
 # 2
 
 min(PerLine$NumFlwr)
-# 1 -- this is worrying to me... only 1 flower for 1 plant for this line?
-# this is true for POB-10 and POB-19. both of them are also sequenced
+# 1 
 max(PerLine$NumFlwr)
 # 36 -- this represents 9 flowers per plant for 4 plants per line
 mean(PerLine$NumFlwr)
@@ -187,8 +186,3 @@ median(PerPlant$NumFlwr)
 # 6
 
 ```
-
-# Questions
-Should I drop the two lines that only have one flower phenotyped? They are both sequenced.
-
-
