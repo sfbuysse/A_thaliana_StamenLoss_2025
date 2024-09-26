@@ -1,0 +1,1424 @@
+Population,Matriline,Plant,PlantingBlock,Tube,NumOvules,NumLongStamens,NumShortStamens,Notes
+ALE,1,A,1,1,37,4,1,One short stamen fell off after examination
+ALE,1,A,1,1,48,4,2,
+ALE,1,A,1,2,34,4,2,
+ALE,1,A,1,2,34,4,2,
+ALE,1,A,1,3,24,4,2,
+ALE,1,A,1,3,28,4,2,
+ALE,1,B,1,1,53,4,2,
+ALE,1,B,1,1,56,4,2,
+ALE,1,B,1,2,43,4,2,thrip?
+ALE,1,B,1,2,51,4,2,
+ALE,1,B,1,3,34,4,2,Disintegrating
+ALE,3,A,1,1,48,4,2,
+ALE,3,A,1,1,50,4,1,
+ALE,3,A,1,2,37,4,2,
+ALE,3,A,1,2,37,4,2,
+ALE,3,B,1,1,36,4,1,
+ALE,3,B,1,1,41,4,2,
+ALE,3,B,1,2,23,4,2,
+ALE,3,B,1,2,28,4,0,
+ALE,3,B,1,3,25,4,1,disintegrating
+ALE,3,B,1,3,.,4,1,disintegrating
+ALE,4,A,1,1,52,4,2,
+ALE,4,A,1,1,.,4,2,
+ALE,4,A,1,2,38,4,2,
+ALE,4,A,1,2,40,4,2,
+ALE,4,A,1,3,33,4,2,disintegrating
+ALE,4,B,1,1,.,4,2,
+ALE,4,B,1,1,.,4,2,
+ALE,4,B,1,2,38,4,2,
+ALE,4,B,1,2,41,4,2,
+ALE,4,B,1,3,29,4,2,
+ALE,5,A,1,1,40,4,2,
+ALE,5,A,1,1,42,4,2,
+ALE,5,A,1,2,32,4,2,
+ALE,5,A,1,2,35,4,2,
+ALE,5,A,1,3,.,4,2,
+ALE,5,B,1,1,44,4,2,
+ALE,5,B,1,1,56,4,2,
+ALE,5,B,1,2,41,4,2,
+ALE,5,B,1,2,48,4,2,"Two long stamens, 2 medium [short stamens], 2 small [long stamens]"
+ALE,5,B,1,3,.,4,2,
+ALE,5,B,1,3,.,4,2,
+ALE,8,A,1,1,48,4,2,
+ALE,8,A,1,1,49,4,2,
+ALE,8,C,2,1,40,4,2,disintegrating
+ALE,8,C,2,1,44,4,2,disintegrating
+ALE,8,C,2,2,34,4,2,disintegrating
+ALE,8,C,2,2,36,4,2,disintegrating
+ALE,8,C,2,3,.,4,2,disintegrating
+ALE,8,C,2,3,.,4,2,disintegrating
+ALE,9,A,1,1,43,4,2,
+ALE,9,A,1,1,58,4,2,
+ALE,9,A,1,2,.,4,2,
+ALE,9,A,1,2,.,4,2,
+ALE,9,A,1,3,.,4,1,
+ALE,9,A,1,3,.,4,1,
+ALE,9,B,1,1,34,4,2,Flower fell apart
+ALE,9,B,1,1,.,4,2,
+ALE,9,B,1,2,28,4,2,
+ALE,9,B,1,2,36,4,2,
+ALE,10,A,3,1,43,4,2,
+ALE,10,A,3,1,44,4,2,
+ALE,10,A,3,1,44,4,2,
+ALE,10,A,3,2,45,4,2,
+ALE,10,A,3,2,47,4,2,
+ALE,10,A,3,2,48,4,2,
+ALE,10,A,3,3,34,4,2,
+ALE,10,A,3,3,35,4,2,
+ALE,10,A,3,3,37,4,2,
+ALE,10,B,3,1,42,4,2,
+ALE,10,B,3,1,44,4,2,
+ALE,10,B,3,1,46,4,2,
+ALE,10,B,3,2,34,4,2,
+ALE,10,B,3,2,37,4,2,
+ALE,10,B,3,2,40,4,2,
+ALE,10,B,3,3,31,4,2,
+ALE,10,B,3,3,34,4,2,2 stamen fell off
+ALE,10,B,3,3,34,4,2,
+ALE,10,C,3,1,38,4,2,
+ALE,10,C,3,1,41,4,2,
+ALE,10,C,3,1,48,4,2,
+ALE,10,C,3,2,39,4,2,
+ALE,10,C,3,2,44,4,2,
+ALE,10,C,3,2,50,4,2,
+ALE,10,C,3,3,40,4,2,
+ALE,10,C,3,3,40,4,2,
+ALE,10,C,3,3,41,4,2,
+ALE,10,D,3,1,40,4,2,
+ALE,10,D,3,1,48,4,2,
+ALE,10,D,3,1,49,4,2,
+ALE,10,D,3,2,42,4,2,
+ALE,10,D,3,2,45,4,2,
+ALE,10,D,3,2,47,4,2,
+ALE,10,D,3,3,28,4,2,
+ALE,10,D,3,3,30,4,2,
+ALE,10,D,3,3,33,4,2,
+ALE,12,A,3,1,40,4,2,
+ALE,12,A,3,1,41,4,2,
+ALE,12,A,3,1,45,4,2,
+ALE,12,A,3,2,36,4,2,
+ALE,12,A,3,2,47,4,2,
+ALE,12,A,3,2,48,4,2,
+ALE,12,A,3,3,40,4,2,
+ALE,12,A,3,3,40,4,2,
+ALE,12,A,3,3,46,4,2,
+ALE,12,B,3,1,45,4,2,
+ALE,12,B,3,1,46,4,2,
+ALE,12,B,3,1,50,4,2,
+ALE,12,B,3,2,42,4,2,
+ALE,12,B,3,2,44,4,2,
+ALE,12,B,3,2,46,4,2,
+ALE,12,B,3,3,32,4,2,
+ALE,12,B,3,3,40,4,2,
+ALE,12,B,3,3,41,4,2,
+ALE,12,C,3,1,39,4,2,
+ALE,12,C,3,1,43,4,2,
+ALE,12,C,3,1,45,4,2,
+ALE,12,C,3,2,43,4,2,
+ALE,12,C,3,2,43,4,2,
+ALE,12,C,3,2,45,4,2,
+ALE,12,C,3,3,39,4,2,
+ALE,12,C,3,3,43,4,2,
+ALE,12,C,3,3,46,4,1,
+ALE,12,D,3,1,.,4,2,no ethanol
+ALE,12,D,3,1,.,4,2,no ethanol
+ALE,12,D,3,1,.,4,2,no ethanol
+ALE,12,D,3,2,38,4,2,
+ALE,12,D,3,2,45,4,2,
+ALE,12,D,3,2,47,4,2,
+ALE,12,D,3,3,42,4,2,
+ALE,12,D,3,3,.,4,2,
+ALE,12,D,3,3,.,4,2,
+ALE,16,A,3,1,44,4,2,
+ALE,16,A,3,1,45,4,2,
+ALE,16,A,3,1,51,4,2,
+ALE,16,A,3,2,53,4,2,
+ALE,16,A,3,2,54,4,2,
+ALE,16,A,3,2,58,4,2,
+ALE,16,A,3,3,41,4,2,
+ALE,16,A,3,3,41,4,2,
+ALE,16,A,3,3,42,4,2,
+ALE,16,B,3,1,45,4,2,
+ALE,16,B,3,1,50,4,2,
+ALE,16,B,3,1,51,4,2,
+ALE,16,B,3,2,50,4,2,
+ALE,16,B,3,2,53,4,2,
+ALE,16,B,3,2,53,4,2,
+ALE,16,B,3,3,45,4,2,
+ALE,16,B,3,3,56,4,2,
+ALE,16,B,3,3,61,4,2,
+ALE,16,C,3,1,50,4,2,
+ALE,16,C,3,1,51,4,2,
+ALE,16,C,3,1,52,4,2,
+ALE,16,C,3,2,54,4,2,
+ALE,16,C,3,2,55,4,2,
+ALE,16,C,3,2,58,4,2,
+ALE,16,C,3,3,41,4,2,
+ALE,16,C,3,3,46,4,2,
+ALE,16,C,3,3,50,4,2,
+ALE,16,D,3,1,51,4,2,
+ALE,16,D,3,1,52,4,2,
+ALE,16,D,3,1,56,4,2,
+ALE,16,D,3,2,49,4,2,
+ALE,16,D,3,2,49,4,2,
+ALE,16,D,3,2,55,4,2,
+ALE,16,D,3,3,34,4,2,side stalk -- all other flowers on main stalk began fruiting
+ALE,16,D,3,3,37,4,2,side stalk -- all other flowers on main stalk began fruiting
+ALE,16,D,3,3,39,4,2,side stalk -- all other flowers on main stalk began fruiting
+ARU,10,A,3,1,.,4,2,no ethanol
+ARU,10,A,3,1,.,4,2,no ethanol
+ARU,10,A,3,1,.,4,2,no ethanol
+ARU,10,A,3,2,47,4,2,
+ARU,10,A,3,2,49,4,2,
+ARU,10,A,3,2,51,4,2,
+ARU,10,A,3,3,39,4,2,
+ARU,10,A,3,3,39,4,2,
+ARU,10,A,3,3,43,4,2,
+ARU,10,B,3,1,37,4,2,Only 1 short stamen counted during flower collection
+ARU,10,B,3,1,37,4,2,
+ARU,10,B,3,1,37,4,2,
+ARU,10,B,3,2,34,4,2,
+ARU,10,B,3,2,40,4,2,
+ARU,10,B,3,2,43,4,2,
+ARU,10,B,3,3,37,4,2,
+ARU,10,B,3,3,41,4,2,
+ARU,10,B,3,3,50,4,2,
+ARU,10,C,3,1,41,4,2,"(May have been labeled ""ARB 11c"")"
+ARU,10,C,3,1,41,4,2,"(May have been labeled ""ARB 11c"")"
+ARU,10,C,3,1,42,4,2,"(May have been labeled ""ARB 11c"")"
+ARU,10,C,3,2,46,4,2,
+ARU,10,C,3,2,48,4,2,
+ARU,10,C,3,2,53,4,2,
+ARU,10,C,3,3,44,4,2,
+ARU,10,C,3,3,49,4,2,
+ARU,10,C,3,3,51,4,2,
+ARU,10,D,3,1,39,4,2,"(May have been labeled ""ARB 12d"")"
+ARU,10,D,3,1,41,4,2,"(May have been labeled ""ARB 12d"")"
+ARU,10,D,3,1,42,4,2,"(May have been labeled ""ARB 12d"")"
+ARU,10,D,3,2,45,4,2,
+ARU,10,D,3,2,48,4,2,
+ARU,10,D,3,2,50,4,2,
+ARU,10,D,3,3,41,4,2,
+ARU,10,D,3,3,45,4,2,
+ARU,10,D,3,3,45,4,2,
+ARU,2,B,1,1,.,4,1,
+ARU,2,C,2,2,56,4,2,"Nodes 31, 32, 33"
+ARU,2,C,2,2,60,4,1,"Nodes 31, 32, 33"
+ARU,2,C,2,2,64,4,1,"Nodes 31, 32, 33"
+ARU,2,C,2,3,43,4,2,disintegrating
+ARU,2,C,2,3,53,4,0,disintegrating
+ARU,3,C,2,1,54,4,2,disintegrating
+ARU,3,C,2,1,57,4,2,disintegrating
+ARU,3,C,2,2,55,4,2,disintegrating
+ARU,3,C,2,2,57,4,2,disintegrating
+ARU,3,C,2,3,31,4,1,disintegrating
+ARU,3,C,2,3,42,4,1,disintegrating
+ARU,5,A,1,1,51,4,2,
+ARU,5,A,1,1,54,4,2,
+ARU,5,A,1,2,34,4,0,
+ARU,5,A,1,2,36,4,1,One pair of long stamens as short as short stamens
+ARU,5,A,1,3,.,4,1,
+ARU,5,A,1,3,.,4,2,
+ARU,5,B,1,1,46,4,2,One short stamen significantly shorter than the other
+ARU,5,B,1,1,.,4,2,
+ARU,5,B,1,2,.,4,2,
+ARU,5,B,1,2,.,4,2,
+ARU,5,B,1,3,30,4,2,
+ARU,5,B,1,3,34,4,2,
+ARU,6,C,2,1,47,4,2,disintegrating
+ARU,6,C,2,1,50,4,2,short stamens almost as tall as long stamens
+ARU,6,C,2,2,36,4,2,One of the long stamens as short as the short stamens
+ARU,6,C,2,2,40,4,2,disintegrating
+ARU,6,C,2,3,.,4,0,disintegrating
+ARU,6,C,2,3,.,4,0,disintegrating
+ARU,8,C,2,1,64,4,2,disintegrating
+ARU,8,C,2,1,64,4,2,short stamens almost as tall as long stamens
+ARU,8,C,2,2,54,4,2,short stamens almost as tall as long stamens
+ARU,8,C,2,2,59,4,0,disintegrating
+ARU,8,C,2,3,46,4,0,disintegrating
+ARU,8,C,2,3,49,4,2,disintegrating
+ARU,9,C,2,1,38,4,0,falling apart
+ARU,9,C,2,1,39,4,2,disintegrating
+ARU,9,C,2,2,.,4,1,disintegrating
+ARU,9,C,2,2,.,4,2,disintegrating
+ARU,9,C,2,3,39,4,1,Short stamen almost as long as long stamens
+ARU,9,C,2,3,40,4,0,One of the long stamens significantly shorter than others
+BAR,1,B,1,1,51,4,2,One short stamen much shorter than the other
+BAR,1,B,1,2,47,4,2,
+BAR,1,B,1,2,55,4,2,
+BAR,1,B,1,3,39,4,2,
+BAR,1,C,2,1,56,4,2,disintegrating
+BAR,1,C,2,1,64,4,2,disintegrating
+BAR,1,C,2,2,48,4,2,disintegrating
+BAR,1,C,2,2,48,4,2,disintegrating
+BAR,1,C,2,3,34,4,2,"Nodes 34, 36"
+BAR,1,C,2,3,38,4,2,"Nodes 34, 36"
+BAR,3,C,2,1,46,4,1,disintegrating
+BAR,3,C,2,1,46,4,2,disintegrating
+BAR,3,C,2,2,57,4,2,disintegrating
+BAR,3,C,2,2,58,4,2,disintegrating
+BAR,3,C,2,3,34,4,2,disintegrating
+BAR,3,C,2,3,38,4,2,Disintegrating
+BAR,4,A,1,1,36,4,2,
+BAR,4,A,1,1,39,4,2,
+BAR,4,A,1,1,41,4,2,
+BAR,4,A,1,1,43,4,1,
+BAR,4,A,1,2,38,4,2,One of the long stamens as short as the short stamens
+BAR,4,A,1,3,.,4,2,
+BAR,4,A,1,3,.,4,2,
+BAR,4,B,1,1,58,4,2,
+BAR,4,B,1,1,65,4,2,
+BAR,4,B,1,2,29,4,2,
+BAR,4,B,1,2,38,4,2,Disintegrating
+BAR,4,B,1,3,22,4,1,
+BAR,7,A,1,1,37,4,2,
+BAR,7,A,1,1,43,4,2,
+BAR,7,A,1,2,36,4,2,
+BAR,7,A,1,2,40,4,1,
+BAR,7,A,1,3,24,4,1,disintegrating
+BAR,7,A,1,3,29,4,1,One long stamen as short as the short stamen
+BAR,7,B,1,1,48,4,2,
+BAR,7,B,1,1,49,4,2,
+BAR,7,B,1,2,47,4,2,
+BAR,7,B,1,2,55,4,1,
+BAR,8,C,2,1,52,4,2,disintegrating
+BAR,8,C,2,1,57,4,2,disintegrating
+BAR,8,C,2,2,51,4,2,disintegrating
+BAR,8,C,2,2,56,4,2,disintegrating
+BAR,8,C,2,3,51,4,2,disintegrating
+BAR,8,C,2,3,56,4,2,disintegrating
+BAR,9,A,3,1,43,4,2,
+BAR,9,A,3,1,44,4,1,
+BAR,9,A,3,1,44,4,2,Stamens and petals fallen off between collection time and ovule counting
+BAR,9,A,3,2,42,4,2,
+BAR,9,A,3,2,46,4,2,
+BAR,9,A,3,2,49,4,2,
+BAR,9,A,3,3,49,4,2,
+BAR,9,A,3,3,52,4,2,
+BAR,9,A,3,3,53,4,2,
+BAR,9,B,3,1,.,4,2,no ethanol
+BAR,9,B,3,1,.,4,2,no ethanol
+BAR,9,B,3,1,.,4,2,no ethanol
+BAR,9,B,3,2,55,4,2,
+BAR,9,B,3,2,58,4,2,
+BAR,9,B,3,2,58,4,2,
+BAR,9,B,3,3,40,4,2,
+BAR,9,B,3,3,46,4,2,
+BAR,9,B,3,3,54,4,2,
+BAR,9,C,3,1,.,4,1,
+BAR,9,C,3,1,.,4,2,
+BAR,9,C,3,1,.,4,2,
+BAR,9,C,3,2,49,4,2,
+BAR,9,C,3,2,49,4,2,
+BAR,9,C,3,2,50,4,2,
+BAR,9,C,3,3,42,4,2,
+BAR,9,C,3,3,50,4,2,
+BAR,9,C,3,3,51,4,2,
+BAR,9,D,3,1,45,4,2,
+BAR,9,D,3,1,48,4,2,
+BAR,9,D,3,1,52,4,2,
+BAR,9,D,3,2,40,4,2,
+BAR,9,D,3,2,49,4,2,
+BAR,9,D,3,2,49,4,2,
+BAR,9,D,3,3,44,4,2,
+BAR,9,D,3,3,50,4,2,
+BAR,9,D,3,3,53,4,2,
+BAR,11,A,1,1,52,4,1,
+BAR,11,A,1,1,57,4,1,
+BAR,11,A,1,2,30,4,2,Flower fell apart upon examination
+BAR,11,A,1,3,19,4,0,
+BAR,11,A,1,3,20,4,1,
+BAR,11,B,1,1,40,4,2,
+BAR,11,B,1,1,43,4,2,short stamens almost as tall as long stamens
+BAR,11,B,1,2,28,4,2,
+BAR,11,B,1,2,31,4,2,
+BAR,11,B,1,3,30,4,2,
+BAR,11,B,1,3,33,4,2,disintegrating
+BIS,2,A,1,1,.,4,2,Disintegrating
+BIS,2,A,1,1,.,4,2,Short stamens almost as long as long stamens
+BIS,2,A,1,2,41,4,2,
+BIS,2,A,1,2,42,4,2,
+BIS,2,A,1,3,38,4,2,disintegrating
+BIS,2,A,1,3,38,4,2,disintegrating
+BIS,2,B,1,1,.,4,2,
+BIS,2,B,1,2,35,4,2,
+BIS,2,B,1,2,40,4,2,One of the long stamens as short as the short stamens
+BIS,2,B,1,3,33,4,2,disintegrating
+BIS,2,B,1,3,37,4,2,disintegrating
+BIS,4,A,1,1,61,4,2,short stamens almost as tall as long stamens
+BIS,4,A,1,1,.,4,2,
+BIS,4,A,1,2,43,4,2,
+BIS,4,A,1,2,46,4,2,
+BIS,4,A,1,3,.,4,2,disintegrating
+BIS,4,A,1,3,.,4,2,disintegrating
+BIS,4,B,1,1,.,4,2,
+BIS,4,B,1,1,.,4,2,
+BIS,4,B,1,2,.,4,2,One of the short stamens longer than long stamens
+BIS,4,B,1,2,.,4,2,disintegrating
+BIS,4,B,1,3,49,4,1,disintegrating
+BIS,4,B,1,3,52,4,1,One stamen from each long pair as short as the short stamen
+BIS,8,A,1,2,54,4,2,
+BIS,8,A,1,2,58,4,2,
+BIS,8,A,1,3,.,4,1,
+BIS,8,A,1,3,.,4,2,
+BIS,8,B,1,1,.,4,2,
+BIS,8,B,1,1,.,4,2,
+BIS,8,B,1,2,.,3,1,"3 long, 1 short"
+BIS,8,B,1,2,.,4,2,
+BIS,8,B,1,3,38,4,2,disintegrating
+BIS,8,B,1,3,39,4,2,disintegrating
+BIS,9,A,1,1,47,4,2,
+BIS,9,A,1,1,.,4,2,
+BIS,9,A,1,2,21,4,2,
+BIS,9,A,1,2,36,4,2,
+BIS,9,A,1,3,.,4,2,
+BIS,9,A,1,3,.,4,2,
+BIS,9,B,1,1,.,4,2,
+BIS,9,B,1,1,.,4,2,
+BIS,9,B,1,2,30,4,1,
+BIS,9,B,1,3,25,4,2,disintegrating
+BIS,9,B,1,3,28,4,2,disintegrating
+BIS,11,A,1,1,39,4,1,
+BIS,11,A,1,1,47,4,2,
+BIS,11,B,1,1,.,4,1,
+BIS,11,B,1,1,.,4,2,
+BIS,11,B,1,2,59,4,2,
+BIS,11,B,1,3,.,4,2,one stamen fell off
+BIS,11,B,1,3,.,4,2,
+BIS,12,A,1,1,.,4,0,
+BIS,12,A,1,1,.,4,1,
+BIS,12,B,1,1,45,4,0,
+BIS,12,B,1,1,47,4,0,
+BIS,12,B,1,2,36,4,1,
+BIS,12,B,1,2,.,4,1,Short stamen almost as long as long stamens
+BIS,20,A,3,1,42,4,2,
+BIS,20,A,3,1,50,4,2,previously counted a 4/1
+BIS,20,A,3,1,55,4,2,
+BIS,20,A,3,2,48,4,2,one long stamen stunted
+BIS,20,A,3,2,51,3,2,previously counted as 4/2
+BIS,20,A,3,2,54,4,2,
+BIS,20,A,3,3,48,4,2,
+BIS,20,A,3,3,50,4,2,
+BIS,20,A,3,3,51,4,2,
+BIS,20,B,3,1,37,4,2,
+BIS,20,B,3,1,41,4,2,
+BIS,20,B,3,1,47,4,2,
+BIS,20,B,3,2,47,4,2,
+BIS,20,B,3,2,56,4,2,
+BIS,20,B,3,2,57,4,2,
+BIS,20,B,3,3,39,4,2,
+BIS,20,B,3,3,46,4,2,
+BIS,20,B,3,3,46,4,2,
+BIS,20,C,3,1,42,3,2,
+BIS,20,C,3,1,52,4,2,
+BIS,20,C,3,1,52,4,2,
+BIS,20,C,3,2,42,4,2,
+BIS,20,C,3,2,46,4,2,
+BIS,20,C,3,2,52,4,2,
+BIS,20,C,3,3,42,4,2,
+BIS,20,C,3,3,45,4,2,
+BIS,20,C,3,3,49,4,2,
+BIS,20,D,3,1,24,4,1,
+BIS,20,D,3,1,47,4,1,
+BIS,20,D,3,1,55,4,2,
+BIS,20,D,3,2,50,4,2,
+BIS,20,D,3,2,53,4,2,
+BIS,20,D,3,2,57,4,2,one short stamen stunted
+BIS,20,D,3,3,34,4,2,one short stamen stunted
+BIS,20,D,3,3,35,4,2,
+BIS,20,D,3,3,38,4,2,
+BIS ,16,A,3,1,28,4,1,previously counted as 4/2
+BIS ,16,A,3,1,56,4,2,
+BIS ,16,A,3,1,59,4,2,
+BIS ,16,A,3,2,47,4,2,
+BIS ,16,A,3,2,54,4,2,
+BIS ,16,A,3,2,55,4,2,
+BIS ,16,A,3,3,.,4,2,
+BIS ,16,A,3,3,.,4,2,
+BIS ,16,A,3,3,.,4,2,
+BIS ,16,B,3,1,43,4,2,
+BIS ,16,B,3,1,46,4,2,
+BIS ,16,B,3,1,56,4,2,
+BIS ,16,B,3,2,38,4,2,
+BIS ,16,B,3,2,47,4,2,
+BIS ,16,B,3,2,52,4,2,
+BIS ,16,B,3,3,44,4,2,
+BIS ,16,B,3,3,50,4,2,
+BIS ,16,B,3,3,54,4,2,
+BIS ,16,C,3,1,37,4,2,
+BIS ,16,C,3,1,42,4,2,
+BIS ,16,C,3,1,44,4,2,
+BIS ,16,C,3,2,36,4,2,
+BIS ,16,C,3,2,40,4,2,
+BIS ,16,C,3,2,44,4,2,
+BIS ,16,C,3,3,38,4,2,
+BIS ,16,C,3,3,39,4,2,
+BIS ,16,C,3,3,45,4,2,
+BOS,2,B,1,1,36,4,2,
+BOS,2,B,1,1,42,4,1,
+BOS,2,B,1,2,27,4,2,One short stamen as tall as long stamen
+BOS,2,B,1,2,31,4,1,
+BOS,2,C,2,1,41,4,0,disintegrating
+BOS,2,C,2,1,50,4,0,disintegrating
+BOS,2,C,2,2,36,4,2,disintegrating
+BOS,2,C,2,2,43,4,0,disintegrating
+BOS,2,C,2,3,35,4,1,disintegrating
+BOS,2,C,2,3,44,4,1,disintegrating
+BOS,5,B,1,1,27,4,2,
+BOS,5,B,1,1,30,4,2,
+BOS,5,B,1,2,25,4,2,
+BOS,5,B,1,2,28,4,2,
+BOS,5,B,1,3,.,4,1,
+BOS,5,C,2,1,40,4,0,disintegrating
+BOS,5,C,2,1,45,4,0,disintegrating
+BOS,5,C,2,2,36,4,0,disintegrating
+BOS,5,C,2,2,44,4,0,disintegrating
+BOS,5,C,2,3,27,4,2,disintegrating
+BOS,5,C,2,3,29,4,2,short stamens almost as tall as long stamens
+BOS,6,A,1,1,47,4,2,"Flower broke during examination, nodes 7, 8 or 9"
+BOS,6,A,1,1,49,4,2,
+BOS,6,A,1,2,39,4,1,
+BOS,6,A,1,2,47,4,2,
+BOS,6,A,1,3,30,4,1,"Nodes 35, 36, 37"
+BOS,6,A,1,3,30,4,2,"Nodes 35, 36, 37"
+BOS,6,A,1,3,.,4,2,"Nodes 35, 36, 37, one flower lost after the counts"
+BOS,6,C,2,1,38,4,1,Short stamen almost as long as long stamens
+BOS,6,C,2,1,41,4,1,Short stamen almost as long as long stamens
+BOS,6,C,2,2,38,4,1,disintegrating
+BOS,6,C,2,2,44,4,2,disintegrating
+BOS,6,C,2,3,.,4,1,disintegrating
+BOS,6,C,2,3,.,4,2,disintegrating
+BOS,9,A,1,1,41,4,2,"Nodes 12, 14"
+BOS,9,A,1,1,50,4,1,"Nodes 12, 14"
+BOS,9,A,1,2,32,4,2,One stamen came apart
+BOS,9,A,1,2,43,4,0,
+BOS,9,A,1,3,.,4,2,
+BOS,9,A,1,3,.,4,2,
+BOS,9,B,1,1,45,4,1,
+BOS,9,B,1,1,45,4,2,
+BOS,9,B,1,2,44,4,2,One of the long stamens as short as the short stamens
+BOS,10,B,1,1,38,4,2,"5 long, 1 short; ""2nd"" short stamen indistinguishable from long in terms of height and relative attachment to ovary."
+BOS,10,B,1,1,40,4,0,
+BOS,10,B,1,2,.,4,1,
+BOS,10,B,1,2,.,4,2,
+BOS,10,B,1,3,.,4,2,
+BOS,10,B,1,3,.,4,2,
+BOS,10,C,2,1,.,4,0,disintegrating
+BOS,10,C,2,1,.,4,0,disintegrating
+BOS,10,C,2,2,47,4,0,disintegrating
+BOS,10,C,2,2,50,4,0,One of the stamens shorter than the other 3.
+BOS,10,C,2,3,32,4,0,disintegrating
+BOS,10,C,2,3,38,4,2,disintegrating
+COC,5,C,2,1,54,4,1,disintegrating
+COC,5,C,2,1,59,4,1,disintegrating
+COC,5,C,2,2,57,4,2,disintegrating
+COC,5,C,2,2,61,4,2,disintegrating
+COC,5,C,2,3,50,4,2,disintegrating
+COC,5,C,2,3,50,4,2,disintegrating
+COC,14,A,3,1,41,4,2,
+COC,14,A,3,1,42,4,2,
+COC,14,A,3,1,50,4,2,
+COC,14,A,3,2,38,4,2,4 petals and 3 sepals
+COC,14,A,3,2,45,4,1,
+COC,14,A,3,2,47,4,2,
+COC,14,A,3,3,47,4,1,"one pedicel, two fruiting flowers (pedicel #27)"
+COC,14,A,3,3,52,4,2,"one pedicel, two fruiting flowers (pedicel #27)"
+COC,14,A,3,3,52,4,2,"one pedicel, two fruiting flowers (pedicel #27)"
+COC,14,B,3,1,38,4,2,
+COC,14,B,3,1,41,4,2,
+COC,14,B,3,1,46,4,2,
+COC,14,B,3,2,45,4,2,
+COC,14,B,3,2,49,4,2,
+COC,14,B,3,2,52,4,2,
+COC,14,B,3,3,40,4,2,
+COC,14,B,3,3,41,4,1,
+COC,14,B,3,3,42,4,2,
+COC,14,C,3,1,47,4,2,
+COC,14,C,3,1,47,4,2,
+COC,14,C,3,1,51,4,2,
+COC,14,C,3,2,49,4,2,
+COC,14,C,3,2,50,4,2,
+COC,14,C,3,2,55,4,2,
+COC,14,C,3,3,.,4,2,
+COC,14,C,3,3,.,4,2,
+COC,14,C,3,3,.,4,2,
+COC,14,D,3,1,44,4,2,
+COC,14,D,3,1,46,4,2,
+COC,14,D,3,1,50,4,2,
+COC,14,D,3,2,39,4,1,
+COC,14,D,3,2,43,4,2,
+COC,14,D,3,2,47,4,2,4 petals and 3 sepals
+COC,14,D,3,3,47,4,2,
+COC,14,D,3,3,49,4,1,
+COC,14,D,3,3,50,4,2,
+COC,15,B,1,1,54,4,2,One short stamen almost as tall as long stamens
+COC,15,B,1,1,56,4,1,
+COC,16,A,1,1,56,4,2,short stamens almost as tall as long stamens
+COC,16,A,1,1,58,4,2,short stamens almost as tall as long stamens
+COC,16,A,1,2,31,4,2,disintegrating
+COC,16,B,1,1,60,4,2,
+COC,16,B,1,1,62,4,1,
+COC,16,B,1,2,.,4,1,
+COC,16,B,1,2,.,4,2,
+COC,17,A,3,1,40,4,2,
+COC,17,A,3,1,45,4,2,
+COC,17,A,3,1,45,4,2,
+COC,17,A,3,2,45,4,2,
+COC,17,A,3,2,47,4,2,
+COC,17,A,3,2,52,4,2,
+COC,17,A,3,3,49,4,2,
+COC,17,A,3,3,50,4,2,
+COC,17,A,3,3,52,4,2,
+COC,17,B,3,1,42,4,2,
+COC,17,B,3,1,42,4,2,
+COC,17,B,3,1,46,4,2,
+COC,17,B,3,2,48,4,2,
+COC,17,B,3,2,49,4,2,
+COC,17,B,3,2,54,4,2,
+COC,17,B,3,3,.,4,2,no ethanol
+COC,17,B,3,3,.,4,2,no ethanol
+COC,17,B,3,3,.,4,2,no ethanol
+COC,17,D,3,1,43,4,2,
+COC,17,D,3,1,45,4,2,
+COC,17,D,3,1,45,4,2,
+COC,17,D,3,2,47,4,2,
+COC,17,D,3,2,49,4,2,
+COC,17,D,3,2,53,4,2,
+COC,17,D,3,3,45,4,2,
+COC,17,D,3,3,48,4,2,
+COC,17,D,3,3,49,4,2,
+COC,18,A,1,1,38,4,2,short stamen as long as long stamens
+COC,18,A,1,1,40,4,2,long stamen as short as short stamens
+COC,18,A,1,2,.,4,2,disintegrating
+COC,18,A,1,3,17,4,2,disintegrating
+COC,18,A,1,3,36,4,2,disintegrating
+COC,18,B,1,1,28,4,2,
+COC,18,B,1,1,39,4,2,
+COC,18,B,1,2,26,4,2,
+COC,18,B,1,2,32,4,2,
+COC,18,B,1,3,27,4,1,Disintegrating
+COC,19,A,3,1,44,4,2,
+COC,19,A,3,1,48,4,2,
+COC,19,A,3,1,49,4,2,
+COC,19,A,3,2,51,4,2,
+COC,19,A,3,2,51,4,2,
+COC,19,A,3,2,53,4,2,
+COC,19,A,3,3,47,4,2,
+COC,19,A,3,3,50,4,2,
+COC,19,A,3,3,56,4,2,
+COC,19,B,3,1,40,4,2,previously counted a 4/1
+COC,19,B,3,1,42,4,2,
+COC,19,B,3,1,44,4,2,
+COC,19,B,3,2,43,4,2,
+COC,19,B,3,2,44,4,2,
+COC,19,B,3,2,50,4,2,
+COC,19,B,3,3,45,4,2,
+COC,19,B,3,3,51,4,2,
+COC,19,B,3,3,53,4,2,
+COC,19,C,3,1,40,4,2,
+COC,19,C,3,1,41,4,1,
+COC,19,C,3,1,42,4,2,
+COC,19,C,3,2,44,4,1,
+COC,19,C,3,2,47,4,2,
+COC,19,C,3,2,47,4,2,
+COC,19,C,3,3,46,4,2,
+COC,19,C,3,3,50,4,2,
+COC,19,C,3,3,52,4,2,
+COC,19,D,3,1,41,4,2,
+COC,19,D,3,1,43,4,2,
+COC,19,D,3,1,49,4,2,
+COC,19,D,3,2,44,4,2,
+COC,19,D,3,2,45,4,2,
+COC,19,D,3,2,53,4,2,
+COC,19,D,3,3,46,4,2,
+COC,19,D,3,3,48,4,2,
+COC,19,D,3,3,50,4,2,
+HOR,1,A,1,1,.,4,2,
+HOR,1,A,1,1,.,4,2,
+HOR,1,A,1,2,28,4,2,Disintegrating
+HOR,1,A,1,2,41,4,2,
+HOR,1,A,1,3,30,4,2,One short stamen as tall as long stamens
+HOR,1,A,1,3,33,4,1,disintegrating
+HOR,1,B,1,1,35,4,2,
+HOR,1,B,1,1,43,4,2,
+HOR,1,B,1,2,33,4,2,
+HOR,1,B,1,2,36,4,2,Pair of long stamens as short as short stamens
+HOR,2,B,1,1,.,4,2,One of the long stamens as short as the short stamens
+HOR,2,B,1,1,.,4,2,
+HOR,2,B,1,2,20,4,2,
+HOR,2,B,1,2,22,4,1,
+HOR,2,B,1,3,.,4,0,disintegrating
+HOR,2,B,1,3,.,4,2,disintegrating
+HOR,2,C,2,1,43,4,2,disintegrating
+HOR,2,C,2,1,47,4,2,disintegrating
+HOR,2,C,2,2,45,4,2,disintegrating
+HOR,2,C,2,2,52,4,2,disintegrating
+HOR,2,C,2,3,39,4,2,disintegrating
+HOR,2,C,2,3,42,4,1,disintegrating
+HOR,4,A,1,1,32,4,2,Parts falling off
+HOR,4,A,1,1,35,4,2,
+HOR,4,B,1,1,40,4,2,
+HOR,4,B,1,1,42,4,2,
+HOR,4,B,1,2,44,4,2,
+HOR,4,B,1,3,32,4,2,
+HOR,4,B,1,3,34,4,2,
+HOR,5,C,2,1,.,4,1,disintegrating
+HOR,5,C,2,1,.,4,2,disintegrating
+HOR,5,C,2,2,50,4,2,disintegrating
+HOR,5,C,2,2,52,4,2,disintegrating
+HOR,6,A,1,1,39,4,1,
+HOR,6,A,1,1,40,4,1,
+HOR,6,A,1,2,.,4,2,
+HOR,6,A,1,2,.,4,2,
+HOR,6,B,1,1,42,4,1,
+HOR,6,B,1,1,43,4,2,One short stamen almost as tall as long stamens
+HOR,7,A,3,1,42,4,2,
+HOR,7,A,3,1,45,4,2,
+HOR,7,A,3,1,51,4,2,
+HOR,7,A,3,2,.,4,2,no ethanol
+HOR,7,A,3,2,.,4,2,no ethanol
+HOR,7,A,3,2,.,4,2,no ethanol
+HOR,7,A,3,3,45,4,1,
+HOR,7,A,3,3,47,4,2,only counted 1 short stamen at flower collection
+HOR,7,A,3,3,47,4,2,
+HOR,7,B,3,1,45,4,2,
+HOR,7,B,3,1,49,4,2,
+HOR,7,B,3,1,54,4,2,
+HOR,7,B,3,2,46,4,2,
+HOR,7,B,3,2,48,4,1,
+HOR,7,B,3,2,48,4,2,
+HOR,7,B,3,3,53,4,0,
+HOR,7,B,3,3,54,4,0,
+HOR,7,B,3,3,62,4,0,
+HOR,7,C,3,1,42,4,1,Counted 2 short stamen at flower collection
+HOR,7,C,3,1,45,4,2,
+HOR,7,C,3,1,49,4,2,
+HOR,7,C,3,2,45,4,2,
+HOR,7,C,3,2,47,4,2,
+HOR,7,C,3,2,47,4,2,
+HOR,7,C,3,3,45,4,2,
+HOR,7,C,3,3,53,4,2,
+HOR,7,C,3,3,54,4,2,
+HOR,7,D,3,1,43,4,2,
+HOR,7,D,3,1,46,4,2,
+HOR,7,D,3,1,49,4,2,
+HOR,7,D,3,2,50,4,2,
+HOR,7,D,3,2,52,4,2,
+HOR,7,D,3,2,56,4,2,
+HOR,7,D,3,3,48,4,1,
+HOR,7,D,3,3,50,4,1,
+HOR,7,D,3,3,53,4,1,
+HOR,9,A,1,1,33,4,1,
+HOR,9,A,1,1,41,4,2,
+HOR,9,A,1,2,27,4,1,
+HOR,9,A,1,2,28,4,1,
+HOR,9,A,1,3,18,4,0,
+HOR,9,A,1,3,19,4,1,
+HOR,9,B,1,1,.,4,1,
+HOR,9,B,1,2,33,4,1,
+HOR,9,B,1,2,37,4,2,
+HOR,9,B,1,3,32,4,0,"Nodes 24, 26"
+HOR,16,A,3,1,45,4,2,
+HOR,16,A,3,1,46,4,0,Previously counted as having 4 long and 1 short stamen
+HOR,16,A,3,1,48,4,2,one long stamen w/o anther
+HOR,16,A,3,2,50,4,2,
+HOR,16,A,3,2,52,4,2,
+HOR,16,A,3,2,55,4,2,
+HOR,16,A,3,3,27,3,2,Flowers from side stalk
+HOR,16,A,3,3,30,4,2,Flowers from side stalk
+HOR,16,A,3,3,50,3,2,Flowers from side stalk
+HOR,16,B,3,1,48,4,2,
+HOR,16,B,3,1,.,4,2,
+HOR,16,B,3,1,.,4,2,
+HOR,16,B,3,2,48,4,2,
+HOR,16,B,3,2,.,4,2,
+HOR,16,B,3,2,.,4,2,
+HOR,16,B,3,3,50,4,1,
+HOR,16,B,3,3,.,4,1,
+HOR,16,B,3,3,.,4,1,
+HOR,16,C,3,1,46,4,2,
+HOR,16,C,3,1,.,3,2,
+HOR,16,C,3,1,.,4,2,
+HOR,16,C,3,2,47,4,0,
+HOR,16,C,3,2,.,4,0,
+HOR,16,C,3,2,.,4,1,
+HOR,16,D,3,1,42,4,2,
+HOR,16,D,3,1,.,4,2,
+HOR,16,D,3,1,.,4,2,
+HOR,16,D,3,2,56,4,1,
+HOR,16,D,3,2,.,4,1,
+HOR,16,D,3,2,.,4,1,
+MUR,3,C,2,1,46,4,2,disintegrating
+MUR,3,C,2,1,49,4,2,disintegrating
+MUR,3,C,2,2,44,4,2,disintegrating
+MUR,3,C,2,2,51,4,2,disintegrating
+MUR,3,C,2,3,34,4,2,disintegrating
+MUR,15,A,1,1,28,4,2,
+MUR,15,A,1,1,.,4,2,
+MUR,15,A,1,2,38,4,2,One of the long stamens as short as the short stamens
+MUR,15,A,1,3,17,4,2,disintegrating
+MUR,15,A,1,3,17,4,2,disintegrating
+MUR,15,B,1,1,43,4,2,One short stamen much shorter than the other
+MUR,15,B,1,1,50,4,2,short stamens almost as tall as long stamens
+MUR,15,B,1,2,40,4,2,One of the short stamens almost as tall as the long stamens
+MUR,15,B,1,2,40,4,2,"Nodes 35, 37, disintegrated"
+MUR,15,B,1,3,30,4,2,
+MUR,15,B,1,3,30,4,2,
+MUR,16,A,1,1,39,4,2,
+MUR,16,A,1,1,39,4,2,One short stamen longer than the other
+MUR,16,A,1,2,31,4,1,
+MUR,16,A,1,2,32,4,1,
+MUR,16,A,1,3,30,4,2,
+MUR,16,A,1,3,34,4,2,
+MUR,16,B,1,1,.,4,2,Two stamens fell during evaluation
+MUR,16,B,1,1,.,4,2,Flower completely fell apart
+MUR,17,C,2,1,.,4,0,"Nodes 12, 14"
+MUR,17,C,2,1,.,4,2,"Nodes 12, 14, stamen fell off"
+MUR,17,C,2,2,42,4,2,disintegrating
+MUR,17,C,2,2,44,4,2,disintegrating
+MUR,17,C,2,3,41,4,1,One of the long stamens at intermediate height
+MUR,17,C,2,3,50,4,2,disintegrating
+MUR,18,A,1,1,45,4,1,
+MUR,18,A,1,1,50,4,2,
+MUR,18,A,1,2,29,4,2,
+MUR,18,A,1,2,34,4,0,
+MUR,18,A,1,3,.,4,2,disintegrating
+MUR,18,A,1,3,.,4,2,disintegrating
+MUR,18,C,2,1,44,4,1,One of the long stamens as short as the short stamen
+MUR,18,C,2,1,50,4,2,One of the long stamens fell off
+MUR,18,C,2,2,48,4,2,disintegrating
+MUR,18,C,2,2,52,4,2,disintegrating
+MUR,18,C,2,3,42,4,0,"Tall, short, tall, short stamen heights (all stamens are ""long"" based on attachment points)"
+MUR,18,C,2,3,53,4,1,One of the long stamens as short as the short stamen
+MUR,20,A,1,1,41,4,2,
+MUR,20,A,1,1,49,4,2,
+MUR,20,A,1,2,.,4,1,disintegrating
+MUR,20,A,1,2,.,4,2,
+MUR,20,A,1,3,.,4,2,disintegrating
+MUR,20,B,1,1,43,4,1,
+MUR,20,B,1,1,44,4,2,
+MUR,20,B,1,2,37,4,1,
+MUR,20,B,1,2,38,4,0,"two long, two short in height"
+MUR,20,B,1,3,21,4,0,disintegrating
+MUR,20,B,1,3,27,4,0,disintegrating
+PAL,2,C,2,1,65,4,2,disintegrating
+PAL,2,C,2,1,68,4,2,One short stamen as tall as long stamen
+PAL,2,C,2,2,56,4,2,disintegrating
+PAL,2,C,2,2,60,4,2,disintegrating
+PAL,2,C,2,3,38,4,2,disintegrating
+PAL,2,C,2,3,41,4,2,disintegrating
+PAL,4,C,2,1,49,4,2,disintegrating
+PAL,4,C,2,1,53,4,2,disintegrating
+PAL,4,C,2,2,38,4,2,two long stamens fused
+PAL,4,C,2,2,45,4,0,one long stamen significantly shorter
+PAL,4,C,2,3,46,4,2,disintegrating
+PAL,6,A,1,1,62,4,2,
+PAL,6,A,1,1,65,4,1,
+PAL,6,A,1,2,44,4,2,
+PAL,6,A,1,2,50,4,1,"1 long, 3 intermediate, 1 short. "
+PAL,6,A,1,3,.,4,2,
+PAL,6,A,1,3,.,4,2,
+PAL,6,B,1,1,62,4,2,
+PAL,6,B,1,1,66,4,2,
+PAL,6,B,1,2,44,4,2,"nodes 35, 38"
+PAL,6,B,1,2,46,4,2,"nodes 35, 38"
+PAL,7,B,3,1,52,4,2,
+PAL,7,B,3,1,55,4,2,
+PAL,7,B,3,1,56,4,2,
+PAL,7,B,3,2,.,4,2,no ethanol
+PAL,7,B,3,2,.,4,2,no ethanol
+PAL,7,B,3,2,.,4,2,no ethanol
+PAL,7,B,3,3,.,4,2,no ethanol
+PAL,7,B,3,3,.,4,2,no ethanol
+PAL,7,B,3,3,.,4,2,no ethanol
+PAL,7,C,3,1,24,4,2,
+PAL,7,C,3,1,34,4,2,
+PAL,7,C,3,1,43,4,2,
+PAL,7,C,3,2,53,4,2,
+PAL,7,C,3,2,56,4,2,
+PAL,7,C,3,2,58,4,2,
+PAL,7,C,3,3,42,4,2,
+PAL,7,C,3,3,43,4,2,
+PAL,7,C,3,3,47,4,2,
+PAL,7,D,3,1,56,3,2,
+PAL,7,D,3,1,59,4,2,
+PAL,7,D,3,1,61,4,2,
+PAL,7,D,3,2,52,4,2,
+PAL,7,D,3,2,53,4,2,
+PAL,7,D,3,2,55,4,2,
+PAL,7,D,3,3,.,4,2,no ethanol
+PAL,7,D,3,3,.,4,2,no ethanol
+PAL,7,D,3,3,.,4,2,no ethanol
+PAL,12,C,2,1,44,4,2,disintegrating
+PAL,12,C,2,1,48,4,2,disintegrating
+PAL,12,C,2,2,36,4,2,disintegrating
+PAL,12,C,2,2,36,4,2,disintegrating
+PAL,16,A,3,1,48,3,2,
+PAL,16,A,3,1,49,3,2,
+PAL,16,A,3,1,51,3,2,
+PAL,16,A,3,2,50,4,2,
+PAL,16,A,3,2,50,4,2,
+PAL,16,A,3,2,56,4,2,
+PAL,16,A,3,3,39,4,2,
+PAL,16,A,3,3,46,4,2,
+PAL,16,A,3,3,49,4,2,
+PAL,16,B,3,1,3,4,2,
+PAL,16,B,3,1,64,4,2,
+PAL,16,B,3,1,67,4,2,
+PAL,16,B,3,2,54,4,2,
+PAL,16,B,3,2,56,4,2,
+PAL,16,B,3,2,60,4,2,
+PAL,16,C,3,1,46,4,2,
+PAL,16,C,3,1,47,3,2,
+PAL,16,C,3,1,52,4,2,
+PAL,16,C,3,2,50,4,2,
+PAL,16,C,3,2,51,4,2,
+PAL,16,C,3,2,56,4,2,
+PAL,16,C,3,3,49,4,2,
+PAL,16,C,3,3,49,4,2,
+PAL,16,C,3,3,51,4,2,
+PAL,16,D,3,1,47,4,2,
+PAL,16,D,3,1,47,4,2,
+PAL,16,D,3,1,50,4,2,
+PAL,16,D,3,2,42,4,2,
+PAL,16,D,3,2,52,4,2,
+PAL,16,D,3,2,55,4,2,
+PAL,16,D,3,3,48,4,2,
+PAL,16,D,3,3,51,4,2,
+PAL,16,D,3,3,53,4,2,
+PAL,17,A,1,1,54,4,2,
+PAL,17,A,1,1,58,4,2,
+PAL,17,A,1,2,51,4,2,
+PAL,17,A,1,2,52,4,2,
+PAL,17,A,1,3,.,4,2,
+PAL,17,A,1,3,.,4,2,
+PAL,17,B,1,1,51,4,2,
+PAL,17,B,1,1,55,4,2,
+PAL,17,B,1,2,47,4,2,
+PAL,17,B,1,2,48,4,2,
+PAL,17,B,1,3,.,4,2,
+PAL,17,B,1,3,.,4,2,
+PAL,18,A,1,1,47,4,2,Disintegrating
+PAL,18,A,1,1,59,4,2,
+PAL,18,A,1,2,.,4,2,
+PAL,18,A,1,2,.,4,2,
+PAL,18,A,1,3,29,4,2,"Nodes 53, 54, 55"
+PAL,18,A,1,3,30,4,2,"Nodes 53, 54, 55"
+PAL,18,A,1,3,31,4,2,"Nodes 53, 54, 55"
+PAL,18,B,1,2,45,4,2,
+PAL,18,B,1,2,48,4,2,
+PAL,18,B,1,3,23,4,2,disintegrating
+PAL,18,B,1,3,23,4,2,disintegrating
+PAN,1,C,2,1,53,4,1,disintegrating
+PAN,1,C,2,1,54,4,0,One of the long stamens significantly shorter than others
+PAN,1,C,2,2,54,4,2,disintegrating
+PAN,1,C,2,2,68,2,1,"two long, 1 short; all other floral organs normal"
+PAN,1,C,2,3,47,4,2,short stamens almost as tall as long stamens
+PAN,1,C,2,3,47,4,2,disintegrating
+PAN,2,B,1,1,48,4,2,Short stamens as tall as long stamens
+PAN,2,B,1,1,49,4,2,
+PAN,2,B,1,2,28,4,2,
+PAN,2,B,1,2,.,4,2,
+PAN,2,C,2,1,40,4,1,disintegrating
+PAN,2,C,2,1,.,4,1,Short stamen as tall as long stamens
+PAN,2,C,2,2,45,4,2,disintegrating
+PAN,2,C,2,2,49,4,2,disintegrating
+PAN,2,C,2,3,41,4,2,disintegrating
+PAN,2,C,2,3,43,4,2,disintegrating
+PAN,3,A,1,1,48,4,2,Pair of long stamens as short as short stamens
+PAN,3,A,1,1,.,4,2,Pair of long stamens as short as short stamens
+PAN,3,A,1,2,32,4,2,"Nodes 15, 16, 17"
+PAN,3,A,1,2,.,4,2,"Nodes 15, 16, 17"
+PAN,3,A,1,3,.,4,2,"Nodes 15, 16, 17"
+PAN,3,A,1,3,.,4,2,disintegrating
+PAN,3,A,1,3,.,4,2,disintegrating
+PAN,3,B,1,1,50,4,2,
+PAN,3,B,1,1,50,4,2,
+PAN,3,B,1,2,24,4,2,
+PAN,3,B,1,2,43,4,1,can't tell positions (too twisted)
+PAN,5,C,2,1,48,4,2,one long stamen as short as the short stamens
+PAN,5,C,2,1,51,4,2,disintegrating
+PAN,5,C,2,2,41,4,2,disintegrating
+PAN,5,C,2,2,44,4,2,disintegrating
+PAN,5,C,2,3,37,4,2,disintegrating
+PAN,5,C,2,3,38,4,2,disintegrating
+PAN,8,C,2,1,45,4,2,disintegrating
+PAN,8,C,2,1,49,4,1,disintegrating
+PAN,8,C,2,2,41,4,2,One short stamen significantly shorter than the other
+PAN,8,C,2,2,44,4,2,disintegrating
+PAN,8,C,2,3,27,4,2,disintegrating
+PAN,8,C,2,3,.,4,2,disintegrating
+PAN,9,C,2,1,50,4,1,disintegrating
+PAN,9,C,2,1,52,4,2,disintegrating
+PAN,9,C,2,2,47,4,2,disintegrating
+PAN,9,C,2,2,53,4,2,disintegrating
+PAN,9,C,2,3,42,4,2,disintegrating
+PAN,9,C,2,3,45,4,2,disintegrating
+PIN,2,A,1,1,35,4,2,
+PIN,2,A,1,1,36,4,0,
+PIN,2,A,1,2,33,4,1,
+PIN,2,A,1,2,35,4,1,
+PIN,2,A,1,3,25,4,1,disintegrating
+PIN,2,C,2,1,48,4,2,stamens fell off
+PIN,2,C,2,1,50,4,2,stamens fell off
+PIN,2,C,2,2,.,4,1,disintegrating
+PIN,2,C,2,2,.,4,1,disintegrating
+PIN,2,C,2,3,43,4,0,disintegrating
+PIN,2,C,2,3,48,4,1,disintegrating
+PIN,3,A,3,1,41,4,2,
+PIN,3,A,3,1,45,4,0,
+PIN,3,A,3,1,47,4,0,
+PIN,3,A,3,2,42,4,0,
+PIN,3,A,3,2,44,4,0,
+PIN,3,A,3,2,44,4,2,Incorrectly counted as only 1 short stamen previously
+PIN,3,A,3,3,41,4,0,
+PIN,3,A,3,3,44,4,1,
+PIN,3,A,3,3,48,4,0,
+PIN,3,B,3,1,42,4,1,
+PIN,3,B,3,1,47,4,1,
+PIN,3,B,3,1,63,4,0,
+PIN,3,B,3,2,.,4,1,no ethanol in tube
+PIN,3,B,3,2,.,4,1,no ethanol in tube
+PIN,3,B,3,2,.,4,1,no ethanol in tube
+PIN,3,B,3,3,38,4,1,
+PIN,3,B,3,3,40,4,0,
+PIN,3,B,3,3,41,4,1,"immature short stamen, previously counted as 4/2"
+PIN,3,C,3,1,40,4,2,
+PIN,3,C,3,1,42,4,1,
+PIN,3,C,3,1,42,4,2,previously counted as 4/1
+PIN,3,C,3,2,45,4,2,
+PIN,3,C,3,2,49,4,1,
+PIN,3,C,3,2,49,4,2,
+PIN,6,A,3,1,42,4,2,"2 plants in pot; with label facing counter, left plant used"
+PIN,6,A,3,1,42,4,2,"2 plants in pot; with label facing counter, left plant used"
+PIN,6,A,3,1,43,4,2,"2 plants in pot; with label facing counter, left plant used"
+PIN,6,A,3,2,45,4,2,"2 plants in pot; with label facing counter, left plant used"
+PIN,6,A,3,2,46,4,1,"2 plants in pot; with label facing counter, left plant used"
+PIN,6,A,3,2,48,4,0,"2 plants in pot; with label facing counter, left plant used"
+PIN,6,A,3,3,33,4,0,"2 plants in pot; with label facing counter, left plant used"
+PIN,6,A,3,3,38,4,1,"2 plants in pot; with label facing counter, left plant used"
+PIN,6,A,3,3,38,4,1,"2 plants in pot; with label facing counter, left plant used"
+PIN,6,B,3,1,46,4,2,
+PIN,6,B,3,1,47,4,1,
+PIN,6,B,3,1,48,4,2,
+PIN,6,B,3,2,.,3,2,no ethanol in tube
+PIN,6,B,3,2,.,4,2,no ethanol in tube
+PIN,6,B,3,2,.,4,2,no ethanol in tube
+PIN,6,B,3,3,40,4,0,
+PIN,6,B,3,3,44,4,0,
+PIN,6,B,3,3,45,4,1,
+PIN,6,C,3,1,.,4,2,no ethanol in tube
+PIN,6,C,3,1,.,4,2,no ethanol in tube
+PIN,6,C,3,1,.,4,2,no ethanol in tube
+PIN,6,C,3,2,43,4,2,
+PIN,6,C,3,2,45,4,2,
+PIN,6,C,3,2,48,4,2,
+PIN,6,C,3,3,39,4,1,previously counted as 4/2
+PIN,6,C,3,3,43,4,1,
+PIN,6,C,3,3,44,4,0,
+PIN,6,D,3,1,46,4,1,
+PIN,6,D,3,1,47,4,2,
+PIN,6,D,3,1,51,4,2,
+PIN,6,D,3,2,30,4,2,
+PIN,6,D,3,2,50,4,2,
+PIN,6,D,3,2,51,4,2,
+PIN,6,D,3,3,21,4,1,flower from side stalk
+PIN,6,D,3,3,21,4,1,flower from side stalk
+PIN,6,D,3,3,22,4,0,flower from side stalk
+PIN,7,A,1,1,46,4,0,
+PIN,7,A,1,2,39,4,2,
+PIN,7,A,1,2,43,4,2,
+PIN,7,B,1,1,46,4,2,
+PIN,7,B,1,1,51,4,0,
+PIN,7,B,1,2,21,4,1,
+PIN,7,B,1,2,27,4,1,
+PIN,8,A,1,1,.,4,1,
+PIN,8,A,1,1,.,4,2,
+PIN,8,A,1,2,43,4,2,
+PIN,8,A,1,2,50,4,1,
+PIN,8,A,1,3,29,4,1,
+PIN,8,A,1,3,31,4,2,
+PIN,8,C,2,1,45,4,0,disintegrating
+PIN,8,C,2,1,57,4,0,disintegrating
+PIN,8,C,2,2,42,4,0,disintegrating
+PIN,8,C,2,2,51,4,0,disintegrating
+PIN,8,C,2,3,28,4,0,disintegrating
+PIN,8,C,2,3,47,4,1,disintegrating
+PIN,9,A,1,1,41,4,1,
+PIN,9,A,1,1,42,4,0,
+PIN,9,A,1,2,33,4,2,
+PIN,9,A,1,2,36,4,0,
+PIN,9,A,1,3,.,4,2,disintegrating
+PIN,9,A,1,3,.,4,2,disintegrating
+PIN,9,B,1,1,56,4,0,
+PIN,9,B,1,1,58,4,0,One pair of long stamens longer than the other
+PIN,9,B,1,2,44,4,2,Disintegrating
+PIN,9,B,1,2,45,4,1,
+PIN,10,A,1,1,45,4,2,
+PIN,10,A,1,1,46,4,2,
+PIN,10,A,1,2,43,4,1,
+PIN,10,A,1,2,47,4,0,
+PIN,10,B,1,1,44,4,2,
+PIN,10,B,1,1,49,4,2,
+PIN,10,B,1,2,44,4,0,
+PIN,10,B,1,2,46,4,0,
+PIN,10,B,1,3,25,4,2,One long stamen fell off
+PIN,10,B,1,3,.,4,1,Disintegrating
+POB,7,A,1,1,.,4,2,
+POB,7,A,1,1,.,4,2,
+POB,7,A,1,2,41,4,2,One short stamen as tall as the long stamens
+POB,7,A,1,2,44,4,2,
+POB,7,A,1,2,44,4,2,
+POB,7,A,1,2,44,4,2,
+POB,7,A,1,3,32,4,2,
+POB,7,A,1,3,39,4,2,
+POB,7,B,1,1,51,4,2,
+POB,7,B,1,1,53,4,2,
+POB,7,B,1,2,40,4,2,short stamens almost as tall as long stamens
+POB,7,B,1,2,42,4,2,One pair of long stamens as short as the short stamens
+POB,7,B,1,3,36,4,2,disintegrating
+POB,10,B,1,1,41,4,2,
+POB,13,B,1,1,43,4,2,
+POB,13,B,1,1,47,4,2,
+POB,13,B,1,2,49,4,2,One pair of long stamens as short as the short stamens
+POB,13,B,1,2,52,4,2,
+POB,13,B,1,3,38,4,2,
+POB,13,B,1,3,40,4,2,disintegrating
+POB,14,A,1,1,49,4,2,
+POB,14,A,1,1,51,4,2,
+POB,14,A,1,2,42,4,2,Disintegrating
+POB,14,A,1,3,38,4,2,disintegrating
+POB,14,A,1,3,42,4,2,disintegrating
+POB,14,B,1,1,42,4,2,
+POB,14,B,1,1,45,4,2,
+POB,14,B,1,2,41,4,2,
+POB,14,B,1,2,43,4,2,
+POB,14,B,1,3,24,4,2,disintegrating
+POB,14,B,1,3,26,4,2,disintegrating
+POB,16,A,1,1,44,4,2,
+POB,16,A,1,1,50,4,2,
+POB,16,A,1,2,34,4,2,disintegrating
+POB,16,A,1,2,.,4,2,disintegrating
+POB,16,A,1,3,31,4,2,disintegrating
+POB,16,A,1,3,39,4,2,disintegrating
+POB,16,B,1,1,45,4,2,
+POB,16,B,1,1,49,4,2,
+POB,16,B,1,2,41,4,2,two long stamens fused
+POB,16,B,1,2,45,4,2,
+POB,19,B,1,1,.,4,2,
+RAB,4,A,3,1,44,4,2,
+RAB,4,A,3,1,45,4,1,previously counted as 4/2
+RAB,4,A,3,1,48,4,2,
+RAB,4,A,3,2,37,4,2,
+RAB,4,A,3,2,44,4,2,
+RAB,4,A,3,2,48,4,2,
+RAB,4,A,3,3,37,4,2,stamen shirveled
+RAB,4,A,3,3,.,4,0,
+RAB,4,A,3,3,.,4,1,
+RAB,4,B,3,1,43,4,0,
+RAB,4,B,3,1,46,4,1,previously counted as 4/0
+RAB,4,B,3,1,50,4,1,
+RAB,4,B,3,2,41,4,2,
+RAB,4,B,3,2,41,4,2,
+RAB,4,B,3,2,45,4,2,
+RAB,4,B,3,3,30,4,2,
+RAB,4,B,3,3,32,4,1,
+RAB,4,B,3,3,40,4,2,
+RAB,4,C,3,1,43,4,0,
+RAB,4,C,3,1,43,4,1,
+RAB,4,C,3,1,55,4,1,
+RAB,4,C,3,2,.,4,2,no ethanol in tube
+RAB,4,C,3,2,.,4,2,no ethanol in tube
+RAB,4,C,3,2,.,4,2,no ethanol in tube
+RAB,4,C,3,3,40,4,1,previously counted as 3/2
+RAB,4,C,3,3,40,4,2,
+RAB,4,C,3,3,43,3,2,
+RAB,4,D,3,1,30,4,2,
+RAB,4,D,3,1,34,4,2,
+RAB,4,D,3,1,36,4,2,
+RAB,4,D,3,2,22,4,2,
+RAB,7,A,1,1,44,4,0,"nodes 14, 16"
+RAB,7,A,1,1,50,4,0,"nodes 14, 16"
+RAB,7,A,1,2,39,4,2,
+RAB,7,A,1,3,.,4,1,
+RAB,7,A,1,3,.,4,1,
+RAB,7,B,1,1,54,4,2,
+RAB,7,B,1,1,61,4,2,
+RAB,7,B,1,2,49,4,0,
+RAB,7,B,1,2,54,4,0,
+RAB,7,B,1,3,41,4,2,
+RAB,7,B,1,3,46,4,2,
+RAB,14,C,2,1,42,4,0,One long stamen fell off
+RAB,14,C,2,1,49,4,0,disintegrating
+RAB,14,C,2,2,43,4,0,disintegrating
+RAB,14,C,2,2,51,4,0,disintegrating
+RAB,17,A,1,1,33,4,0,
+RAB,17,A,1,1,35,4,1,
+RAB,17,A,1,2,.,4,0,
+RAB,17,A,1,2,.,4,2,
+RAB,17,B,1,1,44,4,2,
+RAB,17,B,1,1,47,4,2,
+RAB,17,B,1,2,40,4,1,
+RAB,17,B,1,2,41,4,1,
+RAB,17,B,1,3,.,4,2,
+RAB,18,C,2,1,.,4,0,disintegrating
+RAB,18,C,2,1,.,4,0,disintegrating
+RAB,18,C,2,2,46,4,1,"Nodes 27, 29"
+RAB,18,C,2,2,49,4,0,"Nodes 27, 29"
+RAB,19,A,1,1,50,4,2,
+RAB,19,A,1,1,52,4,1,
+RAB,19,A,1,2,38,4,2,
+RAB,19,A,1,2,48,4,0,
+RAB,19,A,1,3,18,4,1,
+RAB,19,B,1,1,40,4,0,"nodes 5, 7"
+RAB,19,B,1,1,42,4,1,"nodes 5, 7"
+RAB,19,B,1,2,55,4,1,
+RAB,19,B,1,2,56,4,0,
+RAB,20,A,1,1,43,4,2,
+RAB,20,A,1,1,45,4,2,
+RAB,20,A,1,2,38,4,2,
+RAB,20,A,1,2,46,4,2,
+RAB,20,A,1,3,30,4,1,
+RAB,20,B,1,1,47,4,2,
+RAB,20,B,1,1,52,4,2,Not as dimorphic between longs and shorts
+RAB,20,B,1,2,41,4,2,One pair of long stamens as short as the short stamens
+RAB,20,B,1,2,41,4,2,One long stamen as short as short stamens
+RAB,20,B,1,3,19,4,2,Two long stamens fell after counting
+RAB,20,B,1,3,24,4,0,
+RAB ,9,A,3,1,40,4,2,
+RAB ,9,A,3,1,47,4,1,
+RAB ,9,A,3,1,47,4,2,
+RAB ,9,A,3,2,.,4,1,no ethanol in tube
+RAB ,9,A,3,2,.,4,1,no ethanol in tube
+RAB ,9,A,3,2,.,4,2,no ethanol in tube
+RAB ,9,A,3,3,26,4,0,
+RAB ,9,A,3,3,31,4,1,
+RAB ,9,A,3,3,33,4,2,
+RAB ,9,B,3,1,40,4,0,
+RAB ,9,B,3,1,43,3,0,
+RAB ,9,B,3,1,45,4,0,
+RAB ,9,B,3,2,37,4,2,
+RAB ,9,B,3,2,41,4,2,
+RAB ,9,B,3,2,45,4,2,
+RAB ,9,B,3,3,32,4,1,
+RAB ,9,C,3,1,37,4,0,
+RAB ,9,C,3,1,40,4,1,
+RAB ,9,C,3,1,45,4,1,
+RAB ,9,C,3,2,36,4,2,
+RAB ,9,C,3,2,41,4,2,
+RAB ,9,C,3,2,45,4,2,
+RAB ,9,C,3,3,32,4,0,
+RAB ,9,C,3,3,33,4,1,
+RAB ,9,D,3,1,42,4,0,
+RAB ,9,D,3,1,43,4,0,
+RAB ,9,D,3,1,44,4,0,
+RAB ,9,D,3,2,42,4,1,Flowers collected were not 10 flowers from tube 2
+RAB ,9,D,3,2,42,4,2,Flowers collected were not 10 flowers from tube 2
+RAB ,9,D,3,2,44,4,0,"Flowers collected were not 10 flowers from tube 2, previously counted as 4/1"
+RAB ,9,D,3,3,45,4,2,
+RAB ,9,D,3,3,47,4,2,
+RAB ,9,D,3,3,49,4,2,
+SAL,1,C,2,1,57,4,1,disintegrating
+SAL,1,C,2,2,47,4,0,disintegrating
+SAL,1,C,2,2,51,4,0,disintegrating
+SAL,1,C,2,3,41,4,0,disintegrating
+SAL,1,C,2,3,53,4,0,Disintegrating
+SAL,2,C,2,1,.,4,1,disintegrating
+SAL,2,C,2,1,.,4,1,disintegrating
+SAL,2,C,2,2,53,4,2,disintegrating
+SAL,2,C,2,2,58,4,2,disintegrating
+SAL,2,C,2,3,51,4,0,disintegrating
+SAL,2,C,2,3,53,4,0,disintegrating
+SAL,5,A,1,1,30,4,2,
+SAL,5,A,1,1,38,4,0,
+SAL,5,A,1,2,34,4,2,
+SAL,5,A,1,2,41,4,2,Disintegrating
+SAL,5,C,2,1,44,4,1,disintegrating
+SAL,5,C,2,1,44,4,2,disintegrating
+SAL,5,C,2,1,49,4,2,disintegrating
+SAL,5,C,2,1,49,4,1,disintegrating
+SAL,5,C,2,2,47,4,1,disintegrating
+SAL,5,C,2,2,54,4,0,disintegrating
+SAL,5,C,2,3,43,4,0,disintegrating
+SAL,5,C,2,3,44,4,0,disintegrating
+SAL,6,A,1,1,39,4,2,
+SAL,6,A,1,1,45,4,1,
+SAL,6,B,1,1,46,4,1,
+SAL,6,B,1,1,51,4,1,
+SAL,7,A,1,1,41,4,1,
+SAL,7,A,1,1,49,4,1,
+SAL,7,A,1,2,16,4,1,
+SAL,7,A,1,2,28,4,0,
+SAL,7,A,1,3,18,4,0,Counted both most developed flowers (2 others not as developed)
+SAL,7,A,1,3,28,4,1,Counted both most developed flowers (2 others not as developed)
+SAL,7,B,1,1,48,4,1,
+SAL,7,B,1,1,49,4,0,
+SAL,7,B,1,2,39,4,1,Short stamen almost as long as long stamens
+SAL,7,B,1,2,44,4,0,
+SAL,9,A,1,1,46,4,2,
+SAL,9,A,1,1,51,4,2,
+SAL,9,A,1,2,43,4,1,
+SAL,9,B,1,1,30,4,0,
+SAL,9,B,1,1,34,4,2,
+SAL,9,B,1,2,21,4,2,
+SAL,9,B,1,2,31,4,1,
+SAL,9,B,1,3,.,4,1,"Exactly node 25, node 24 broken"
+VDM,8,A,1,1,57,4,2,
+VDM,8,A,1,1,58,4,1,Disintegrated during counts
+VDM,8,A,1,2,50,4,2,
+VDM,8,A,1,2,52,4,2,
+VDM,8,A,1,3,38,4,2,disintegrating
+VDM,8,A,1,3,59,4,2,disintegrating
+VDM,8,B,1,1,61,4,2,One pair of long stamens as short as the short stamens
+VDM,8,B,1,1,62,4,2,One long stamen as short as short stamens
+VDM,8,B,1,2,42,4,2,
+VDM,8,B,1,2,42,4,2,
+VDM,8,B,1,3,34,4,2,disintegrating
+VDM,8,B,1,3,38,4,2,Disintegrating
+VDM,9,A,1,1,47,4,2,
+VDM,9,A,1,1,54,4,2,
+VDM,9,A,1,2,40,4,2,
+VDM,9,A,1,2,49,4,2,
+VDM,9,A,1,3,28,4,2,disintegrating
+VDM,9,A,1,3,35,4,2,disintegrating
+VDM,12,A,1,2,43,4,2,one long stamen as short as the short stamens
+VDM,12,A,1,2,46,4,0,
+VDM,12,A,1,3,22,4,2,disintegrating
+VDM,12,A,1,3,29,4,2,disintegrating
+VDM,12,B,1,1,43,4,2,
+VDM,12,B,1,1,48,4,2,
+VDM,13,B,1,2,37,4,2,
+VDM,13,B,1,2,43,4,2,
+VDM,13,C,2,1,44,4,2,disintegrating
+VDM,13,C,2,1,44,4,2,short stamens almost as tall as long stamens
+VDM,13,C,2,2,37,4,2,short stamens almost as tall as long stamens
+VDM,13,C,2,2,39,4,2,disintegrating
+VDM,17,A,1,2,46,4,1,
+VDM,17,A,1,2,50,4,2,Short stamens almost as long as long stamens
+VDM,17,A,1,3,36,4,2,
+VDM,17,A,1,3,45,4,2,
+VDM,17,B,1,1,49,4,2,
+VDM,17,B,1,1,50,4,2,
+VDM,17,B,1,2,44,3,2,"3 long, 2 shorts lost, then found"
+VDM,17,B,1,2,47,4,2,
+VDM,17,B,1,3,29,4,2,disintegrating
+VDM,17,B,1,3,38,4,2,disintegrating
+VDM,20,A,1,1,49,3,2,
+VDM,20,A,1,1,52,4,1,"three long stamens, 2 short stamens"
+VDM,20,A,1,2,45,4,1,
+VDM,20,B,1,1,31,4,2,
+VDM,20,B,1,1,40,4,2,
+VDM,20,B,1,2,39,4,2,
+VDM,20,B,1,2,43,4,1,
+VDM,20,B,1,3,20,4,2,disintegrating
+VDM,20,B,1,3,29,4,2,disintegrating
+VIE,3,C,2,1,48,4,2,disintegrating
+VIE,3,C,2,1,.,4,2,disintegrating
+VIE,3,C,2,2,48,4,2,short stamens almost as tall as long stamens
+VIE,3,C,2,2,49,4,2,disintegrating
+VIE,3,C,2,3,37,4,2,disintegrating
+VIE,3,C,2,3,40,4,2,disintegrating
+VIE,4,A,1,2,41,4,2,One of the long stamens as short as the short stamens
+VIE,4,A,1,2,43,4,2,
+VIE,4,A,1,3,41,4,2,
+VIE,4,A,1,3,43,4,2,
+VIE,4,B,1,1,47,4,2,
+VIE,4,B,1,1,55,4,1,
+VIE,4,B,1,2,.,4,2,disintegrating
+VIE,4,B,1,2,.,4,2,disintegrating
+VIE,4,B,1,3,44,4,2,disintegrating
+VIE,4,B,1,3,46,4,2,disintegrating
+VIE,6,B,3,1,38,4,2,
+VIE,6,B,3,1,40,4,2,
+VIE,6,B,3,1,46,4,2,
+VIE,6,B,3,2,44,4,2,
+VIE,6,B,3,2,46,4,2,petal-looking structure growing from short anther
+VIE,6,B,3,2,47,4,2,
+VIE,6,B,3,3,33,4,2,
+VIE,6,B,3,3,42,4,2,
+VIE,6,B,3,3,43,4,2,
+VIE,6,D,3,1,42,4,2,
+VIE,6,D,3,1,43,3,2,previously counted as 4/1
+VIE,6,D,3,1,44,4,2,
+VIE,6,D,3,2,40,4,2,
+VIE,6,D,3,2,43,4,2,
+VIE,6,D,3,2,44,4,2,
+VIE,6,D,3,3,40,4,2,
+VIE,6,D,3,3,41,4,2,
+VIE,6,D,3,3,47,4,2,
+VIE,8,B,1,1,46,4,2,disintegrating
+VIE,8,B,1,1,48,4,2,disintegrating
+VIE,8,B,1,2,39,4,1,disintegrating
+VIE,8,B,1,2,.,4,2,disintegrating
+VIE,8,B,1,3,.,4,2,disintegrating
+VIE,8,B,1,3,.,4,2,disintegrating
+VIE,8,C,2,1,44,4,2,disintegrating
+VIE,8,C,2,1,55,4,1,disintegrating
+VIE,8,C,2,2,52,4,2,one long stamen as short as the short stamens
+VIE,8,C,2,2,52,4,2,disintegrating
+VIE,8,C,2,3,38,4,2,disintegrating
+VIE,9,A,1,1,36,4,2,Carpel fell off
+VIE,9,A,1,1,.,4,2,
+VIE,9,A,1,2,39,4,2,
+VIE,9,A,1,2,43,4,2,
+VIE,9,A,1,3,22,4,2,
+VIE,9,A,1,3,31,4,2,
+VIE,9,B,1,1,47,4,2,
+VIE,9,B,1,1,59,4,2,
+VIE,9,B,1,2,.,4,2,One short stamen much shorter than the other
+VIE,9,B,1,2,.,4,2,
+VIE,9,B,1,3,25,4,1,
+VIE,9,B,1,3,36,4,1,
+VIE,10,A,1,1,45,4,2,
+VIE,10,A,1,1,50,4,2,
+VIE,10,A,1,2,36,4,2,short stamens almost as tall as long stamens
+VIE,10,A,1,2,43,4,2,
+VIE,10,A,1,3,46,4,2,disintegrating
+VIE,10,A,1,3,50,4,2,disintegrating
+VIE,10,B,1,1,43,4,2,
+VIE,10,B,1,1,45,4,2,One short stamen shorter than the other
+VIE,10,B,1,2,.,4,2,
+VIE,10,B,1,2,.,4,2,
+VIE,10,B,1,3,.,4,1,Disintegrating
+VIE,10,B,1,3,.,4,2,disintegrating
+VIE,11,B,1,1,53,4,2,Disintegrated after counting
+VIE,11,B,1,1,57,4,2,
+VIE,11,B,1,2,30,4,2,disintegrating
+VIE,11,B,1,2,35,4,1,disintegrating
+VIE,11,B,1,3,33,4,2,disintegrating
+VIE,11,B,1,3,34,4,2,disintegrating
+VIE,11,C,2,1,44,4,1,Short stamen almost as long as long stamens
+VIE,11,C,2,1,44,4,2,disintegrating
+VIE,11,C,2,2,45,4,2,One long stamen fell off
+VIE,11,C,2,2,51,4,1,disintegrating
+VIE,11,C,2,3,32,4,2,short stamens almost as tall as long stamens
+VIE,11,C,2,3,41,4,2,disintegrating
+VIE ,16,A,3,1,.,4,1,no ethanol
+VIE ,16,A,3,1,.,4,1,no ethanol
+VIE ,16,A,3,1,.,4,2,no ethanol
+VIE ,16,A,3,2,49,4,2,
+VIE ,16,A,3,2,51,4,2,
+VIE ,16,A,3,2,52,4,2,
+VIE ,16,A,3,3,.,4,2,no ethanol
+VIE ,16,A,3,3,.,4,2,no ethanol
+VIE ,16,A,3,3,.,4,2,no ethanol
+VIE ,16,B,3,1,.,4,2,no ethanol
+VIE ,16,B,3,1,.,4,2,no ethanol
+VIE ,16,B,3,1,.,4,2,no ethanol
+VIE ,16,B,3,2,45,4,2,
+VIE ,16,B,3,2,50,4,2,
+VIE ,16,B,3,2,51,4,2,
+VIE ,16,B,3,3,41,4,2,
+VIE ,16,B,3,3,43,4,2,
+VIE ,16,B,3,3,44,4,2,
+VIE ,16,C,3,1,33,4,2,
+VIE ,16,C,3,1,40,4,2,
+VIE ,16,C,3,1,44,4,2,
+VIE ,16,C,3,2,45,4,2,
+VIE ,16,C,3,2,46,4,2,
+VIE ,16,C,3,2,48,4,2,
+VIE ,16,C,3,3,40,4,2,
+VIE ,16,C,3,3,41,4,2,
+VIE ,16,C,3,3,44,4,2,
