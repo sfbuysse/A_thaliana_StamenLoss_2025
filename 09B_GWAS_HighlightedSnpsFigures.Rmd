@@ -201,7 +201,104 @@ manhattan_highlight <- function(identifier, sig.level = 0.05, type, i){
 # there might also be a slighly overlap between color and fill that is creating a dark outline because both are at least somewhat transparent. Maybe I need to decrease size so it isn't 1.3?
 ```
 
-and actual run the function
+Make a version of the function with no pink
+```{r}
+manhattan_highlight_NoPink <- function(identifier, sig.level = 0.05, type, i){
+  # add fdr.line as an object?
+  ##### Set filenames and read in file #####
+  
+  filename = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/GemmaOutput_2022/", identifier, ".assoc.txt")
+  fig_name = paste0("C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/", identifier)
+  
+  results <- read.delim(file= filename, header = T, stringsAsFactors = F)
+  
+  # reorganize dataframe
+  
+  forplot <- data.frame("BP" = results$ps, "CHR" = results$chr, "P" = results$p_wald, "SNP" = results$rs)
+  
+  forplot$fdr <- p.adjust(p= forplot$P, method = "fdr")
+  #for point color...
+  forplot$fdr_col <- forplot$CHR
+  forplot[forplot$fdr_col == 1, "fdr_col"] <- "#ABABAB"
+  forplot[forplot$fdr_col == 2, "fdr_col"] <- "#000000"
+  forplot[forplot$fdr_col == 3, "fdr_col"] <- "#ABABAB"
+  forplot[forplot$fdr_col == 4, "fdr_col"] <- "#000000"
+  forplot[forplot$fdr_col == 5, "fdr_col"] <- "#ABABAB"
+  forplot[forplot$fdr < 0.10, "fdr_col"] <- "#1E88E5"
+  # allSNPs raw: cutoff for this is between 9.651559e-02 (6) and 1.004850e-01 (1)
+  forplot$fdr_col <- as.factor(forplot$fdr_col)
+  #make the shared hits a 0 or something??
+
+  # add bonferroni correction p value
+  forplot$bon <- p.adjust(forplot$P, method = "bonferroni")
+  
+  # add row for outlining shared SNPs
+  forplot$shared <- as.character(alpha(forplot$fdr_col, 0))
+  forplot[forplot$SNP %in% type, "shared"] <- alpha("green", 1)
+  forplot$shared <- as.factor(forplot$shared)
+  
+  ###### manual plot #####
+  # prep to plot
+  don <- forplot %>%
+    # compute chromosome size in bp
+    group_by(CHR) %>%
+    summarize(chr_len=max(BP)) %>%
+    
+    #calculate cumulative position of each chromosome (again in bp)
+    mutate(tot=cumsum(chr_len)-chr_len) %>%
+    dplyr::select(-chr_len) %>%
+    
+    #add this info to the initial data set (so like adding new column and sorting by it)
+    left_join(forplot, ., by=c("CHR"="CHR")) %>%
+    
+    #add cum position of each SNP
+    arrange(CHR, BP) %>%
+    mutate( psCum=BP+tot)
+  
+  axisdf = don %>% group_by(CHR) %>% summarize(center=( max(psCum) + min(psCum) ) /2 )
+  
+  #sig.level is set in the function line. is 0.05 default but not expecting hits above that.
+  bonferroni_sig <- sig.level/length(forplot$P)
+  
+# and plot. should just make the 1 plot.
+  
+  # split don into shared SNPs and not shared SNPs, then merging together so the shared snps are at the bottom of the dataframe and will be plotted on top of the other points.
+  don_a <- don[don$shared == "#00FF00FF", ]
+  don_b <- don[don$shared != "#00FF00FF", ]
+  don_c <- rbind(don_b, don_a)
+  
+  # start plot with don_b becuase that is most of what I'll need
+  mplot <- ggplot(don_c, aes(x=psCum, y=-log10(P))) +
+    geom_point(aes(fill = fdr_col, color = shared), shape = 21, size = 1.3)+
+    geom_hline(yintercept = -log10(bonferroni_sig), color = "#FFC107", linetype = "dashed", alpha = 0.6)+
+    geom_segment(aes(x = 21551000, y = -0.3, xend = 30245000, yend = -0.3), col = "black", lineend = "round")+
+    geom_segment(aes(x = (50122495+7329000), y = -0.3, xend = (50122495+ 8201000), yend = -0.3), col = "black", lineend = "round")+
+    geom_segment(aes(x =(92167091+2408000 ), y = -0.3, xend = (92167091+2986000 ), yend = -0.3), col = "black", lineend = "round")+
+    scale_fill_manual(values = alpha(levels(don_c$fdr_col),0.8)) + 
+    scale_color_manual(values = levels(don_c$shared))+ 
+    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
+    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + # might add this back in later for better comparison
+    labs(x="Chromosome", y= bquote(-log[10](p)))+
+    theme_bw() +
+    theme(
+      legend.position="none",
+      panel.border = element_blank(),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+    )
+  
+  mplot <- annotate_figure(mplot,
+                fig.lab = mplot_letter[i], fig.lab.face = "bold")
+  #annotate_figure(qplot_label[i],
+  #              fig.lab = qplot_letter[i], fig.lab.face = "bold")
+  
+  ggsave(paste0(fig_name,"_NoPink.png"), plot = mplot, width = 7, height = 3, dpi = 700, units = "in")
+  
+  print(paste0("Done making NoPink plot for: ", identifier))
+}
+```
+
+and actually run the function
 
 With centromere
 ```{r}
@@ -214,6 +311,8 @@ manhattan_highlight(identifier = "allSNPs.PlinkFiltering_raw_subset.c", type = c
 
 ##### Asin Phenotypes #####
 manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Asin.c", type = cent, i=5)
+# adding no pink version because hard to see in manuscript draft and reviews agree - only see green outline
+manhattan_highlight_NoPink(identifier = "allSNPs.PlinkFiltering_Asin.c", type = cent, i=5)
 
 ##### Binary Phenotypes #####
 manhattan_highlight(identifier = "allSNPs.PlinkFiltering_Binary.c", type = cent, i=8)
