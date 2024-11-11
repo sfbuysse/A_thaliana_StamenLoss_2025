@@ -115,6 +115,16 @@ mean(PerPlant$sdSSN, na.rm = TRUE)
 # 0.368523
 mean(PerPlant$seSSN, na.rm = TRUE)
 # 0.1586749
+
+
+# how many plants have variation in short stamen number? 
+1 - (96/227) # 227 cause can't count the 3 with only 1 flower measured
+
+# how many plants have short stamen loss
+134/230
+
+# percentage of plants that have variation of the ones that have loss
+93/96
 ```
 
 # Summarize info from Sequenced Plants

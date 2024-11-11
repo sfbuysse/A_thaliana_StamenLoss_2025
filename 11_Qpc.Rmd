@@ -256,6 +256,9 @@ plot(-log10(stamenQpc$pvals), bty="n", xlab = "PCs", ylab = "-log10(p value)", c
 abline(h = -log10(0.05/length(stamenQpc$pvals)), col = "#FF5300", lwd=2)
 axis(1, at = c(1:length(stamenQpc$pvals)))
 
+# print the p vals to the screen
+stamenQpc$pvals
+
 ```
 
 If dark line is outside confidence intervals (dashed line), then evidence of selection - PC2 in example data. If dark line is within confidence intervals, then fits with neutral expectation and drift - PC1 with example data.

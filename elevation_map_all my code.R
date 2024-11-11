@@ -142,21 +142,22 @@ tm_shape(pyr_elev)+
 # just make a black point 
 black <-  tm_shape(pyr_elev)+
     tm_raster(palette = terrain.colors(16), alpha = 0.8, title = "Elevation")+
-    tm_scale_bar(position = c("right", "bottom"))+
-    tm_legend(scale = 0.4, legend.outside = FALSE, legend.position = c("right", "bottom"))+
+    tm_scale_bar(position = c("left", "bottom"))+
+    tm_legend(scale = 0.4, legend.outside = FALSE, legend.position = c("left", "bottom"), legend.text.size = 1.1, legend.title.size = 1.1,
+              legend.bg.color = "white", legend.frame = "black")+
     tm_shape(pop_loc2)+
-    tm_text('pop', col = 'black', auto.placement = FALSE, size = 1)+
+    tm_text('pop', col = 'black', auto.placement = FALSE, size = 1.1)+
     tm_shape(pop_loc)+
     tm_symbols(col = "black", border.col = "black", shape = 21, 
-               stretch.palette = TRUE, size = 0.25, 
+               stretch.palette = TRUE, size = 1.1, 
                legend.col.show = FALSE, legend.shape.show =  FALSE)
 black
-tmap_save(black, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/BlackDotMap.png", 
+tmap_save(black, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/BlackDotMap2.png", 
           dpi = 1000,
           outer.margins = c(0, 0, 0, 0),
           insets_tm = outline, 
-          insets_vp = viewport(x = unit(0.15, "npc"),
-                               y = unit(0.18, "npc"),
+          insets_vp = viewport(x = unit(-0.15, "npc"),
+                               y = unit(-0.18, "npc"),
                                width = unit(0.35, "npc"),
                                height = unit(0.35, "npc"),
                                default.units = "npc",
