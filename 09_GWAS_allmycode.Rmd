@@ -850,6 +850,8 @@ Purpose of this code is to hopefully solve my weird significance line issue and 
 
 This code was ran on 10/31/2023 to make files that were saved. Trying to make snp highlighted images on this day, but that will happen in the top SNPs section.
 
+Updating on 11/13/2024 to edit the qqplot font sizes since I finally figured out how to do that
+
 ```{r}
 # load packages
 library(ggplot2)
@@ -899,15 +901,17 @@ gwas_plots <- function(type, identifier, sig.level = 0.05){
   # how similar are these
   min(forplot$fdr)
   min(forplot$bon)
-  hist(forplot$fdr)
-  hist(forplot$bon)
+  #hist(forplot$fdr)
+  #hist(forplot$bon)
   # they are different, but it seems a smidge subtle for the raw phenotypes
   
   ##### QQ plot with qqman #####
 
-  png(qqplot_name)
-  qq(forplot$P)
+  png(qqplot_name, width = 2.2, height = 2.2, units = 'in', res = 700)
+  op <- par(mar = c(2.5,2,0.1,0.1) + 0.01)
+  qq(forplot$P, cex.lab = 1, cex.axis = 1, cex = 0.2, mgp = c(1.3, 0.3, 0), tcl = -0.2  ) #las = 1
   dev.off()
+  par(op)
   
   ###### Manhattan plot with qqman #####
   #
