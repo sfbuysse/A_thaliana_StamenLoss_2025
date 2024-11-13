@@ -76,7 +76,7 @@ pyr_elev <- crop(elev_raster, as(extent(-0.50, 3.5, 41.00, 43.00), 'SpatialPolyg
 pop_loc2 <- data.frame(lon = c(metadata$Lon_DecDeg[1:6], metadata$Lon_DecDeg[7]-0.04, 
                                metadata$Lon_DecDeg[8:10], metadata$Lon_DecDeg[11]+0.04,
                                metadata$Lon_DecDeg[12:16]), 
-                       lat = c(metadata$Lat_DecDeg[1:5]+0.06, metadata$Lat_DecDeg[6]+0.05, metadata$Lat_DecDeg[7]-0.06, 
+                       lat = c(metadata$Lat_DecDeg[1:5]+0.06, metadata$Lat_DecDeg[6]-0.06, metadata$Lat_DecDeg[7]-0.06, 
                                metadata$Lat_DecDeg[8]+0.06, metadata$Lat_DecDeg[9]-0.06,
                                metadata$Lat_DecDeg[10:16]+0.06), 
                        pop = metadata$PopCode) %>%
@@ -142,24 +142,24 @@ tm_shape(pyr_elev)+
 # just make a black point 
 black <-  tm_shape(pyr_elev)+
     tm_raster(palette = terrain.colors(16), alpha = 0.8, title = "Elevation")+
-    tm_scale_bar(position = c("left", "bottom"))+
-    tm_legend(scale = 0.4, legend.outside = FALSE, legend.position = c("left", "bottom"), legend.text.size = 1.1, legend.title.size = 1.1,
+    tm_scale_bar(position = c("center", 0), text.size = 1.1)+ # x and y coordinates I was trying c(0.04, 0.005)
+    tm_legend(scale = 0.4, legend.outside = FALSE, legend.position = c("left", "bottom"), legend.text.size = 1.1, legend.title.size = 1.5,
               legend.bg.color = "white", legend.frame = "black")+
     tm_shape(pop_loc2)+
     tm_text('pop', col = 'black', auto.placement = FALSE, size = 1.1)+
     tm_shape(pop_loc)+
     tm_symbols(col = "black", border.col = "black", shape = 21, 
-               stretch.palette = TRUE, size = 1.1, 
+               stretch.palette = TRUE, size = 0.5, 
                legend.col.show = FALSE, legend.shape.show =  FALSE)
 black
 tmap_save(black, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - SophieAnalyses/Figures/ManuscriptFigs/BlackDotMap2.png", 
           dpi = 1000,
           outer.margins = c(0, 0, 0, 0),
           insets_tm = outline, 
-          insets_vp = viewport(x = unit(-0.15, "npc"),
-                               y = unit(-0.18, "npc"),
-                               width = unit(0.35, "npc"),
-                               height = unit(0.35, "npc"),
+          insets_vp = viewport(x = unit(0.88, "npc"),
+                               y = unit(0.135, "npc"),
+                               width = unit(0.25, "npc"),
+                               height = unit(0.25, "npc"),
                                default.units = "npc",
                                just = "centre",gp = gpar(),
                                clip = "inherit",
@@ -169,7 +169,25 @@ tmap_save(black, "C:/Users/Sophie/Michigan State University/Conner, Jeffrey - So
                                angle = 0,
                                layout = NULL,
                                layout.pos.row = NULL, layout.pos.col = NULL,name = NULL),
-          width = 3 ,
+          width = 3,
           height = 2,
           units = 'in',
           add.titles = "test")
+
+# version with the legend outside
+black2 <-tm_shape(pyr_elev)+
+  tm_raster(palette = terrain.colors(16), alpha = 0.8, title = "Elevation")+
+  tm_scale_bar(position = c("right", "bottom"), text.size = 1.1)+
+  tm_legend(scale = 0.4, legend.outside = TRUE, legend.outside.position = c("right"), legend.text.size = 1.1, legend.title.size = 1.1,
+            legend.bg.color = "white", legend.frame = "black")+
+  tm_shape(pop_loc2)+
+  tm_text('pop', col = 'black', auto.placement = FALSE, size = 1.1)+
+  tm_shape(pop_loc)+
+  tm_symbols(col = "black", border.col = "black", shape = 21, 
+             stretch.palette = TRUE, size = 0.5, 
+             legend.col.show = FALSE, legend.shape.show =  FALSE)+
+  tm_layout(frame = FALSE)
+black2  
+# I don't like how this looks
+
+# put legend and inset on same side?
