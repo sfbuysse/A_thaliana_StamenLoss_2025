@@ -850,7 +850,7 @@ Purpose of this code is to hopefully solve my weird significance line issue and 
 
 This code was ran on 10/31/2023 to make files that were saved. Trying to make snp highlighted images on this day, but that will happen in the top SNPs section.
 
-Updating on 11/13/2024 to edit the qqplot font sizes since I finally figured out how to do that
+Updating on 11/13/2024 to edit the qqplot font sizes since I finally figured out how to do that. Only made a good plot for the arcsin that goes in the main text cause it did take some cropping and manual editing after the fact.
 
 ```{r}
 # load packages

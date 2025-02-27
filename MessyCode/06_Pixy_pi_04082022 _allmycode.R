@@ -1019,6 +1019,9 @@ m.resid.pi2 <- lm(Elev_residuals ~ Mean.pi, dat = comp)
 summary(m.resid.pi2)
 # mean.pi estimate = 46.8278, p value = 0.397, r squared = 0.05168 so this is a terrible fit.
 
+## 1/9/2025 try to adjust this by adding the residuals on the x axis as well as this seems like the actual way to do a partial regression
+plot(resid(lm(Mean.pi ~ Elev_m + Elev_c2, data = comp)), comp$Elev_residuals)
+
 # then I want the inverse. so the residuals of ssn ~ mean.pi regressed with elevation
 # making new model b/c need order to match comp row order and I think it will but why not just do it again
 tmp.resid2 <- residuals(lm(Seq_PopFlwrMean ~ Mean.pi, data = comp))
@@ -1034,6 +1037,8 @@ summary(m.resid.elev2)
 # Elev_m2 estimate = -4.543e-07, p value = 0.1955
 # r squared = 0.2559 so this is not a great fit but is much better than the other residual plot!
 
+# add Jimmy's thing in a quick plot, quadratic not included here and I'm not sure how I would
+plot(y=comp$Pi_residuals, x = resid(lm(Elev_m ~ Mean.pi, data = comp)))
 
 # use newdata (elevations) and newdata2 (pi with cent) from earlier
 

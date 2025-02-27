@@ -197,7 +197,7 @@ Relationship matrix calculation complete.
 # Now visualize the results with R
 ### Prep Datasets ###
 
-manually moved important data file to my local machine to make higher quality figures.
+manually moved important data file to my local machine to make higher quality figures. These are in the data subfolder of the github repository.
 
 ```{r}
 library(dplyr)

@@ -12,9 +12,29 @@ The goal of this Code is to use the R package Quaint to differentiation between 
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Install the Package
+only need to do this once. Copied directly from the Quaint Github page. (https://github.com/emjosephs/quaint/blob/master/install_quaint.R)
+
+This code currently doesn't work for me, so I'm going to try just coping the functions instead?
+```{r, eval = FALSE}
+packages_needed <- c("devtools","roxygen2")
+
+for (i in 1:length(packages_needed)){
+  if(!(packages_needed[i] %in% installed.packages())){install.packages(packages_needed[i])}
+}
+
+for (i in 1:length(packages_needed)){
+  library( packages_needed[i], character.only = TRUE)
+}
+
+
+document(pkg = "../")
+setwd('../')
+install('quaint')
+```
+
 # Set up Quaint Functions
 Note: copied this code from the package at https://github.com/emjosephs/quaint/blob/master/install_quaint.R
-
 calcQpc
 ```{r}
 #' Calculate Qpc
@@ -122,13 +142,29 @@ library(ggpubr)
 ```
 
 # load data
+```{r, eval = FALSE}
+# start with example data?
+load("C:/Users/Sophie/Downloads/1001-matrix-50Ksamp.rda") # called myGt
+allData <- read.csv("C:/Users/Sophie/Downloads/1001genomes-FT10-FT16 and 1001genomes-accessions.csv", stringsAsFactors = F)
+# get rid of missing phenotype data
+allDataFT16 = dplyr::filter(allData, is.na(FT16_mean) == FALSE)
+
+# pull out genotype data for individuals with phenotypes
+combinedData = dplyr::inner_join(allDataFT16, myGt, by='id')
+myG = combinedData[,-c(1:17)]
+myTraits = combinedData[,1:17]
+
+# need to replicate myG for the genotype matrix
+```
+
 ```{r}
+# my data!
 # genotype Matrix of 50K randomly chosen sites (see 10_QpcPrep)
 load("data/GenotypeMatrix_Cent_50k_Nov2023.ROBJ") # called Stamen_Gt_sub
 load("data/RawPhenotypes_Aug2023.ROBJ") # called pheno2
 # don't have any missing phenotype data to get rid of
 
-# join geno and pheno together
+# let's join geno and pheno together
 stamenCombined <- dplyr::inner_join(Stamen_Gt_sub, pheno2, by = 'LineID')
 # make stamenG to use for make_k
 stamenG <- stamenCombined[ , c(2:50001)]
@@ -140,13 +176,31 @@ stamenTrait <- stamenCombined[ , c(1, 50002)]
 
 # make a kinship matrix
 
+I got a kinship matrix from gemma. why am I not using that here? Shouldn't I be using whatever was input in to plink to do PCA initially? Can't reuse anything because I need there to be no NAs and I need to make sure the standardization is done a certain way for the kinship matrix for the later Qpc math to work. The input file I used in the Qpc prep Rscript is the same input file used for Fst, PCA, and GWAS so there is that consistency.
+
+```{r, eval = FALSE}
+# example data
+myK <- make_k(as.matrix(myG))
+# do eigen decomposition
+myEig <- eigen(myK)
+
+# plot the first two PCs
+plot(myEig$vectors[,1], myEig$vectors[,2], bty="n", xlab = "PC1", ylab = "PC2", col = '#FF5300')
+
+# plot pve
+plot(myEig$values/sum(myEig$values)*100, col = "#43B629", bty="n", ylab = "% variation explained by each PC", xlab = "PC")
+
+```
+
 ```{r}
+# Stamen Data
 stamenK <- make_k(as.matrix(stamenG))
 # do eigen decomposition
 stamenEig <- eigen(stamenK)
 
 # plot the first two PCs
 plot(stamenEig$vectors[,1], stamenEig$vectors[,2], bty="n", xlab = "PC1", ylab = "PC2", col = '#FF5300')
+# this looks different than the PCA I made with plink, likely just because the standardization is different??
 
 # plot pve
 plot(stamenEig$values/sum(stamenEig$values)*100, col = "#43B629", bty="n", ylab = "% variation explained by each PC", xlab = "PC")
@@ -156,9 +210,9 @@ stamenEig$values/sum(stamenEig$values)*100
 
 ```
 
-Using the PVE plot, I am going to choose the first 4 PCs to use to look for a signal of selection because there is a break in the pve after 4. 
+Using the PVE plot, I am going to choose the first 4 PCs to use to look for a signal of selection because there is a break in the pve after  4. Emily also suggested using the ones that are correlated with elevation.
 
-Then I use the bottom half of the PCs to estimate Va (additive variation) so that is PC 30-60.
+Then I use the bottom half of the PCs to estimate Va (additive variation) so that is PC 30-60 - estimates the drift part.
 
 # Run Qpc
 
@@ -168,7 +222,17 @@ myLambdas is the eigen values of the kinship matrix
 myL is the range of PCs used to estimate Va
 myM is the range of PCs used to test for selection
 
+```{r, eval = FALSE}
+# example data
+myQpc <- calcQpc(myZ = myTraits$FT16_mean,
+                 myU = myEig$vectors,
+                 myLambdas = myEig$values,
+                 myM = 1:10,
+                 myL = 485:969)
+```
+
 ```{r}
+# stamen data
 stamenQpc <- calcQpc(myZ = stamenTrait$Pheno,
                  myU = stamenEig$vectors,
                  myLambdas = stamenEig$values,
@@ -177,6 +241,14 @@ stamenQpc <- calcQpc(myZ = stamenTrait$Pheno,
 ```
 
 # look at the Qpc output
+
+```{r, eval = FALSE}
+# example data
+plot(-log10(myQpc$pvals), bty="n", xlab = "PCs", ylab = "-log10(p value)", col = "#1BB6AF", lwd=2, xaxt="n")
+abline(h = -log10(0.05/length(myQpc$pvals)), col = "#FF5300", lwd=2)
+axis(1, at = c(1:length(myQpc$pvals)))
+# replicates example data result
+```
 
 ```{r}
 # stamen data
@@ -189,7 +261,10 @@ stamenQpc$pvals
 
 ```
 
+If dark line is outside confidence intervals (dashed line), then evidence of selection - PC2 in example data. If dark line is within confidence intervals, then fits with neutral expectation and drift - PC1 with example data.
+
 ```{r}
+# stamen data
 #estimate the confidence intervals
 stamenVaest = var0(stamenQpc$cml)
 stamenCI = 1.96*sqrt(stamenVaest*stamenEig$values)
@@ -207,11 +282,11 @@ abline(a=mean(stamenTrait$Pheno), b = stamenCI[1], lty=2, col='#56B4E9', lwd=2)
 abline(a=mean(stamenTrait$Pheno), b = -stamenCI[1], lty=2, col='#56B4E9', lwd=2)
 ```
 
-# Fancy Plotting
+# Plottin
 
 ```{r}
-# add elevation for plotting later on - just add this to stamenTrait
-load(file = "data/Elev_Means_Feb2022.ROBJ")
+# let's also add elevation for plotting later on - just add this to stamenTrait
+load(file = "~/R_script/StamenLossPipeline/Elev_Means_Feb2022.ROBJ")
 # don't need the pop mean columns.
 Elev_Means <- Elev_Means[ , c('Population', 'Elev_m')]
 # make Pop column to merge by
@@ -222,7 +297,7 @@ stamenTrait[stamenTrait$Population == "ARB", "Population"] <- "ARU"
 stamenTrait[stamenTrait$Population == "SPE", "Population"] <- "SAL"
 # dataframe with x and y vars while still int he same order
 forplot <- data.frame("eig_vec1" = stamenEig$vectors[,1], stamenTrait[-nrow(stamenTrait), ])
-# join together, need to remove the last row
+# join together, need to remove the last row cause Emily does in her plot
 forplot <- merge(forplot, Elev_Means, by = "Population")
 
 # prep the dataframe now
@@ -230,7 +305,7 @@ forplot <- merge(forplot, Elev_Means, by = "Population")
 forplot <- forplot[order(forplot$Elev_m),]
 forplot$Population <- factor(forplot$Population, levels = unique(forplot$Population[order(forplot$Elev_m)]))
 str(forplot$Population)
-### key is that you need to order the whole sheet AND reorder the factor.
+### key is that you need to order the whole sheet AND reorder the factor. BOTH, not just one.
 forplot$labels <- paste0(forplot$Population, " - ", forplot$Elev_m, "m")
 forplot$posCI <- sapply(forplot$eig_vec1, FUN = function(x){stamenCI[1]*x + mean(stamenTrait$Pheno)})
 forplot$negCI <- sapply(forplot$eig_vec1, FUN = function(x){-stamenCI[1]*x + mean(stamenTrait$Pheno)})

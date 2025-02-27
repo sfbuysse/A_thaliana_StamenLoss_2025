@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Code to run GWAS with Gemma and make the output.
 
 # Step 1: create fam file. 
-You can do this with R. This is also where you will want to do any transformations
+You can do this with R. This is also where you will want to do any transformations.
 
 ### Prep ###
 
@@ -28,8 +28,8 @@ library(bestNormalize)
 
 
 ## load data
-Sequenced <- read.csv("~/SpanishMasterDataset_Sequenced.csv")
-PopMetaData <- read.csv("~/SpanishMasterDataset_PopMetaData.csv")
+Sequenced <- read.csv("data/SpanishMasterDataset_Sequenced.csv")
+PopMetaData <- read.csv("data/SpanishMasterDataset_PopMetaData.csv")
 
 ## format columns as factors
 Sequenced <- Sequenced[,1:9]
@@ -58,7 +58,7 @@ Now summarize by Line for the sequenced plants only because the purpose of these
 # LSMs
 ## create a fully nested random model
 colnames(Sequenced)
-# the important ones are Pop, Line, Rep, Tube to mimic what Jeff used
+# the important ones are
 # Population
 # line
 # Rep
@@ -90,7 +90,7 @@ based on these results, I should use the raw means when I think about transforma
 ### Transformations ###
 Set up for transformations.
 ```{r transform}
-# to do transformations, I really only care about the distribution of the means, not which line they belong to
+# to do transformations, I care about the distribution of the means, not which line they belong to
 raw_means <- Seq_RawMeans$Seq_LineFlwrMean
 plotNormalHistogram(raw_means)
 shapiro.test(raw_means)
@@ -135,13 +135,11 @@ cox <- data.frame(box$x, box$y)
 cox2 <- cox[with(cox, order(-cox$box.y)),]
 cox2[1,]
 lambda <- cox2[1, "box.x"]
-# confusing that I got 2 values here?
 
 means_bc_bn <- predict(bc)
 means_bc_MASS <- ((raw_means^lambda)-1)/lambda
 
-# rank (don't want to use this one b/c it basically forces a normal distribution)
-# could be an comparison though? maybe not.
+# rank (don't want to use this one b/c it forces a normal distribution)
 means_qqnorm <- qqnorm(raw_means, plot = F)
 means_rank <- means_qqnorm[["x"]]
 
@@ -220,7 +218,7 @@ Seq_RawMeans$Binary <- c(rep(0, times = 61))
 Seq_RawMeans$Binary[Seq_RawMeans$Seq_LineFlwrMean < 2] = 1
 # zero indicates no short stamen loss (control), one indicates that there is short stamen loss (case).
 
-## gemma says to use 0 for control and 1 case for binary. 
+## gemma says to use 0 for control and 1 for case for binary. 
 
 ```
 
@@ -264,13 +262,13 @@ Super important note! This fam file is organized in alphabetical order.
 
 Move this file onto the HPCC. 
 
-The order was actually not important when using the --pheno tag in plink because it matches things up by ID instead of row order.
+The order was actually not important when using the --pheno tag in plink because it matches up by ID instead of row order.
 
 ```{r}
 # addition on 2/20/2024
 # I need to calculate shapiro wilks for the subset distribution
 # reading in an old fam file to do this becuase it is on my local machine; has correct means and 43 lines like the one made below
-subset <- read.delim("~/FamFiles/nonzero.fam", header=FALSE)
+subset <- read.delim("nonzero.fam", header=FALSE)
 shapiro.test(subset$V6)
 # W = 0.9316, p = 0.0132
 ```
@@ -323,13 +321,12 @@ mv NoCent.PlinkFiltering_Binary2.fam NoCent.PlinkFiltering_Binary.fam
 
 ```
 
-All log files confirm there are 61 individuals with phenotypes after running the code lines.
+All log files confirm there are 61 individuals with phenotypes after running the code lines unless noted.
 
 # Step 3: Make relatedness matrix
 
 ### Plink Filtering ###
 ```{bash}
-# Plink Filtering
 cd /mnt/scratch/buysseso/GWAS
 
 ### with centromere ###
@@ -372,8 +369,6 @@ cd /mnt/scratch/buysseso/GWAS
 
 # Step 4: Run GWAS
 
-There must have been a way for me to do this with a loop somehow, but I just didn't get it so I ran them each one by one.
-
 ### Plink Filtering ###
 
 Updated 1/24/2023 so that all files are using -lmm 4 to run all 3 ways of calculating the p value. The beta and se are included when using the wald test.
@@ -413,18 +408,6 @@ result_table <- read.delim("~/GemmaOutput_2022/allSNPs.PlinkFiltering_raw.c_test
 cor(result_table$p_wald, result_table$p_lrt, method = "pearson")
 # correlation is 0.9984886
 
-tmp1 <- result_table[order(result_table$p_wald), ]
-top_wald <- tmp1[1:50, ]
-tmp2 <- result_table[order(result_table$p_lrt), ]
-top_lrt <- tmp2[1:50, ]
-
-# what do these lists have in common?
-intersect(top_lrt$rs, top_wald$rs)
-
-# 23 of them are in common, so that is a little less than half.
-
-# of the lrt top 10, all but 7 and 10 are in common
-
 ```
 
 #### without the centromere ####
@@ -454,194 +437,7 @@ cd /mnt/scratch/buysseso/GWAS
 
 Trend is that percent variance explained (pve) is slightly lower for all of the NoCent files with short stamen as the phenotypes (continuous or binary). no cent explains slightly more but the change is SUPER small.\
 
-# Step 5: Make plots #
-I can do this with R on the HPCC, or I can do it with R on my local machine. I think it mostly depends if I want to be moving files back and forth or moving images back and forth... neither is ideal. Deciding to move files because I can't load all the packages with R on the HPCC.
-
-So at this point, manually move files between the HPCC and my local machine.
-
-Done 1/11/2023 at 11:11AM
-
-For manuscript, made new code file for final figures.
-
-### New Code In Jan 2023 ###
-Purpose of this code is to hopefully solve my weird significance line issue and to rely on plotting more within the qqman package to hopefully do this.
-
-This code was ran on 10/31/2023 to make files that were saved. Trying to make snp highlighted images on this day, but that will happen in the top SNPs section.
-
-```{r}
-# load packages
-library(ggplot2)
-library(dplyr)
-library(qqman)
-
-rm(list = ls())
-
-### multiple testing stuff ###
-# use p.adjust and plot the adjusted p values to see how many points should be significant at my threshold
-# do the same for bonferoni
-
-# compare this to the bonferroni line drawn on unadjusted p values and the fdr line drawn on unadjusted p values wth the coe from the NAM package
-
-# after testing, I am deciding that I should make the adjusted graphs for everything, so I am going to join that in with the function, and my function will make 4 plots per identifier: qq plot, fdr adjusted p value gwas, bonferroni adjusted p value gwas, gwas with bonferroni line of significance.
-
-
-### Info to read in the file ###
-
-# this happens within the graphing function, so I need a list of identifier names
-
-# so let's start a list of samples I'm using:
-files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c","NoCent.PlinkFiltering_raw.c_testing" )
-# could then theoretically lapply my function to this list of names, but I didn't do that.
-
-##### Graphing Function #####
-# for testing out
-#identifier <- "allSNPs.PlinkFiltering_raw.c"
-
-gwas_plots <- function(type, identifier, sig.level = 0.05){
-  ##### Set filenames and read in file #####
-  
-  filename = paste0("~/GemmaOutput_2022/", identifier, ".assoc.txt")
-  mplot_name = paste0("~/Figures/mplot_", identifier)
-  qqplot_name = paste0("~/Figures/qq_",identifier,".png")
-  
-  results <- read.delim(file= filename, header = T, stringsAsFactors = F)
-  
-  # reorganize dataframe - Note I am using the wald test now!
-  
-  forplot <- data.frame("BP" = results$ps, "CHR" = results$chr, "P" = results$p_wald, "SNP" = results$rs)
-  
-  forplot$fdr <- p.adjust(p= forplot$P, method = "fdr")
-
-  forplot$bon <- p.adjust(forplot$P, method = "bonferroni")
-
-  # how similar are these
-  min(forplot$fdr)
-  min(forplot$bon)
-  hist(forplot$fdr)
-  hist(forplot$bon)
-  # they are different, but it seems a smidge subtle for the raw phenotypes
-  
-  ##### QQ plot with qqman #####
-
-  png(qqplot_name)
-  qq(forplot$P)
-  dev.off()
-  
-  ###### Manhattan plot with qqman #####
-  #
-  #png(mplot_name)
-  #manhattan(forplot)
-  ## takes a super long time because I"m not running it within dev so it is trying to show up on the screen
-  #dev.off()
-  #
-
-  ###### manual plot #####
-  # prep to plot
-  don <- forplot %>%
-    # compute chromosome size in bp
-    group_by(CHR) %>%
-    summarize(chr_len=max(BP)) %>%
-    
-    #calculate cumulative position of each chromosome (again in bp)
-    mutate(tot=cumsum(chr_len)-chr_len) %>%
-    dplyr::select(-chr_len) %>%
-    
-    #add this info to the initial data set (so like adding new column and sorting by it)
-    left_join(forplot, ., by=c("CHR"="CHR")) %>%
-    
-    #add cum position of each SNP
-    arrange(CHR, BP) %>%
-    mutate( psCum=BP+tot)
-  
-  axisdf = don %>% group_by(CHR) %>% summarize(center=( max(psCum) + min(psCum) ) /2 )
-  
-  #sig.level is set in the function line. is 0.05 default but not expecting hits above that.
-  bonferroni_sig <- 0.05/length(forplot$P)
-  
-# and plot. should make 3 plots.
-  
-  mplot_fdr <- ggplot(don, aes(x=psCum, y=-log10(fdr))) +
-    geom_point( aes(color=as.factor(CHR)), alpha=0.8, size=1.3)+
-    geom_hline(yintercept = -log10(0.05), color = "blue", linetype = "dashed")+
-    geom_hline(yintercept = -log10(0.10), color = "yellow", linetype = "solid")+
-    scale_color_manual(values = rep(c("grey", "black"), 22)) +
-    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
-    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + #choosing not to set this
-    labs(x="Chromosome", y= "-log10(fdr adjusted wald p)")+
-    theme_bw() +
-    theme(
-      legend.position="none",
-      panel.border = element_blank(),
-      panel.grid.major.x = element_blank(),
-      panel.grid.minor.x = element_blank(),
-    )
-  ggsave(paste0(mplot_name, "_fdr.png"), plot = mplot_fdr, width = 7, height = 3, units = "in")
-  
-  mplot_bon <- ggplot(don, aes(x=psCum, y=-log10(bon))) +
-    geom_point( aes(color=as.factor(CHR)), alpha=0.8, size=1.3)+
-    geom_hline(yintercept = -log10(0.05), color = "blue", linetype = "dashed")+
-    geom_hline(yintercept = -log10(0.10), color = "yellow", linetype = "solid")+
-    scale_color_manual(values = rep(c("grey", "black"), 22)) +
-    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
-    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) +
-    labs(x="Chromosome", y= "-log10(bonferroni adjusted wald p)")+
-    theme_bw() +
-    theme(
-      legend.position="none",
-      panel.border = element_blank(),
-      panel.grid.major.x = element_blank(),
-      panel.grid.minor.x = element_blank(),
-    )
-  ggsave(paste0(mplot_name, "_bonf.png"), plot = mplot_bon, width = 7, height = 3, units = "in")
- 
-  mplot <- ggplot(don, aes(x=psCum, y=-log10(P))) +
-    geom_point( aes(color=as.factor(CHR)), alpha=0.8, size=1.3)+
-    geom_hline(yintercept = -log10(bonferroni_sig), color = "blue", linetype = "dashed")+
-    #geom_hline(yintercept = -log10(sig.level), color = "red", linetype = "dotdash")+ # I want this to draw an fdr line
-    scale_color_manual(values = rep(c("grey", "black"), 22)) +
-    scale_x_continuous( label = axisdf$CHR, breaks = axisdf$center ) +
-    #scale_y_continuous(expand = c(0,0), limits = c(0, ylim)) + # might add this back in later for better comparison
-    labs(x="Chromosome", y= "-log10( wald P)")+
-    theme_bw() +
-    theme(
-      legend.position="none",
-      panel.border = element_blank(),
-      panel.grid.major.x = element_blank(),
-      panel.grid.minor.x = element_blank(),
-    )
-  ggsave(paste0(mplot_name,".png"), plot = mplot, width = 7, height = 3, units = "in")
-  
-  print(paste0("Done making plots for: ", identifier))
-}
-
-# does the function work?? 
-
-
-##### Raw Phenotypes #####
-gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_raw.c")
-gwas_plots(type = "NoCent", identifier = "NoCent.PlinkFiltering_raw.c")
-
-
-##### Subset Raw Phenotypes #####
-# only include if less than 2 as mean short stamen number
-gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_raw_subset.c")
-gwas_plots(type = "NoCent", identifier = "NoCent.PlinkFiltering_raw_subset.c")
-
-##### Asin Phenotypes #####
-gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_Asin.c")
-gwas_plots(type = "NoCent", identifier = "NoCent.PlinkFiltering_Asin.c")
-
-##### Binary Phenotypes #####
-gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_Binary.c")
-gwas_plots(type = "NoCent", identifier = "NoCent.PlinkFiltering_Binary.c")
-
-##### Elevation! #####
-gwas_plots(type = "All", identifier = "allSNPs.PlinkFiltering_Elev.c")
-gwas_plots(type = "NoCent", identifier = "NoCent.PlinkFiltering_Elev.c")
-
-```
-
-# Step 6: Pull out list of top hits #
+# Step 5: Pull out list of top hits #
 
 ```{r top_hits}
 # read in packages
@@ -651,13 +447,11 @@ suppressPackageStartupMessages(library(qqman))
 
 # list of all the files I am interested in
 files <- c("NoCent.PlinkFiltering_Binary.c", "NoCent.PlinkFiltering_raw.c",  "NoCent.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_Asin.c", "allSNPs.PlinkFiltering_raw.c", "allSNPs.PlinkFiltering_Binary.c", "allSNPs.PlinkFiltering_raw_subset.c", "NoCent.PlinkFiltering_raw_subset.c")
-# could then theoretically lapply my function to this list of names
-# does not include the testing file b/c not needed here.
 
 ```
 
 ## pull out all hits above fdr
-This code does not need to be run every time. The code chunk ends by writing out a csv with all the hits above fdr. 0.10
+The code chunk ends by writing out a csv with all the hits above fdr. 0.10
 
 ```{r}
 ##### pull out all hits above fdr 0.10#####
@@ -710,11 +504,10 @@ sum(fdr_pvals[[3]] < 0.15)
 sum(fdr_pvals[[10]] < 0.15)
 # 18 - no cent - subset
 
-# step two: pull out all snps above that level ( start with p = 0.10)
+# step two: pull out all snps above that level (p = 0.10)
 
-# the indexing should be the same, so I should be able to use the indexing from fdr_pvals
-#so for each gwas file, I want to subset out based on fdr_vals[[i]] < 0.10
-# let's test it on no cent binary
+#for each gwas file, I want to subset out based on fdr_vals[[i]] < 0.10
+#test it first
 nocent_bin <- read.delim(file = paste0("~/GemmaOutput_2022/", files[1], ".assoc.txt"))
 
 # check that lengths match
@@ -726,9 +519,6 @@ nocent_bin_top <- nocent_bin[fdr_pvals[[1]] < 0.10, ]
 # check expected output lengths match 
 sum(fdr_pvals[[1]] < 0.10)
 length(nocent_bin_top$ps)
-
-#okay, so now just loop this code and I think the hard part will be making the outputs unique? or I make a list of dataframes and somehow figure out how to merge them together.
-
 
 # step three: do for each GWAS
 # loop outline
@@ -755,8 +545,7 @@ write.csv(top_hits_fdr_all, "~/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023.csv", 
 
 ```
 
-
-This next section pulls out all the hits above fdr 0.05 to use for genome browsing because of Emily's thought that some of the GWAS might miss something so there could be something biologically meaningful that was only picked up by one of the GWAS. It writes out a .cvs just like the previous section.
+This next section pulls out all the hits above fdr 0.05 to use for genome browsing. It writes out a .cvs just like the previous section.
 
 ```{r}
 ##### pull out all hits above fdr 0.05 #####
@@ -816,8 +605,8 @@ write.csv(top_hits_fdr_all, "~/GemmaOutput_2022/Top_hits_fdr_wald_Apr2023_05.csv
 
 ```
 
-# Step 7: Window Analysis
-this code reads in the April file and writes the output to a list of lists rather than just to the console.
+# Step 6: Window Analysis
+this code reads in the April 2023 file and writes the output to a list of lists rather than just to the console.
 
 ```{r}
 library(praise)
@@ -831,10 +620,7 @@ top_hits_fdr_all$max <- top_hits_fdr_all$ps + 500
 
 ### things that happen to all chromosomes at once ###
 
-# take out elevation for now and see if that increases the workability of my loop output
-
-# NOTE: There was an elevation GWAS that was later removed from the analysis, but reminants of removing it are present here.
-# maybe I need to do it in two steps. first step would be to get rid of the columns, second step would be to get rid of rows that are all NAs
+# NOTE: There was an elevation GWAS that was later removed from the analysis, but remnants of removing it are present here.
 th_fdr_noelev <- top_hits_fdr_all[, grep("elev", colnames(top_hits_fdr_all), value = TRUE, invert = TRUE)]
 
 # to solve the problem of making sure the overlap is between two GWAS types, I should also only look at either all or NoCent at once
@@ -843,24 +629,11 @@ th_noelev_nocent <- top_hits_fdr_all[, grep("all", colnames(th_fdr_noelev), valu
 # using the 'inverse of nocent' code so the first three columns are also kept
 th_noelev_all <- top_hits_fdr_all[, grep("nc", colnames(th_fdr_noelev), value = TRUE, invert = TRUE)]
 
-# adding elevation back in on 1/25/2024 because I need the overlap analysis to be consistent between everything.
-# using the "inverse of all' code so the first three columns are kept + min + max
-th_nocent <- top_hits_fdr_all[, grep("all", colnames(top_hits_fdr_all), value = TRUE, invert = TRUE)]
-# using the 'inverse of nocent' code so the first three columns are also kept
-th_all <- top_hits_fdr_all[, grep("nc", colnames(top_hits_fdr_all), value = TRUE, invert = TRUE)]
-
 # count NAs, and  keep rows with fewer than 12 NAs (3 columns should have values for all rows)
 th_noelev_nocent <- th_noelev_nocent[rowSums(is.na(th_noelev_nocent)) < 12 , ] 
 # sample size went way down!
 th_noelev_all <- th_noelev_all[rowSums(is.na(th_noelev_all)) < 12 , ] 
 # sample size went way down! but is larger than no cent.
-
-# count NAs, and  keep rows with fewer than 15 NAs (5 columns should have values for all rows)
-# expect this to reduce rows that were only in all or only in nocent now that I've split them up.
-th_nocent <- th_nocent[rowSums(is.na(th_nocent)) < 15 , ] 
-# sample size went down by ~2000
-th_all <- th_all[rowSums(is.na(th_all)) < 15 , ] 
-# sample size went down by ~3000
 
 #### Functions ####
 
@@ -889,15 +662,9 @@ id_snps <- function(input){
 ## celebrate!
 #praise()
 
-# function to identify if any of the overlapping regions are between at least 2 GWAS types
-# issue with this function is that the columns to check will change depending on if it is an nc file or an all file
-# I think this function might actually need a bit more testing
-#nc_p_cols <- c("p_binary_nc", "p_raw_nc", "p_asin_nc", "p_subset_nc")
-#all_p_cols <- c("p_binary_all", "p_raw_all", "p_asin_all", "p_subset_all")
+nc_p_cols <- c("p_binary_nc", "p_raw_nc", "p_asin_nc", "p_subset_nc")
+all_p_cols <- c("p_binary_all", "p_raw_all", "p_asin_all", "p_subset_all")
 
-# include elev
-nc_p_cols <- c("p_binary_nc", "p_raw_nc", "p_asin_nc", "p_subset_nc", "p_elev_nc")
-all_p_cols <- c("p_binary_all", "p_raw_all", "p_asin_all", "p_subset_all", "p_elev_all")
 
 gwas_overlap <- function(input, keep_cols){
   cols_with_values <- c()
@@ -909,7 +676,7 @@ gwas_overlap <- function(input, keep_cols){
   return(output)
 }
 
-##testing further below, but it seems to work!
+##testing further below, it seems to work!
 praise()
 ```
 
@@ -926,16 +693,16 @@ chr1_overlap_nc <- id_snps(hits_fdr_chr1)
 
 # output makes more sense when ran in the console
 
-length(unique(chr1_overlap_nc)) # only 115 are unique, that seems promising; 232 unique when keeping tmp_df with only one row (i.e., one SNP)
+length(unique(chr1_overlap_nc)) # only 115 are unique; 232 unique when keeping tmp_df with only one row (i.e., one SNP)
 
 
 # don't expect this to keep any
 OverlapHits_chr1_nc <- gwas_overlap(chr1_overlap_nc, nc_p_cols)
-# and it didn't which for this case is a good sign because it is what I was expecting. see below for all of my testing code.
+# and it didn't
 
 # manually scrolling through, all of the overlap just with nocent is only within a single gwas type... what changed? some hits must not have made the cutoff.
 
-#maybe try it on all instead of NC?
+#try it on all instead of NC
 ##### all  #####
 # only keep the p value columns
 hits_fdr_chr1_a <- th_noelev_all[(th_noelev_all$chr == 1), c("chr", "rs", "ps", grep("p_", colnames(th_noelev_all), value = TRUE), "min", "max")]
@@ -953,9 +720,7 @@ OverlapHits_chr1_all <- gwas_overlap(chr1_overlap_all, all_p_cols)
 shared_snps <- unique(c(OverlapHits_chr1_all[[1]]$rs))
 ```
 
-7/17/2023: After fixing this to include windows with only one SNP, there is one SNP included with all that has overlap in all but not nc! It is at Chr1:14262517 - is this in the centromere? or one that showed up for a different reason? well I will see when I include it in my shared snps code! because now that needs to include more snps :)
-
-##### some testing #####
+##### some more testing #####
 
 ```{r, eval = FALSE}
 ### test to make sure the loop to only identify dataframes with p values from at least 2 GWAS types works on different types of dataframes. ###

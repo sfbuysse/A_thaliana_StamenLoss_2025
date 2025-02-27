@@ -158,7 +158,6 @@ Seq$FlowerID <- paste0(Seq$PlantID, "-", Seq$flower)
 dat_seq <- Seq[,c("Population", "LineID", "PlantID", "FlowerID", "Short_Stamens")]
 ```
 
-Now that interesting stuff
 ```{r}
 # How many unique lines?
 length(unique(dat_seq$LineID))

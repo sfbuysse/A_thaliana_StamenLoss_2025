@@ -68,11 +68,11 @@ save(Stamen_Gt_sub, file = "/mnt/research/josephslab/Sophie/Qpc/GenotypeMatrix_C
 write.csv(Stamen_Gt_sub, file = "/mnt/research/josephslab/Sophie/Qpc/GenotypeMatrix_Cent_50k_Nov2023.csv", row.names = FALSE)
 
 ##### Phenotype Information #####
-# read in FAM... how have I done this before?
+# read in FAM
 # can read in no cent or cent, the fam files are identical but file names need to match geno files to run the GWAS so there are copies
 pheno <- read.table("/mnt/gs21/scratch/buysseso/GWAS/NoCent.PlinkFiltering_raw.fam")
 head(pheno)
-# look to be in same order as geno file, but let's make the case match too just cause
+# in same order as geno file, but let's make the case match too
 # get rid of the dash in some of them
 pheno$V1 <- gsub(pattern = "-", replacement = "", pheno$V1)
 head(pheno)
@@ -80,12 +80,11 @@ head(pheno)
 pheno$V1 <- toupper(pheno$V1)
 # look at all to see if V1 and V2 match
 pheno
-# looks good to me.
-# let's save just the columns I need
+
+# save just the columns I need
 pheno2 <- pheno[ , c("V1", "V6")]
 colnames(pheno2) <- c("LineID", "Pheno")
 head(pheno2)
 
-# save them
 save(pheno2, file = "/mnt/research/josephslab/Sophie/Qpc/RawPhenotypes_Aug2023.ROBJ")
 write.csv(pheno2, file = "/mnt/research/josephslab/Sophie/Qpc/RawPhenotypes_Aug2023.csv", row.names = FALSE)
