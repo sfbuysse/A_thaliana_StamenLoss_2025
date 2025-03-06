@@ -1042,6 +1042,13 @@ plot(y=comp$Pi_residuals, x = resid(lm(Elev_m ~ Mean.pi, data = comp)))
 
 # use newdata (elevations) and newdata2 (pi with cent) from earlier
 
+## 3/6/2025: reviewer comment: is the pattern driven by outliers in fig 2D? (which is made below, but addressing with a model here)
+# the two outlier populations are BOS and SAL
+comp_sub <- comp[!(comp$pop %in% c("BOS", "SAL")), ]
+# run model and look at output
+summary(lm(Seq_PopFlwrMean ~ Elev_m + Elev_c2 + Mean.pi, dat = comp_sub))
+# general takeaway does not change after removing outliers. Elev and Elev^2 significant, pi less significant than before.
+
 ### Now use predict to get the predictions
 newdata5 <- cbind(newdata, newdata2, Elev_residuals = seq(-0.7,0.4, length = 2000), Pi_residuals = seq(-0.8, 0.5, length = 2000) )
 #m.ssn.elev.pi.pred = predict(m.ssn.elev.pi, newdata = newdata5, se.fit = TRUE)

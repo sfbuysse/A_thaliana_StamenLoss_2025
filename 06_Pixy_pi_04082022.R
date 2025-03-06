@@ -517,6 +517,13 @@ summary(m.resid.elev2)
 # Elev_m2 estimate = -4.543e-07, p value = 0.1955
 # r squared = 0.2559
 
+## 3/6/2025: reviewer comment: is the pattern driven by outliers in fig 2D? (which is made below, but addressing with a model here)
+# the two outlier populations are BOS and SAL. remove those.
+comp_sub <- comp[!(comp$pop %in% c("BOS", "SAL")), ]
+# run model and look at output
+summary(lm(Seq_PopFlwrMean ~ Elev_m + Elev_c2 + Mean.pi, dat = comp_sub))
+# general takeaway does not change after removing outliers. Elev and Elev^2 significant, pi less significant than before.
+
 
 # use newdata (elevations) and newdata2 (pi with cent) from earlier
 
