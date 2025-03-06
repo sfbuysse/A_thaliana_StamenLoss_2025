@@ -1,7 +1,7 @@
 # Athaliana_Stamens
-Pipeline for the manuscript "" - see our preprint here: LINK
+Pipeline for the manuscript "Evaluating the Roles of Drift and Selection in Trait Loss along an Elevational Gradient" - see our preprint here: https://www.biorxiv.org/content/10.1101/2024.06.12.598645v1
 
-The number in front of each file indicates what order in the pipeline it is. The code in the main repository is cleaned up for ease of reuse and understanding the analyses in the manuscript. For completeness, all of the code is reported in the "MessyCode" sub-repository.
+The number in front of each file indicates the order of analyses. The code in the main repository is cleaned up for ease of reuse and understanding the analyses in the manuscript. For completeness, all of the code is reported in the "MessyCode" folder.
 
 The sequence information will be publicly available in GenBank: LINK. Phenotypic information is in the data folder. Due to their size, GWAS output files are on Dryad: LINK. Most intermediates files are not shared here because they are large.
 
@@ -24,4 +24,4 @@ The sequence information will be publicly available in GenBank: LINK. Phenotypic
 - elevation_map: code that makes fig1 map. Some packages now out of date.
 
 
-last updated: 2/27/2025
+last updated: 3/6/2025
