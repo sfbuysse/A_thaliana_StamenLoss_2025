@@ -1,4 +1,4 @@
-# Athaliana_Stamens
+# *Arabidopsis thaliana* Stamen Loss
 Pipeline for the manuscript "Evaluating the Roles of Drift and Selection in Trait Loss along an Elevational Gradient" - see our preprint here: https://www.biorxiv.org/content/10.1101/2024.06.12.598645v1
 
 The number in front of each file indicates the order of analyses. The code in the main repository is cleaned up for ease of reuse and understanding the analyses in the manuscript. For completeness, all of the code is reported in the "MessyCode" folder.
