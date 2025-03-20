@@ -6,6 +6,20 @@
 # SeqID.txt contains the unique identifier at the beginning of each file name, one to a line
 
 # start by combining 001 to 00X for each lane independently
+# note: using '*' in bash sorts files alphabetically so this works to maintain order between files
+# proof of concept with one line and printf: for x in 1 2; do printf '%s\n' /mnt/research/josephslab/Sophie/Athal_2/rawfastq/ALE10_TCCTGAGC-CTCTCTAT_L00"$x"_R1_00*.fastq; done
+#/mnt/research/josephslab/Sophie/Athal_2/rawfastq/ALE10_TCCTGAGC-CTCTCTAT_L001_R1_001.fastq
+#/mnt/research/josephslab/Sophie/Athal_2/rawfastq/ALE10_TCCTGAGC-CTCTCTAT_L001_R1_002.fastq
+#/mnt/research/josephslab/Sophie/Athal_2/rawfastq/ALE10_TCCTGAGC-CTCTCTAT_L001_R1_003.fastq
+#/mnt/research/josephslab/Sophie/Athal_2/rawfastq/ALE10_TCCTGAGC-CTCTCTAT_L001_R1_004.fastq
+#/mnt/research/josephslab/Sophie/Athal_2/rawfastq/ALE10_TCCTGAGC-CTCTCTAT_L001_R1_005.fastq
+#/mnt/research/josephslab/Sophie/Athal_2/rawfastq/ALE10_TCCTGAGC-CTCTCTAT_L002_R1_001.fastq
+#/mnt/research/josephslab/Sophie/Athal_2/rawfastq/ALE10_TCCTGAGC-CTCTCTAT_L002_R1_002.fastq
+#/mnt/research/josephslab/Sophie/Athal_2/rawfastq/ALE10_TCCTGAGC-CTCTCTAT_L002_R1_003.fastq
+#/mnt/research/josephslab/Sophie/Athal_2/rawfastq/ALE10_TCCTGAGC-CTCTCTAT_L002_R1_004.fastq
+#/mnt/research/josephslab/Sophie/Athal_2/rawfastq/ALE10_TCCTGAGC-CTCTCTAT_L002_R1_005.fastq
+
+
 # run these lines in the directory with 
 while IFS= read -r line; do for x in 1 2; do cat "$line"_L00"$x"_R1_00*.fastq > "$line"_L00"$x"_R1_comb.fastq; done; done < SeqID.txt
 while IFS= read -r line; do for x in 1 2; do cat "$line"_L00"$x"_R2_00*.fastq > "$line"_L00"$x"_R2_comb.fastq; done; done < SeqID.txt
@@ -254,3 +268,28 @@ while IFS= read -r line; do samtools stats sorted_"$line"_bwa.bam | grep "is sor
 
 # computer restarted overnight so nothing happened.
 # creating R code to work on getting statistics out of the coverage data I have. Using just an R script so I can hopefully run in on the HPCC and not have to move all the files.
+
+
+##### Prep files for SRA upload #####
+SeqID_62.txt contains the unique identifier at the beginning of each file name, one to a line but does not include BIS11 becuase there is a file match issue and I want to do it line by line to be clear
+
+# for SRA, combine 001 to 00X for each lane independently
+# run these lines in the directory with 
+while IFS= read -r line; do for x in 1 2; do cat /mnt/research/josephslab/Sophie/Athal_2/rawfastq/"$line"_L00"$x"_R1_00*.fastq > "$line"_L00"$x"_R1.fastq; done; done < SeqID_62.txt
+while IFS= read -r line; do for x in 1 2; do cat /mnt/research/josephslab/Sophie/Athal_2/rawfastq/"$line"_L00"$x"_R2_00*.fastq > "$line"_L00"$x"_R2.fastq; done; done < SeqID_62.txt
+
+# 4 lines to get BIS11 together
+# got /mnt/research/josephslab/Sophie/Athal_2/rawfastq/BIS11_GCTACGCT-TATCCTCT_L001_R1_003.fastq from sequencer but no R2 equivalent so left out
+cat /mnt/research/josephslab/Sophie/Athal_2/rawfastq/BIS11_GCTACGCT-TATCCTCT_L001_R1_001.fastq /mnt/research/josephslab/Sophie/Athal_2/rawfastq/BIS11_GCTACGCT-TATCCTCT_L001_R1_002.fastq > BIS11_GCTACGCT-TATCCTCT_L001_R1.fastq
+cat /mnt/research/josephslab/Sophie/Athal_2/rawfastq/BIS11_GCTACGCT-TATCCTCT_L001_R2_001.fastq /mnt/research/josephslab/Sophie/Athal_2/rawfastq/BIS11_GCTACGCT-TATCCTCT_L001_R2_002.fastq > BIS11_GCTACGCT-TATCCTCT_L001_R2.fastq
+cat /mnt/research/josephslab/Sophie/Athal_2/rawfastq/BIS11_GCTACGCT-TATCCTCT_L002_R1_001.fastq /mnt/research/josephslab/Sophie/Athal_2/rawfastq/BIS11_GCTACGCT-TATCCTCT_L002_R1_002.fastq /mnt/research/josephslab/Sophie/Athal_2/rawfastq/BIS11_GCTACGCT-TATCCTCT_L002_R1_003.fastq > BIS11_GCTACGCT-TATCCTCT_L002_R1.fastq
+cat /mnt/research/josephslab/Sophie/Athal_2/rawfastq/BIS11_GCTACGCT-TATCCTCT_L002_R2_001.fastq /mnt/research/josephslab/Sophie/Athal_2/rawfastq/BIS11_GCTACGCT-TATCCTCT_L002_R2_002.fastq /mnt/research/josephslab/Sophie/Athal_2/rawfastq/BIS11_GCTACGCT-TATCCTCT_L002_R2_003.fastq > BIS11_GCTACGCT-TATCCTCT_L002_R2.fastq
+
+
+
+
+
+
+
+
+  
