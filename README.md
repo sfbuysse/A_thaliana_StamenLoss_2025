@@ -9,6 +9,9 @@ Phenotypic information is in the data folder.
 
 Due to their size, GWAS output files are on Dryad: LINK. Most intermediates files are not shared here because they are large.
 
+These populations have been used in multiple publications and two naming discrepencies exist. An initial ARB population should have been ARU and an initial SPE population should be SAL. Labels are correct in manuscript figures, but may be different at some points in the below code. We chose naming consistent with Montesinos-Navarro, A., Picó, F. X., & Tonsor, S. J. (2012). Clinal variation in seed traits influencing life cycle timing in Arabidopsis thaliana. Evolution, 66(11), 3417–3431. https://doi.org/10.1111/j.1558-5646.2012.01689.x
+
+
 # File Descriptions:
 - 01_FastQ_to_BAM: Starts with fastq files. The end result is aligned to the reference genome but not cleaned at all.
 - 01B_Coverage Statistics: calculating coverage statistics for the supplemental table
